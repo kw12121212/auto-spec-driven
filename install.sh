@@ -15,15 +15,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_SKILLS_DIR="$SCRIPT_DIR/skills"
 
 # Parse flags
-PROJECT_MODE=false
-for arg in "$@"; do
+PROJECT_DIR=""
+i=1
+while [ $i -le $# ]; do
+  arg="${!i}"
   case "$arg" in
-    --project) PROJECT_MODE=true ;;
+    --project)
+      i=$((i + 1))
+      # Optional path argument after --project
+      if [ $i -le $# ] && [[ "${!i}" != --* ]]; then
+        PROJECT_DIR="${!i}"
+      else
+        PROJECT_DIR="$(pwd)"
+      fi
+      ;;
   esac
+  i=$((i + 1))
 done
 
-if $PROJECT_MODE; then
-  TARGET_DIR="$(pwd)/.agent/skills"
+if [ -n "$PROJECT_DIR" ]; then
+  TARGET_DIR="$PROJECT_DIR/.agent/skills"
 else
   TARGET_DIR="$HOME/.agents/skills"
 fi
@@ -83,7 +94,7 @@ fi
 
 echo ""
 echo "Done. $installed skill(s) installed, $skipped skipped."
-if $PROJECT_MODE; then
+if [ -n "$PROJECT_DIR" ]; then
   echo "Skills are available project-locally at: $TARGET_DIR"
 else
   echo "Skills are available globally at: $TARGET_DIR"

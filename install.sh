@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO="kw12121212/slim-spec-driven"
+BRANCH="main"
+SKILLS=(
+  spec-driven-propose
+  spec-driven-modify
+  spec-driven-apply
+  spec-driven-verify
+  spec-driven-archive
+)
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILLS_SRC="$SCRIPT_DIR/skills"
+LOCAL_SKILLS_DIR="$SCRIPT_DIR/skills"
 
 # Parse flags
 PROJECT_MODE=false
@@ -24,26 +34,52 @@ mkdir -p "$TARGET_DIR"
 installed=0
 skipped=0
 
-for skill_file in "$SKILLS_SRC"/*.md; do
-  [ -f "$skill_file" ] || continue
-  filename="$(basename "$skill_file")"
-  target="$TARGET_DIR/$filename"
+if [ -d "$LOCAL_SKILLS_DIR" ]; then
+  # Running from a local clone — symlink for live updates
+  for skill in "${SKILLS[@]}"; do
+    filename="${skill}.md"
+    skill_file="$LOCAL_SKILLS_DIR/$filename"
+    target="$TARGET_DIR/$filename"
 
-  if [ -L "$target" ]; then
-    # Update existing symlink
-    ln -sf "$skill_file" "$target"
-    echo "  updated: $filename"
+    [ -f "$skill_file" ] || { echo "  missing: $filename (skipped)"; skipped=$((skipped + 1)); continue; }
+
+    if [ -L "$target" ]; then
+      ln -sf "$skill_file" "$target"
+      echo "  updated: $filename"
+    elif [ -e "$target" ]; then
+      echo "  skipped: $filename (non-symlink file exists)"
+      skipped=$((skipped + 1))
+      continue
+    else
+      ln -s "$skill_file" "$target"
+      echo "  linked:  $filename"
+    fi
     installed=$((installed + 1))
-  elif [ -e "$target" ]; then
-    # Non-symlink file exists — skip to avoid overwriting user content
-    echo "  skipped: $filename (non-symlink file exists at $target)"
-    skipped=$((skipped + 1))
-  else
-    ln -s "$skill_file" "$target"
-    echo "  linked:  $filename"
-    installed=$((installed + 1))
+  done
+else
+  # Running via curl — download files directly
+  if ! command -v curl &>/dev/null; then
+    echo "Error: curl is required for remote install"
+    exit 1
   fi
-done
+
+  BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/skills"
+
+  for skill in "${SKILLS[@]}"; do
+    filename="${skill}.md"
+    target="$TARGET_DIR/$filename"
+
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+      echo "  skipped: $filename (non-symlink file exists)"
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    curl -fsSL "$BASE_URL/$filename" -o "$target"
+    echo "  fetched: $filename"
+    installed=$((installed + 1))
+  done
+fi
 
 echo ""
 echo "Done. $installed skill(s) installed, $skipped skipped."

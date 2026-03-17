@@ -4,8 +4,18 @@ A lightweight spec-driven development framework: 5 Claude skills + thin TypeScri
 
 ## Quick Start
 
+**One-line install (curl):**
 ```bash
-git clone <this-repo> ~/Code/slim-spec-driven
+# Global (~/.agents/skills/)
+curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash
+
+# Project-local (.agent/skills/)
+curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash -s -- --project
+```
+
+**From source (for development or live-edit):**
+```bash
+git clone https://github.com/kw12121212/slim-spec-driven ~/Code/slim-spec-driven
 cd ~/Code/slim-spec-driven
 npm install
 npm run build

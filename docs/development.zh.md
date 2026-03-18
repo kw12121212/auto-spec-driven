@@ -432,6 +432,73 @@ spec-driven-archive
 
 ## install.sh
 
+### 安装后的目录结构
+
+安装完成后，skills 位于目标目录，结构如下：
+
+**全局安装（默认 `--cli all`）：**
+```
+~/.agents/skills/
+├── spec-driven-propose/
+│   ├── SKILL.md
+│   └── scripts/
+│       ├── propose.js
+│       ├── modify.js
+│       ├── apply.js
+│       ├── verify.js
+│       └── archive.js
+├── spec-driven-modify/
+│   ├── SKILL.md
+│   └── scripts/ → （同上）
+├── spec-driven-apply/  ...
+├── spec-driven-verify/ ...
+└── spec-driven-archive/...
+```
+
+**全局安装 `--cli claude`：**
+```
+~/.claude/skills/
+└── spec-driven-propose/
+    ├── SKILL.md
+    └── scripts/
+```
+
+**全局安装 `--cli opencode`：**
+```
+~/.config/opencode/skills/
+└── spec-driven-propose/
+    ├── SKILL.md
+    └── scripts/
+```
+
+**项目本地安装（`--project` 或 `--project /path`）：**
+```
+<项目根目录>/
+└── .agents/skills/          # --cli all（默认）
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+
+<项目根目录>/
+└── .claude/skills/          # --cli claude
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+
+<项目根目录>/
+└── .opencode/skills/        # --cli opencode
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+```
+
+**本地 clone vs curl — `scripts/` 的内容区别：**
+
+| 模式 | `scripts/` 内容 |
+|------|----------------|
+| 本地 clone | 符号链接 → `repo/dist/scripts/`（实时，随仓库更新） |
+| curl | 从 GitHub 下载的 `.js` 文件副本 |
+
 ### 检测逻辑
 
 脚本通过检查 `$SCRIPT_DIR/skills/` 是否存在来判断执行上下文：

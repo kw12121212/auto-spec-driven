@@ -432,6 +432,73 @@ spec-driven-archive
 
 ## install.sh
 
+### Installed directory structure
+
+After installation, skills live in a target directory with the following layout:
+
+**Global install (default `--cli all`):**
+```
+~/.agents/skills/
+├── spec-driven-propose/
+│   ├── SKILL.md
+│   └── scripts/
+│       ├── propose.js
+│       ├── modify.js
+│       ├── apply.js
+│       ├── verify.js
+│       └── archive.js
+├── spec-driven-modify/
+│   ├── SKILL.md
+│   └── scripts/ → (same scripts)
+├── spec-driven-apply/  ...
+├── spec-driven-verify/ ...
+└── spec-driven-archive/...
+```
+
+**Global install `--cli claude`:**
+```
+~/.claude/skills/
+└── spec-driven-propose/
+    ├── SKILL.md
+    └── scripts/
+```
+
+**Global install `--cli opencode`:**
+```
+~/.config/opencode/skills/
+└── spec-driven-propose/
+    ├── SKILL.md
+    └── scripts/
+```
+
+**Project-local install (`--project` or `--project /path`):**
+```
+<project-root>/
+└── .agents/skills/          # --cli all (default)
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+
+<project-root>/
+└── .claude/skills/          # --cli claude
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+
+<project-root>/
+└── .opencode/skills/        # --cli opencode
+    └── spec-driven-propose/
+        ├── SKILL.md
+        └── scripts/
+```
+
+**Local clone vs curl — what `scripts/` contains:**
+
+| Mode | `scripts/` content |
+|------|--------------------|
+| Local clone | Symlink → `repo/dist/scripts/` (live, updates with repo) |
+| curl | Copied `.js` files downloaded from GitHub |
+
 ### Detection logic
 
 The script detects its execution context by checking whether `$SCRIPT_DIR/skills/` exists:

@@ -3,15 +3,6 @@ set -euo pipefail
 
 REPO="kw12121212/slim-spec-driven"
 BRANCH="main"
-SCRIPTS=(
-  propose
-  modify
-  apply
-  verify
-  archive
-  init
-  cancel
-)
 SKILLS=(
   spec-driven-propose
   spec-driven-modify
@@ -20,6 +11,17 @@ SKILLS=(
   spec-driven-archive
   spec-driven-init
   spec-driven-cancel
+)
+
+# Scripts each skill needs (space-separated, subset of all scripts)
+declare -A SKILL_SCRIPTS=(
+  [spec-driven-propose]="propose"
+  [spec-driven-modify]="modify"
+  [spec-driven-apply]="modify apply"
+  [spec-driven-verify]="modify verify apply"
+  [spec-driven-archive]="modify apply archive"
+  [spec-driven-cancel]="modify cancel"
+  [spec-driven-init]="init"
 )
 
 # Central agent skills store (skills live here)
@@ -145,12 +147,15 @@ copy_skill_to_agent_store() {
   local skill="$1"
   local skill_dir="$2"        # source skill directory (SKILL.md lives here)
   local scripts_src="$3"      # source scripts directory
+  local scripts_list="$4"     # space-separated list of scripts to copy
 
   local agent_skill_dir="$AGENT_DIR/$skill"
+  rm -rf "$agent_skill_dir/scripts"
   mkdir -p "$agent_skill_dir/scripts"
 
   cp "$skill_dir/SKILL.md" "$agent_skill_dir/SKILL.md"
-  for script in "${SCRIPTS[@]}"; do
+  sed -i "s|{{SKILL_DIR}}|$agent_skill_dir|g" "$agent_skill_dir/SKILL.md"
+  for script in $scripts_list; do
     cp "$scripts_src/$script.js" "$agent_skill_dir/scripts/$script.js"
   done
 }
@@ -186,7 +191,7 @@ if [ -d "$LOCAL_SKILLS_DIR" ]; then
     skill_dir="$LOCAL_SKILLS_DIR/$skill"
     [ -d "$skill_dir" ] || { echo "  missing: $skill/ (skipped)"; skipped=$((skipped + 1)); continue; }
 
-    copy_skill_to_agent_store "$skill" "$skill_dir" "$SCRIPT_DIR/dist/scripts"
+    copy_skill_to_agent_store "$skill" "$skill_dir" "$SCRIPT_DIR/dist/scripts" "${SKILL_SCRIPTS[$skill]}"
     echo "  copied: $skill/"
     link_cli_dirs "$skill"
     installed=$((installed + 1))
@@ -204,16 +209,24 @@ else
   tmp_dir="$(mktemp -d)"
   trap 'rm -rf "$tmp_dir"' EXIT
 
+  # Download each unique script once into a shared temp scripts dir
+  tmp_scripts_dir="$tmp_dir/scripts"
+  mkdir -p "$tmp_scripts_dir"
+  declare -A _fetched=()
+  for skill in "${SKILLS[@]}"; do
+    for script in ${SKILL_SCRIPTS[$skill]}; do
+      [[ -v _fetched[$script] ]] && continue
+      curl -fsSL "$BASE_URL/dist/scripts/$script.js" -o "$tmp_scripts_dir/$script.js"
+      _fetched[$script]=1
+    done
+  done
+
   for skill in "${SKILLS[@]}"; do
     tmp_skill_dir="$tmp_dir/$skill"
-    mkdir -p "$tmp_skill_dir/scripts"
+    mkdir -p "$tmp_skill_dir"
 
     curl -fsSL "$BASE_URL/skills/$skill/SKILL.md" -o "$tmp_skill_dir/SKILL.md"
-    for script in "${SCRIPTS[@]}"; do
-      curl -fsSL "$BASE_URL/dist/scripts/$script.js" -o "$tmp_skill_dir/scripts/$script.js"
-    done
-
-    copy_skill_to_agent_store "$skill" "$tmp_skill_dir" "$tmp_skill_dir/scripts"
+    copy_skill_to_agent_store "$skill" "$tmp_skill_dir" "$tmp_scripts_dir" "${SKILL_SCRIPTS[$skill]}"
     echo "  fetched: $skill/"
     link_cli_dirs "$skill"
     installed=$((installed + 1))

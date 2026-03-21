@@ -50,6 +50,19 @@ reset_state() {
 echo -e "\n${BOLD}spec-driven test suite${RESET} — project: test/todo-app\n"
 reset_state
 
+# ── 0. init ───────────────────────────────────────────────────────────────────
+echo -e "${BOLD}[0] init${RESET}"
+
+INIT_DIR="$(mktemp -d)"
+out=$(node "$SCRIPTS/init.js" "$INIT_DIR" 2>&1)
+assert_contains "creates .spec-driven/"  "Initialized:"  "$out"
+[ -f "$INIT_DIR/.spec-driven/config.yaml"    ] && pass "config.yaml exists"  || fail "config.yaml missing"
+[ -d "$INIT_DIR/.spec-driven/specs"          ] && pass "specs/ dir exists"   || fail "specs/ dir missing"
+[ -d "$INIT_DIR/.spec-driven/changes"        ] && pass "changes/ dir exists" || fail "changes/ dir missing"
+
+assert_exit "duplicate init exits 1" 1 node "$SCRIPTS/init.js" "$INIT_DIR"
+rm -rf "$INIT_DIR"
+
 # ── 1. propose ────────────────────────────────────────────────────────────────
 echo -e "${BOLD}[1] propose${RESET}"
 
@@ -140,6 +153,19 @@ TODAY="$(date +%Y-%m-%d)"
 
 assert_exit "archive nonexistent exits 1" 1 node "$SCRIPTS/archive.js" "nonexistent"
 assert_exit "duplicate archive exits 1"   1 node "$SCRIPTS/archive.js" "$CHANGE"
+
+# ── 6. cancel ─────────────────────────────────────────────────────────────────
+echo -e "\n${BOLD}[6] cancel${RESET}"
+
+cd "$PROJECT"
+node "$SCRIPTS/propose.js" "to-cancel" &>/dev/null
+[ -d ".spec-driven/changes/to-cancel" ] && pass "change exists before cancel" || fail "change missing before cancel"
+
+out=$(node "$SCRIPTS/cancel.js" "to-cancel" 2>&1)
+assert_contains "reports cancelled path" "Cancelled:" "$out"
+[ ! -d ".spec-driven/changes/to-cancel" ] && pass "change removed after cancel" || fail "change still exists after cancel"
+
+assert_exit "cancel nonexistent exits 1" 1 node "$SCRIPTS/cancel.js" "nonexistent"
 
 # ── Reset (leave repo clean) ──────────────────────────────────────────────────
 reset_state

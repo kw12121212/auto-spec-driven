@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "test": "bash test/run.sh",
     "install-skills": "bash install.sh",
-    "install-skills:project": "bash install.sh --project"
+    "install-skills:project": "bash install.sh --project",
+    "uninstall-skills": "bash install.sh --uninstall",
+    "uninstall-skills:project": "bash install.sh --uninstall --project"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

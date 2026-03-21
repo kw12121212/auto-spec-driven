@@ -1,6 +1,7 @@
 ---
 name: spec-driven-propose
 description: Propose a new spec-driven change. Scaffolds proposal.md, design.md, and tasks.md for a named change, populated with project context.
+version: 0.1.0
 ---
 
 You are helping the user create a new spec-driven change proposal.

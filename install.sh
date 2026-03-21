@@ -9,6 +9,8 @@ SCRIPTS=(
   apply
   verify
   archive
+  init
+  cancel
 )
 SKILLS=(
   spec-driven-propose
@@ -16,6 +18,8 @@ SKILLS=(
   spec-driven-apply
   spec-driven-verify
   spec-driven-archive
+  spec-driven-init
+  spec-driven-cancel
 )
 
 # Known CLI target directories
@@ -111,7 +115,15 @@ installed=0
 skipped=0
 
 if [ -d "$LOCAL_SKILLS_DIR" ]; then
-  # Running from a local clone — symlink skill directories for live updates
+  # Running from a local clone — ensure dist/ is built before installing
+  if [ ! -d "$SCRIPT_DIR/dist/scripts" ]; then
+    echo "Building scripts (dist/ not found)..."
+    (cd "$SCRIPT_DIR" && npm run build) || {
+      echo "Error: build failed. Run 'npm run build' manually."
+      exit 1
+    }
+  fi
+  # Symlink skill directories for live updates
   # Structure: <target>/<skill>/ → repo/skills/<skill>/  (contains SKILL.md + scripts/ symlink)
   for skill in "${SKILLS[@]}"; do
     skill_dir="$LOCAL_SKILLS_DIR/$skill"

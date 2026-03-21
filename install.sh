@@ -61,9 +61,10 @@ while [ $i -le $# ]; do
   i=$((i + 1))
 done
 
-# Resolve agent dir and CLI symlink dirs
+# Resolve agent dir, CLI symlink dirs, and SKILL_DIR_REF (used in SKILL.md instead of absolute path)
 if [ -n "$PROJECT_DIR" ]; then
   AGENT_DIR="$PROJECT_DIR/$PROJECT_AGENT_SUBDIR"
+  SKILL_DIR_REF="$PROJECT_AGENT_SUBDIR"   # relative to project root
   if [ "$CLI" = "all" ]; then
     CLI_LINK_DIRS=("$PROJECT_DIR/${PROJECT_CLI_DIRS[claude]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[opencode]}")
   else
@@ -71,6 +72,7 @@ if [ -n "$PROJECT_DIR" ]; then
   fi
 else
   AGENT_DIR="$GLOBAL_AGENT_DIR"
+  SKILL_DIR_REF="~/.agent/skills"          # tilde expands at runtime, works across users
   if [ "$CLI" = "all" ]; then
     CLI_LINK_DIRS=("${GLOBAL_CLI_DIRS[claude]}" "${GLOBAL_CLI_DIRS[opencode]}")
   else
@@ -142,7 +144,7 @@ copy_skill_to_agent_store() {
   mkdir -p "$agent_skill_dir/scripts"
 
   cp "$skill_dir/SKILL.md" "$agent_skill_dir/SKILL.md"
-  sed -i "s|{{SKILL_DIR}}|$agent_skill_dir|g" "$agent_skill_dir/SKILL.md"
+  sed -i "s|{{SKILL_DIR}}|$SKILL_DIR_REF/$skill|g" "$agent_skill_dir/SKILL.md"
   cp "$scripts_src/spec-driven.js" "$agent_skill_dir/scripts/spec-driven.js"
 }
 
@@ -210,6 +212,22 @@ else
     link_cli_dirs "$skill"
     installed=$((installed + 1))
   done
+fi
+
+# Initialize .spec-driven/ in project directory when using --project
+if [ -n "$PROJECT_DIR" ]; then
+  spec_dir="$PROJECT_DIR/.spec-driven"
+  if [ -d "$spec_dir" ]; then
+    echo ""
+    echo ".spec-driven/ already exists — skipped init"
+  else
+    echo ""
+    if node "$AGENT_DIR/spec-driven-init/scripts/spec-driven.js" init "$PROJECT_DIR" 2>/dev/null; then
+      echo "Initialized .spec-driven/ in: $PROJECT_DIR"
+    else
+      echo "Warning: failed to initialize .spec-driven/ — run '/spec-driven-init' to initialize manually"
+    fi
+  fi
 fi
 
 echo ""

@@ -14,7 +14,7 @@ You are helping the user implement a spec-driven change.
    - `.spec-driven/changes/<name>/proposal.md` — what and why
    - `.spec-driven/changes/<name>/design.md` — approach and decisions
    - `.spec-driven/changes/<name>/tasks.md` — the checklist
-   Also read `.spec-driven/config.yaml` for project context and `.spec-driven/specs/` for current state specs.
+   Also read `.spec-driven/config.yaml` for project context and `.spec-driven/specs/` for current state specs. If config.yaml has a `rules` field, treat those rules as binding constraints throughout implementation.
 
 3. **Check task status** — run:
    ```

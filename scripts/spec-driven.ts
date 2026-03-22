@@ -189,6 +189,8 @@ function verify() {
           warnings.push(`specs/${file} has no content`);
         } else if (!/^### Requirement:/m.test(stripped)) {
           errors.push(`specs/${file} has content but no '### Requirement:' headings — use the spec format`);
+        } else if (!/^## (ADDED|MODIFIED|REMOVED) Requirements$/m.test(stripped)) {
+          errors.push(`specs/${file} is missing section marker — add '## ADDED Requirements', '## MODIFIED Requirements', or '## REMOVED Requirements' before each group of requirements`);
         }
       }
     }
@@ -252,7 +254,7 @@ function init() {
   }
 
   fs.mkdirSync(path.join(specDir, "changes"), { recursive: true });
-  fs.mkdirSync(path.join(specDir, "specs", "core"), { recursive: true });
+  fs.mkdirSync(path.join(specDir, "specs"), { recursive: true });
 
   fs.writeFileSync(
     path.join(specDir, "config.yaml"),

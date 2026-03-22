@@ -6,9 +6,9 @@ Instructions for AI agents working in this repository.
 
 `slim-spec-driven` is a lightweight spec-driven development framework. It ships:
 
-- **5 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
-- **5 TypeScript scripts** (`scripts/*.ts`) — filesystem mechanics only (create, move, parse, validate)
-- **`install.sh`** — installs skills to `~/.agent/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/`
+- **7 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
+- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 7 subcommands
+- **`install.sh`** — installs skills to `~/.slim-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
 
@@ -21,7 +21,7 @@ slim-spec-driven/
 │   └── <name>/SKILL.md
 ├── template/         # .spec-driven/ starter template
 ├── test/
-│   ├── run.sh        # Test runner (32 tests, fully repeatable)
+│   ├── run.sh        # Test runner (46 tests, fully repeatable)
 │   └── todo-app/     # Fixture project used by tests
 ├── .spec-driven/     # This repo uses its own workflow (dogfooding)
 ├── install.sh
@@ -44,7 +44,7 @@ Always rebuild after editing any `scripts/*.ts` file. Tests run against `dist/`.
 bash test/run.sh
 ```
 
-Tests are fully repeatable — they reset state before and after each run. All 32 must pass before committing changes to scripts.
+Tests are fully repeatable — they reset state before and after each run. All 46 must pass before committing changes to scripts.
 
 ## Skill Format
 
@@ -61,16 +61,19 @@ Frontmatter fields used: `name`, `description`. Both CLIs (Claude Code, OpenCode
 ## Scripts Contract
 
 Scripts handle **filesystem mechanics only** — no content generation, no AI logic.
+All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project root.
 
-| Script | CWD assumption | Input | Output |
-|--------|---------------|-------|--------|
-| `propose.js <name>` | project root | kebab-case name | creates `.spec-driven/changes/<name>/` with seed files |
-| `modify.js [name]` | project root | optional name | stdout: change list or artifact paths |
-| `apply.js <name>` | project root | change name | stdout: JSON `{total, complete, remaining, tasks}` |
-| `verify.js <name>` | project root | change name | stdout: JSON `{valid, warnings[], errors[]}` |
-| `archive.js <name>` | project root | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
+| Subcommand | Input | Output |
+|------------|-------|--------|
+| `propose <name>` | kebab-case name | creates `.spec-driven/changes/<name>/` with `proposal.md`, `specs/`, `design.md`, `tasks.md` |
+| `modify [name]` | optional name | stdout: active change list, or paths to all four artifacts |
+| `apply <name>` | change name | stdout: JSON `{total, complete, remaining, tasks}` |
+| `verify <name>` | change name | stdout: JSON `{valid, warnings[], errors[]}` |
+| `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
+| `cancel <name>` | change name | deletes `.spec-driven/changes/<name>/` |
+| `init [path]` | optional path | creates `.spec-driven/` scaffold at path (or CWD) |
 
-All scripts exit `0` on success, `1` on error (except `verify.js` which always exits `0` and reports errors in JSON).
+All subcommands exit `0` on success, `1` on error (except `verify` which always exits `0` and reports errors in JSON).
 
 ## The .spec-driven/ Workflow
 
@@ -88,15 +91,15 @@ Changes in progress live in `.spec-driven/changes/`. Completed changes are in `.
 ## install.sh Flags
 
 ```bash
-bash install.sh                          # global: store in ~/.agent/skills/, symlink into both CLIs
-bash install.sh --cli claude             # global: store in ~/.agent/skills/, symlink into ~/.claude/skills/ only
-bash install.sh --cli opencode           # global: store in ~/.agent/skills/, symlink into ~/.config/opencode/skills/ only
+bash install.sh                          # global: store in ~/.slim-spec-driven/skills/, symlink into both CLIs
+bash install.sh --cli claude             # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.claude/skills/ only
+bash install.sh --cli opencode           # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.config/opencode/skills/ only
 bash install.sh --project                # project-local: store in .agent/skills/, symlink into .claude/skills/ + .opencode/skills/
 bash install.sh --project /path/to/proj  # project-local at path
 bash install.sh --uninstall              # remove symlinks and agent store entries (same --cli/--project flags)
 ```
 
-Skills live in `~/.agent/skills/` (or `.agent/skills/` for project mode). CLI-specific directories only hold symlinks pointing there.
+Skills live in `~/.slim-spec-driven/skills/` (or `.agent/skills/` for project mode). CLI-specific directories only hold symlinks pointing there.
 
 Skills are always copied into the agent store (never symlinked), making the store git-friendly. CLI-specific directories hold symlinks pointing into the agent store.
 

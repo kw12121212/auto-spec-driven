@@ -32,4 +32,4 @@ The system MUST/SHOULD/MAY <observable behavior>.
 - Use present tense: "The system does X"
 - Specs describe **observable behavior**, not implementation details
 - Keep specs stable; changes go through the `changes/` workflow
-- Changes to specs are tracked in `changes/<name>/specs/delta.md`
+- Changes to specs are tracked in `changes/<name>/specs/` (mirroring this directory structure)

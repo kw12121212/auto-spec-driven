@@ -27,7 +27,7 @@ You are helping the user verify a spec-driven change before archiving.
    - Verify the change actually exists (read relevant files)
    - Note any tasks with no visible evidence as WARNINGs
 
-5. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and `.spec-driven/changes/<name>/specs/delta.md`:
+5. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
    - Does the implementation match what was proposed?
    - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
    - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.

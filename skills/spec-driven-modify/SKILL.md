@@ -1,6 +1,6 @@
 ---
 name: spec-driven-modify
-description: Modify an existing spec-driven change artifact (proposal.md, design.md, or tasks.md). Preserves completed task state.
+description: Modify an existing spec-driven change artifact (proposal.md, specs/ delta files, design.md, or tasks.md). Preserves completed task state.
 version: 0.1.0
 ---
 

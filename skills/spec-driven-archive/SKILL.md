@@ -26,12 +26,17 @@ You are helping the user archive a completed spec-driven change.
      - **REMOVED**: locate the `### Requirement: <name>` block by name and delete it; remove the file if it becomes empty
    - Briefly summarize what changed in `specs/` after merging.
 
-4. **Archive the change** — run:
+4. **Update specs/INDEX.md** — after merging, update `.spec-driven/specs/INDEX.md`:
+   - Add entries for any newly created spec files (with a one-line description)
+   - Remove entries for any deleted spec files
+   - Leave existing entries unchanged unless the file's scope changed
+
+5. **Archive the change** — run:
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js archive <name>
    ```
 
-5. **Confirm** — report the result:
+6. **Confirm** — report the result:
    - Where the change was moved to (e.g. `.spec-driven/changes/archive/2024-01-15-<name>/`)
    - Suggest running `/spec-driven-propose` if there's follow-up work
 

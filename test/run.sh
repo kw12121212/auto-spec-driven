@@ -56,9 +56,10 @@ echo -e "${BOLD}[0] init${RESET}"
 INIT_DIR="$(mktemp -d)"
 out=$($CLI init "$INIT_DIR" 2>&1)
 assert_contains "creates .spec-driven/"  "Initialized:"  "$out"
-[ -f "$INIT_DIR/.spec-driven/config.yaml"    ] && pass "config.yaml exists"  || fail "config.yaml missing"
-[ -d "$INIT_DIR/.spec-driven/specs"          ] && pass "specs/ dir exists"   || fail "specs/ dir missing"
-[ -d "$INIT_DIR/.spec-driven/changes"        ] && pass "changes/ dir exists" || fail "changes/ dir missing"
+[ -f "$INIT_DIR/.spec-driven/config.yaml"          ] && pass "config.yaml exists"  || fail "config.yaml missing"
+[ -f "$INIT_DIR/.spec-driven/specs/INDEX.md"       ] && pass "INDEX.md exists"    || fail "INDEX.md missing"
+[ -d "$INIT_DIR/.spec-driven/specs"                ] && pass "specs/ dir exists"   || fail "specs/ dir missing"
+[ -d "$INIT_DIR/.spec-driven/changes"              ] && pass "changes/ dir exists" || fail "changes/ dir missing"
 
 assert_exit "duplicate init exits 1" 1 $CLI init "$INIT_DIR"
 rm -rf "$INIT_DIR"

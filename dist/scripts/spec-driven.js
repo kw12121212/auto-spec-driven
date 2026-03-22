@@ -237,9 +237,11 @@ function init() {
     fs.mkdirSync(path.join(specDir, "changes"), { recursive: true });
     fs.mkdirSync(path.join(specDir, "specs", "core"), { recursive: true });
     fs.writeFileSync(path.join(specDir, "config.yaml"), `schema: spec-driven\ncontext: |\n  [Project context — populated by user, injected into skill prompts]\nrules:\n  specs:\n    - Requirements specify observable behavior, not implementation details\n  tasks:\n    - Tasks should be independently completable\n`);
+    fs.writeFileSync(path.join(specDir, "specs", "INDEX.md"), `# Specs Index\n\n<!-- One entry per spec file. Updated by /spec-driven-archive after each change. -->\n`);
     fs.writeFileSync(path.join(specDir, "specs", "README.md"), `# Specs\n\nSpecs describe the current state of the system — what it does, not how it was built.\n\n## Format\n\n\`\`\`markdown\n### Requirement: <name>\nThe system MUST/SHOULD/MAY <observable behavior>.\n\n#### Scenario: <name>\n- GIVEN <precondition>\n- WHEN <action>\n- THEN <expected outcome>\n\`\`\`\n\n**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).\n\n## Organization\n\nGroup specs by domain area. Use kebab-case directory names (e.g. \`core/\`, \`api/\`, \`auth/\`).\n\n## Conventions\n\n- Write in present tense ("the system does X")\n- Describe observable behavior, not implementation details\n- Keep each spec focused on one area\n`);
     console.log(`Initialized: ${specDir}`);
     console.log(`  ${path.join(specDir, "config.yaml")}`);
+    console.log(`  ${path.join(specDir, "specs", "INDEX.md")}`);
     console.log(`  ${path.join(specDir, "specs", "README.md")}`);
     console.log(`  Edit config.yaml to add project context`);
 }

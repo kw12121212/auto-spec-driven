@@ -11,12 +11,12 @@ You are helping the user implement a spec-driven change.
 1. **Select the change** — run `node {{SKILL_DIR}}/scripts/spec-driven.js modify` to list active changes. Ask which change to apply. If already specified, use it.
 
 2. **Load context** — read all artifacts:
-   - `.spec-driven/changes/<name>/proposal.md` — what and why
+   - `.spec-driven/changes/<name>/proposal.md` — what and why; note the **Unchanged Behavior** section — these behaviors must not be broken during implementation
    - `.spec-driven/changes/<name>/specs/` — delta spec files (mirror of main specs/ structure)
    - `.spec-driven/changes/<name>/design.md` — approach and decisions
    - `.spec-driven/changes/<name>/tasks.md` — the checklist
    Also read:
-   - `.spec-driven/config.yaml` — project context; treat `rules` as binding constraints
+   - `.spec-driven/config.yaml` — project context; treat `rules` as binding constraints; if `fileMatch` entries are present, apply matching rules when editing files whose paths match the glob pattern
    - `.spec-driven/specs/INDEX.md` — identifies all existing spec files
    - Every spec file in INDEX.md that is relevant to this change — read full content to understand current requirements before writing code
 
@@ -34,6 +34,7 @@ You are helping the user implement a spec-driven change.
 5. **Implement tasks** — work through each `- [ ]` task in order:
    - Read relevant code before making changes
    - Implement the task
+   - Verify the change does not violate any **Unchanged Behavior** listed in proposal.md
    - Mark it complete in tasks.md by changing `- [ ]` to `- [x]`
    - Briefly confirm what was done before moving to the next task
 

@@ -37,7 +37,8 @@ You are helping the user verify a spec-driven change before archiving.
    - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
    - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.
    - Do the delta files use the standard format (`### Requirement: <name>`, RFC 2119 keywords, `#### Scenario:` blocks)? Non-conforming format is a CRITICAL — the spec format is mandatory.
-   - If config.yaml has a `rules` field, check whether the implementation and artifacts comply — violations are WARNINGs
+   - If config.yaml has a `rules` field (including any `fileMatch` entries), check whether the implementation and artifacts comply — violations are WARNINGs
+   - If proposal.md has an **Unchanged Behavior** section with content, verify the implementation has not violated any listed behaviors — violations are CRITICALs
    - Flag misalignments as WARNINGs or CRITICALs
 
 8. **Output a tiered report**:

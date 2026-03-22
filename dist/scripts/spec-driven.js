@@ -70,7 +70,7 @@ function propose() {
         process.exit(1);
     }
     fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
-    fs.writeFileSync(path.join(dir, "proposal.md"), `# ${name}\n\n## What\n\n[Describe what this change does]\n\n## Why\n\n[Describe the motivation and context]\n\n## Scope\n\n[List what is in scope and out of scope]\n`);
+    fs.writeFileSync(path.join(dir, "proposal.md"), `# ${name}\n\n## What\n\n[Describe what this change does]\n\n## Why\n\n[Describe the motivation and context]\n\n## Scope\n\n[List what is in scope and out of scope]\n\n## Unchanged Behavior\n\nBehaviors that must not change as a result of this change (leave blank if nothing is at risk):\n`);
     fs.writeFileSync(path.join(dir, "design.md"), `# Design: ${name}\n\n## Approach\n\n[Describe the implementation approach]\n\n## Key Decisions\n\n[List significant decisions and their rationale]\n\n## Alternatives Considered\n\n[Describe alternatives that were ruled out]\n`);
     fs.writeFileSync(path.join(dir, "tasks.md"), `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`);
     console.log(`Created change: ${dir}`);
@@ -267,6 +267,10 @@ function init() {
         "    - Read existing code before modifying it",
         "    - Implement only what the current task requires — no speculative features",
         "    - No abstractions for hypothetical future needs (YAGNI)",
+        "# fileMatch:              # per-pattern rules applied in addition to global rules above",
+        "#   - pattern: \"**/*.test.*\"",
+        "#     rules:",
+        "#       - Tests must cover happy path, error cases, and edge cases",
         "",
     ].join("\n"));
     fs.writeFileSync(path.join(specDir, "specs", "INDEX.md"), `# Specs Index\n\n<!-- One entry per spec file. Updated by /spec-driven-archive after each change. -->\n`);

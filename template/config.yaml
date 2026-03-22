@@ -19,3 +19,7 @@ rules:
     - Read existing code before modifying it
     - Implement only what the current task requires — no speculative features
     - No abstractions for hypothetical future needs (YAGNI)
+# fileMatch:              # per-pattern rules applied in addition to global rules above
+#   - pattern: "**/*.test.*"
+#     rules:
+#       - Tests must cover happy path, error cases, and edge cases

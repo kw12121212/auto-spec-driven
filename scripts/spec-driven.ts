@@ -67,7 +67,7 @@ function propose() {
   fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
   fs.writeFileSync(
     path.join(dir, "proposal.md"),
-    `# ${name}\n\n## What\n\n[Describe what this change does]\n\n## Why\n\n[Describe the motivation and context]\n\n## Scope\n\n[List what is in scope and out of scope]\n`
+    `# ${name}\n\n## What\n\n[Describe what this change does]\n\n## Why\n\n[Describe the motivation and context]\n\n## Scope\n\n[List what is in scope and out of scope]\n\n## Unchanged Behavior\n\nBehaviors that must not change as a result of this change (leave blank if nothing is at risk):\n`
   );
   fs.writeFileSync(
     path.join(dir, "design.md"),
@@ -286,6 +286,10 @@ function init() {
       "    - Read existing code before modifying it",
       "    - Implement only what the current task requires — no speculative features",
       "    - No abstractions for hypothetical future needs (YAGNI)",
+      "# fileMatch:              # per-pattern rules applied in addition to global rules above",
+      "#   - pattern: \"**/*.test.*\"",
+      "#     rules:",
+      "#       - Tests must cover happy path, error cases, and edge cases",
       "",
     ].join("\n")
   );

@@ -26,17 +26,22 @@ You are helping the user implement a spec-driven change.
    ```
    Show the user the task summary (total, complete, remaining).
 
-4. **Implement tasks** — work through each `- [ ]` task in order:
+4. **Check for unresolved markers** — scan proposal.md, design.md, and all delta spec files for `[NEEDS CLARIFICATION]` markers:
+   - If any are found, list each one and **stop** — do not proceed to implementation
+   - Ask the user to resolve the ambiguities (edit the artifacts directly or use `/spec-driven-modify`)
+   - Only continue once all markers are resolved
+
+5. **Implement tasks** — work through each `- [ ]` task in order:
    - Read relevant code before making changes
    - Implement the task
    - Mark it complete in tasks.md by changing `- [ ]` to `- [x]`
    - Briefly confirm what was done before moving to the next task
 
-5. **Update delta specs** — after all tasks are done, re-read each file in `changes/<name>/specs/` and verify it accurately reflects what was actually implemented:
+6. **Update delta specs** — after all tasks are done, re-read each file in `changes/<name>/specs/` and verify it accurately reflects what was actually implemented:
    - If the implementation diverged from the original plan, update the affected files
    - If additional spec files need to be created or modified, do so now
 
-6. **On completion** — when all tasks are done and delta spec is accurate:
+7. **On completion** — when all tasks are done and delta spec is accurate:
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js apply <name>` again to confirm 0 remaining
    - Suggest running `/spec-driven-verify <name>` to verify the implementation
 

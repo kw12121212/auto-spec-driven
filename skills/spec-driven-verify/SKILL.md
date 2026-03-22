@@ -22,12 +22,17 @@ You are helping the user verify a spec-driven change before archiving.
    ```
    If `remaining > 0`, list the incomplete tasks. These are CRITICAL issues.
 
-4. **Implementation evidence check** — for each completed task in tasks.md:
+4. **Clarification check** — scan proposal.md, design.md, and all delta spec files for `[NEEDS CLARIFICATION]` markers:
+   - Any unresolved marker in proposal.md or design.md is a CRITICAL — implementation cannot proceed with ambiguous requirements
+   - Any unresolved marker in delta spec files is a CRITICAL — the spec cannot be archived in an ambiguous state
+   - The script also reports these as warnings; treat them as CRITICALs here
+
+6. **Implementation evidence check** — for each completed task in tasks.md:
    - Identify what code or files the task should have changed
    - Verify the change actually exists (read relevant files)
    - Note any tasks with no visible evidence as WARNINGs
 
-5. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
+7. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
    - Does the implementation match what was proposed?
    - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
    - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.
@@ -35,7 +40,7 @@ You are helping the user verify a spec-driven change before archiving.
    - If config.yaml has a `rules` field, check whether the implementation and artifacts comply — violations are WARNINGs
    - Flag misalignments as WARNINGs or CRITICALs
 
-6. **Output a tiered report**:
+8. **Output a tiered report**:
    ```
    CRITICAL (blocks archive):
      - [list or "none"]
@@ -47,7 +52,7 @@ You are helping the user verify a spec-driven change before archiving.
      - [list or "none"]
    ```
 
-7. **Recommend next step**:
+9. **Recommend next step**:
    - If CRITICAL issues: address them before archiving
    - If only WARNINGs: ask user if they want to address them or proceed
    - If clean: suggest `/spec-driven-archive <name>`

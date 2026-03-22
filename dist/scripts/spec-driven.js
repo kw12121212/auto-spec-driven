@@ -180,6 +180,9 @@ function verify() {
                 else if (!/^## (ADDED|MODIFIED|REMOVED) Requirements$/m.test(stripped)) {
                     errors.push(`specs/${file} is missing section marker — add '## ADDED Requirements', '## MODIFIED Requirements', or '## REMOVED Requirements' before each group of requirements`);
                 }
+                if (raw.includes("[NEEDS CLARIFICATION")) {
+                    warnings.push(`specs/${file} has unresolved [NEEDS CLARIFICATION] markers`);
+                }
             }
         }
     }
@@ -196,6 +199,9 @@ function verify() {
         }
         if (content.includes("[Describe") || content.includes("[List")) {
             warnings.push(`${file} contains unfilled placeholders`);
+        }
+        if (content.includes("[NEEDS CLARIFICATION")) {
+            warnings.push(`${file} has unresolved [NEEDS CLARIFICATION] markers`);
         }
     }
     const tasksPath = path.join(dir, "tasks.md");

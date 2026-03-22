@@ -18,11 +18,13 @@ You are helping the user archive a completed spec-driven change.
    > "This change has X incomplete tasks. Archiving will preserve them as-is. Are you sure you want to proceed?"
    Wait for confirmation before continuing.
 
-3. **Confirm specs are up to date** — read `.spec-driven/changes/<name>/tasks.md` and check whether a "Update specs" task exists and is marked complete. Then:
-   - If the task is present and marked `[x]`: proceed.
-   - If the task is present but unchecked `[ ]`: block and tell the user — this should have been caught in step 2, but remind them to update `.spec-driven/specs/` before archiving.
-   - If no such task exists: ask the user to confirm — "Has `.spec-driven/specs/` been updated to reflect this change, or does this change not affect observable behavior?"
-   Wait for confirmation before continuing.
+3. **Merge delta specs** — read `.spec-driven/changes/<name>/specs/delta.md`:
+   - If the file has no content (all sections empty): ask the user to confirm this change has no observable spec impact before continuing.
+   - If any section has content, merge into `.spec-driven/specs/`:
+     - **ADDED**: find or create the appropriate spec file and append the new requirements
+     - **MODIFIED**: locate the existing requirement by name and update it in place
+     - **REMOVED**: locate the requirement and delete it; remove the file if it becomes empty
+   - Briefly summarize what changed in `specs/` after merging.
 
 4. **Archive the change** — run:
    ```
@@ -35,6 +37,6 @@ You are helping the user archive a completed spec-driven change.
 
 ## Rules
 - Always check for incomplete tasks before archiving
-- Always confirm specs are up to date before archiving — this is a hard gate, not optional
+- Always merge delta specs before archiving — this is a hard gate, not optional
 - Do not skip the incomplete-task warning — let the user make an informed decision
 - Do not delete anything — archive only moves, never deletes

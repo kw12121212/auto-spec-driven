@@ -10,8 +10,9 @@ You are helping the user implement a spec-driven change.
 
 1. **Select the change** — run `node {{SKILL_DIR}}/scripts/spec-driven.js modify` to list active changes. Ask which change to apply. If already specified, use it.
 
-2. **Load context** — read all three artifacts:
+2. **Load context** — read all four artifacts:
    - `.spec-driven/changes/<name>/proposal.md` — what and why
+   - `.spec-driven/changes/<name>/specs/delta.md` — spec changes for this change
    - `.spec-driven/changes/<name>/design.md` — approach and decisions
    - `.spec-driven/changes/<name>/tasks.md` — the checklist
    Also read `.spec-driven/config.yaml` for project context and `.spec-driven/specs/` for current state specs. If config.yaml has a `rules` field, treat those rules as binding constraints throughout implementation.
@@ -28,7 +29,11 @@ You are helping the user implement a spec-driven change.
    - Mark it complete in tasks.md by changing `- [ ]` to `- [x]`
    - Briefly confirm what was done before moving to the next task
 
-5. **On completion** — when all tasks are done:
+5. **Update delta spec** — after all tasks are done, re-read `specs/delta.md` and verify it accurately reflects what was actually implemented:
+   - If the implementation diverged from the original plan, update the ADDED/MODIFIED/REMOVED sections accordingly
+   - If the change turned out to have no spec impact, write a brief explanation in the file
+
+6. **On completion** — when all tasks are done and delta spec is accurate:
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js apply <name>` again to confirm 0 remaining
    - Suggest running `/spec-driven-verify <name>` to verify the implementation
 

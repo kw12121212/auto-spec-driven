@@ -27,9 +27,9 @@ You are helping the user verify a spec-driven change before archiving.
    - Verify the change actually exists (read relevant files)
    - Note any tasks with no visible evidence as WARNINGs
 
-5. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, and `.spec-driven/changes/<name>/proposal.md`:
+5. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and `.spec-driven/changes/<name>/specs/delta.md`:
    - Does the implementation match what was proposed?
-   - If behavior changed, were specs updated?
+   - Does delta.md accurately describe what was implemented? Empty delta with real behavior changes is a CRITICAL.
    - If config.yaml has a `rules` field, check whether the implementation and artifacts comply — violations are WARNINGs
    - Flag misalignments as WARNINGs or CRITICALs
 

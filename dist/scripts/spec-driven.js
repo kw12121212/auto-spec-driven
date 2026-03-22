@@ -59,12 +59,14 @@ function propose() {
         console.error(`Error: change '${name}' already exists at ${dir}`);
         process.exit(1);
     }
-    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
     fs.writeFileSync(path.join(dir, "proposal.md"), `# ${name}\n\n## What\n\n[Describe what this change does]\n\n## Why\n\n[Describe the motivation and context]\n\n## Scope\n\n[List what is in scope and out of scope]\n`);
+    fs.writeFileSync(path.join(dir, "specs", "delta.md"), `# Spec Delta: ${name}\n\nDescribe what this change adds, modifies, or removes from the system spec.\nLeave a section empty if it does not apply.\n\n## ADDED Requirements\n\n<!-- New observable behaviors introduced by this change -->\n\n## MODIFIED Requirements\n\n<!-- Existing requirements that changed. Include a "Previously:" note -->\n\n## REMOVED Requirements\n\n<!-- Requirements that no longer apply. Include a reason -->\n`);
     fs.writeFileSync(path.join(dir, "design.md"), `# Design: ${name}\n\n## Approach\n\n[Describe the implementation approach]\n\n## Key Decisions\n\n[List significant decisions and their rationale]\n\n## Alternatives Considered\n\n[Describe alternatives that were ruled out]\n`);
-    fs.writeFileSync(path.join(dir, "tasks.md"), `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n- [ ] Update specs if behavior changed\n`);
+    fs.writeFileSync(path.join(dir, "tasks.md"), `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`);
     console.log(`Created change: ${dir}`);
     console.log(`  ${path.join(dir, "proposal.md")}`);
+    console.log(`  ${path.join(dir, "specs", "delta.md")}`);
     console.log(`  ${path.join(dir, "design.md")}`);
     console.log(`  ${path.join(dir, "tasks.md")}`);
 }
@@ -95,7 +97,7 @@ function modify() {
         process.exit(1);
     }
     console.log(`Artifacts for '${name}':`);
-    for (const artifact of ["proposal.md", "design.md", "tasks.md"]) {
+    for (const artifact of ["proposal.md", "specs/delta.md", "design.md", "tasks.md"]) {
         const p = path.join(dir, artifact);
         console.log(`  ${p}${fs.existsSync(p) ? "" : " (missing)"}`);
     }
@@ -128,6 +130,23 @@ function verify() {
         errors.push(`Change directory not found: ${dir}`);
         console.log(JSON.stringify({ valid: false, warnings, errors }, null, 2));
         process.exit(0);
+    }
+    const deltaPath = path.join(dir, "specs", "delta.md");
+    if (!fs.existsSync(deltaPath)) {
+        errors.push("Missing required artifact: specs/delta.md");
+    }
+    else {
+        const skipLines = new Set([
+            "Leave a section empty if it does not apply.",
+            "Describe what this change adds, modifies, or removes from the system spec.",
+        ]);
+        const hasContent = fs.readFileSync(deltaPath, "utf-8").split("\n").some(l => {
+            const t = l.trim();
+            return t && !t.startsWith("#") && !t.startsWith("<!--") && !t.startsWith("-->") && !skipLines.has(t);
+        });
+        if (!hasContent) {
+            warnings.push("specs/delta.md has no content — fill in ADDED/MODIFIED/REMOVED or confirm no spec changes");
+        }
     }
     for (const file of ["proposal.md", "design.md", "tasks.md"]) {
         const p = path.join(dir, file);

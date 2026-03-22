@@ -2,6 +2,53 @@
 
 A lightweight spec-driven development framework: 7 Claude skills + thin TypeScript scaffolding.
 
+## How It Helps AI Programming
+
+AI coding agents are capable but tend to drift — they lose track of existing behavior, expand scope, make inconsistent decisions, and leave no record of why things were built a certain way. spec-driven addresses this with three layers of structure.
+
+### Layer 1: `specs/` — the system's long-term memory
+
+Instead of reading the entire codebase to understand what the system does, the AI reads `specs/`:
+
+- `INDEX.md` navigates the full spec collection at a glance
+- Each spec file describes observable behavior using RFC 2119 format (`### Requirement:`, GIVEN/WHEN/THEN scenarios)
+- Both `propose` and `apply` are required to read INDEX.md and all relevant spec files before generating anything
+
+This prevents the AI from introducing conflicting or duplicate behavior — it knows what already exists.
+
+### Layer 2: change artifacts — structured context per change
+
+Every change is a folder with four files, each serving a distinct purpose:
+
+| File | Content | Effect on AI |
+|------|---------|--------------|
+| `proposal.md` | What & Why | Constrains the AI to the stated goal |
+| `specs/` | Delta (ADDED/MODIFIED/REMOVED) | Makes spec intent explicit, not implicit |
+| `design.md` | How — approach and decisions | Prevents the AI from reinventing the approach mid-task |
+| `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
+
+### Layer 3: 7 skills — explicit constraints on AI behavior
+
+Each skill is a precise prompt that specifies:
+- Exactly which files to read (no vague "read the codebase")
+- What to do and what not to do (`propose` does not touch code; `apply` marks tasks complete one at a time)
+- Hard rules enforced by the verify script (spec format violations block archive)
+
+The TypeScript CLI handles all filesystem operations; the AI handles content and judgment.
+
+### Problems solved
+
+| Problem | Solution |
+|---------|----------|
+| AI doesn't know existing system behavior | `specs/` with INDEX.md gives structured, navigable system state |
+| AI expands scope | `proposal.md` defines explicit scope; `tasks.md` controls steps |
+| AI does too much at once | `apply` enforces one task at a time, marked immediately |
+| Specs drift from code over time | Delta specs travel with each change; archive force-merges them back |
+| Past decisions are lost | `design.md` records rationale; `archive/` preserves the full change history |
+| Spec quality is inconsistent | RFC 2119 + Requirement/Scenario format enforced; violations are errors, not warnings |
+
+---
+
 ## Quick Start
 
 **One-line install (curl):**
@@ -41,52 +88,54 @@ bash install.sh --project /path/to/project       # project-local at specified pa
 
 > `~/.claude/skills/` is read by both Claude Code and OpenCode, so `--cli all` installs once and works everywhere.
 
+## Workflow
+
+```
+init → propose → apply → verify → archive
+```
+
+1. **init** — create `.spec-driven/` with config.yaml, specs/INDEX.md, and specs/
+2. **propose** — read existing specs, scaffold all four artifacts, populate delta specs
+3. **apply** — implement tasks one by one; update delta specs to match what was built
+4. **verify** — check task completion, implementation evidence, spec format, and alignment
+5. **archive** — merge delta specs into `specs/` by file path, update INDEX.md, move to archive/
+
+Use **modify** to refine any artifact mid-flight. Use **cancel** to abandon a change.
+
 ## Skills
 
 | Skill | What it does |
 |-------|-------------|
 | `/spec-driven-init` | Initialize `.spec-driven/` in a project and fill config.yaml |
-| `/spec-driven-propose` | Scaffold a new change: proposal.md, specs/delta.md, design.md, tasks.md |
+| `/spec-driven-propose` | Read existing specs, scaffold a new change with all four artifacts |
 | `/spec-driven-modify` | Edit an existing change artifact |
-| `/spec-driven-apply` | Implement tasks one by one, marking each complete; update delta spec |
+| `/spec-driven-apply` | Implement tasks one by one, update delta specs when done |
 | `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
-| `/spec-driven-archive` | Merge delta specs into specs/, then move change to archive/ |
+| `/spec-driven-archive` | Merge delta specs into specs/, update INDEX.md, move to archive/ |
 | `/spec-driven-cancel` | Permanently delete an in-progress change (with confirmation) |
-
-## Workflow
-
-```
-init → propose → modify → apply → verify → archive
-```
-
-1. **init** a project to create `.spec-driven/` with config.yaml and specs/
-2. **propose** a change to scaffold all four artifacts
-3. **modify** artifacts to refine the plan
-4. **apply** to implement tasks (marks `- [x]` as each completes; keeps delta spec accurate)
-5. **verify** to check implementation matches the proposal and specs
-6. **archive** to merge delta specs into `specs/` and move the change to `changes/archive/YYYY-MM-DD-<name>/`
 
 ## Project Structure
 
-After running `/spec-driven-propose` in a project, you get:
-
 ```
 .spec-driven/
-├── config.yaml          # Project context and rules
-├── specs/               # Current-state specs (what the system does)
+├── config.yaml              # Project context and rules (injected into every skill)
+├── specs/
+│   ├── INDEX.md             # Top-level index of all spec files
+│   ├── README.md            # Spec format and conventions
+│   └── <category>/          # One directory per domain area
+│       └── <topic>.md       # Requirements in RFC 2119 format
 └── changes/
     ├── <change-name>/
     │   ├── proposal.md      # What & why
-    │   ├── specs/
-    │   │   └── delta.md     # Spec changes (ADDED/MODIFIED/REMOVED Requirements)
-    │   ├── design.md        # How (approach, decisions)
+    │   ├── specs/           # Delta specs mirroring specs/ structure
+    │   │   └── <category>/
+    │   │       └── <topic>.md  # ADDED / MODIFIED / REMOVED Requirements
+    │   ├── design.md        # How (approach, decisions, alternatives)
     │   └── tasks.md         # Implementation checklist
-    └── archive/             # Completed changes
+    └── archive/             # Completed changes (YYYY-MM-DD-<name>/)
 ```
 
 ## Spec Format
-
-Specs use a structured format with RFC 2119 keywords:
 
 ```markdown
 ### Requirement: <name>
@@ -98,12 +147,13 @@ The system MUST/SHOULD/MAY <observable behavior>.
 - THEN <expected outcome>
 ```
 
-Delta specs (`specs/delta.md`) use `## ADDED Requirements`, `## MODIFIED Requirements`, and `## REMOVED Requirements` sections. At archive time, these are merged into the main `specs/` collection.
+**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).
+
+Delta specs use `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`. At archive time each delta file is merged into its corresponding main spec file by matching `### Requirement: <name>`.
 
 ## Scripts
 
 Scripts handle filesystem mechanics only — skills handle intelligent content.
-All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project root.
 
 ```bash
 node dist/scripts/spec-driven.js propose <name>  # Create change scaffold
@@ -113,17 +163,4 @@ node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → 
 node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/
 node dist/scripts/spec-driven.js cancel <name>   # Delete change (no archive)
 node dist/scripts/spec-driven.js init [path]     # Bootstrap .spec-driven/ scaffold
-```
-
-## Initialize a Project
-
-```bash
-/spec-driven-init
-```
-
-Or directly:
-
-```bash
-node dist/scripts/spec-driven.js init /your/project
-# Then edit /your/project/.spec-driven/config.yaml to add project context
 ```

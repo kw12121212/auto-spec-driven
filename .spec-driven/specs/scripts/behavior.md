@@ -1,34 +1,51 @@
 # Scripts Behavior
 
-## propose.js
+### Requirement: propose-creates-artifacts
+`spec-driven.js propose <name>` MUST create `.spec-driven/changes/<name>/` containing
+`proposal.md`, `specs/delta.md`, `design.md`, and `tasks.md` with seed content.
+The name MUST match `^[a-z0-9]+(-[a-z0-9]+)*$`. Exits 1 if invalid or already exists.
 
-- Accepts a single kebab-case argument matching `^[a-z0-9]+(-[a-z0-9]+)*$`
-- Creates `.spec-driven/changes/<name>/` with proposal.md, design.md, tasks.md
-- Exits 1 if the name is invalid or the change already exists
-- Seed files contain placeholder text using `[Describe ...]` and `[List ...]` patterns
+### Requirement: modify-lists-and-shows
+`spec-driven.js modify` with no argument MUST list all active change directories,
+excluding `archive/`. With a name argument, MUST print paths to all four artifacts
+(`proposal.md`, `specs/delta.md`, `design.md`, `tasks.md`).
+Exits 1 if the named change does not exist.
 
-## modify.js
+### Requirement: apply-tracks-tasks
+`spec-driven.js apply <name>` MUST parse `tasks.md` for `- [ ]` and `- [x]` checkboxes
+and output JSON `{ total, complete, remaining, tasks[] }`.
+Exits 1 if the change or tasks.md does not exist.
 
-- With no argument: lists all directories under `.spec-driven/changes/` excluding `archive/`
-- With a name argument: prints paths to proposal.md, design.md, tasks.md for that change
-- Exits 1 if the named change does not exist
+### Requirement: verify-checks-artifacts
+`spec-driven.js verify <name>` MUST check that `proposal.md`, `specs/delta.md`,
+`design.md`, and `tasks.md` exist and are non-empty.
+Output is always `{ valid, warnings[], errors[] }` and exits 0.
+`valid` is false only when `errors` is non-empty.
 
-## apply.js
+#### Scenario: delta-spec-missing
+- GIVEN `specs/delta.md` does not exist
+- WHEN verify is run
+- THEN errors contains a missing artifact message and valid is false
 
-- Parses `tasks.md` for `- [ ]` and `- [x]` checkboxes (case-insensitive, leading whitespace allowed)
-- Outputs JSON: `{ total, complete, remaining, tasks[] }`
-- Exits 1 if the change or tasks.md does not exist
+#### Scenario: delta-spec-empty
+- GIVEN `specs/delta.md` has no content beyond the seed template
+- WHEN verify is run
+- THEN warnings contains an empty delta spec message
 
-## verify.js
+#### Scenario: delta-spec-format-violation
+- GIVEN `specs/delta.md` has content but no `### Requirement:` headings
+- WHEN verify is run
+- THEN errors contains a format violation message and valid is false
 
-- Checks each artifact (proposal.md, design.md, tasks.md) exists and is non-empty
-- Emits warnings for unfilled placeholders (`[Describe`, `[List`)
-- Emits warnings if tasks.md has no checkboxes or has incomplete tasks
-- Always exits 0; errors and warnings are in the JSON payload
-- Output: `{ valid, warnings[], errors[] }` — `valid` is false only when errors is non-empty
+### Requirement: archive-moves-change
+`spec-driven.js archive <name>` MUST move `.spec-driven/changes/<name>/` to
+`.spec-driven/changes/archive/YYYY-MM-DD-<name>/`, creating the archive directory
+if needed. Exits 1 if the source does not exist or the target already exists.
 
-## archive.js
+### Requirement: cancel-removes-change
+`spec-driven.js cancel <name>` MUST delete the change directory without archiving.
+Exits 1 if the change does not exist.
 
-- Moves `.spec-driven/changes/<name>/` to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/`
-- Creates the archive directory if it does not exist
-- Exits 1 if the change does not exist or the archive target already exists
+### Requirement: init-bootstraps-project
+`spec-driven.js init [path]` MUST create `.spec-driven/` with `config.yaml` and
+`specs/README.md` at the given path (or CWD). Exits 1 if `.spec-driven/` already exists.

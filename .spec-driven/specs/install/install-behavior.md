@@ -1,31 +1,25 @@
 # Install Behavior
 
-## Global install (default)
+### Requirement: global-install-destination
+The installer MUST copy skills to `~/.agent/skills/<name>/` by default.
+Each skill directory contains `SKILL.md` and a `scripts/` directory.
 
-- Skills are installed to `~/.agents/skills/<name>/`
-- Each skill directory contains `SKILL.md` and a `scripts/` directory
+### Requirement: cli-symlinks
+The installer MUST create symlinks from CLI-specific directories into the agent store:
+- `~/.claude/skills/<name>` → `~/.agent/skills/<name>` for Claude Code
+- `~/.config/opencode/skills/<name>` → `~/.agent/skills/<name>` for OpenCode
 
-## Local clone mode
+### Requirement: cli-targeting
+The `--cli` flag restricts which CLI symlinks are created.
+- `--cli claude`: only `~/.claude/skills/`
+- `--cli opencode`: only `~/.config/opencode/skills/`
+- Default (no flag): both CLIs
 
-- Detected when `$SCRIPT_DIR/skills/` exists
-- Creates directory symlinks: `~/.agents/skills/<name>` → `repo/skills/<name>/`
-- The `scripts/` inside each skill symlinks to `repo/dist/scripts/`
-- Editing skill files in the repo takes effect immediately without reinstalling
+### Requirement: project-install
+With `--project [path]`, skills MUST install to `.agent/skills/` under the given path,
+with symlinks in `.claude/skills/` and `.opencode/skills/` within the same path.
+Running with `--project` on a directory without `.spec-driven/` initializes it automatically.
 
-## Curl mode
-
-- Detected when `$SCRIPT_DIR/skills/` does not exist
-- Downloads `SKILL.md` and all compiled scripts into `~/.agents/skills/<name>/`
-- Updates require re-running the curl command
-
-## CLI targets
-
-- `--cli all` (default): `~/.agents/skills/`
-- `--cli claude`: `~/.claude/skills/`
-- `--cli opencode`: `~/.config/opencode/skills/`
-- `--project [path]`: installs to `.agents/skills/` under the given path (or CWD)
-
-## Uninstall
-
-- Removes symlinks directly
-- Removes curl-installed directories only if they contain no unexpected files
+### Requirement: uninstall
+The `--uninstall` flag MUST remove all CLI symlinks created by the installer.
+Copied agent store directories are only removed if they contain no unexpected files.

@@ -6,8 +6,8 @@ Instructions for AI agents working in this repository.
 
 `slim-spec-driven` is a lightweight spec-driven development framework. It ships:
 
-- **7 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
-- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 7 subcommands
+- **8 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
+- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 8 subcommands
 - **`install.sh`** — installs skills to `~/.slim-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
@@ -83,7 +83,8 @@ This repo uses its own workflow. To propose a change to this project:
 ```
 /spec-driven-propose   → fills .spec-driven/changes/<name>/
 /spec-driven-apply     → implements tasks, marks [x]
-/spec-driven-verify    → checks implementation
+/spec-driven-verify    → checks completion and spec alignment
+/spec-driven-review    → reviews code quality
 /spec-driven-archive   → moves to archive/
 ```
 

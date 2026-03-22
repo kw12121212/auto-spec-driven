@@ -1,6 +1,6 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 5 Claude skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 7 Claude skills + thin TypeScript scaffolding.
 
 ## Quick Start
 
@@ -45,23 +45,26 @@ bash install.sh --project /path/to/project       # project-local at specified pa
 
 | Skill | What it does |
 |-------|-------------|
-| `/spec-driven-propose` | Scaffold a new change with proposal.md, design.md, tasks.md |
+| `/spec-driven-init` | Initialize `.spec-driven/` in a project and fill config.yaml |
+| `/spec-driven-propose` | Scaffold a new change: proposal.md, specs/delta.md, design.md, tasks.md |
 | `/spec-driven-modify` | Edit an existing change artifact |
-| `/spec-driven-apply` | Implement tasks one by one, marking each complete |
-| `/spec-driven-verify` | Check completion and implementation evidence |
-| `/spec-driven-archive` | Move a completed change to archive/ |
+| `/spec-driven-apply` | Implement tasks one by one, marking each complete; update delta spec |
+| `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
+| `/spec-driven-archive` | Merge delta specs into specs/, then move change to archive/ |
+| `/spec-driven-cancel` | Permanently delete an in-progress change (with confirmation) |
 
 ## Workflow
 
 ```
-propose → modify → apply → verify → archive
+init → propose → modify → apply → verify → archive
 ```
 
-1. **propose** a change to get scaffolded artifacts
-2. **modify** artifacts to refine the plan
-3. **apply** to implement tasks (marks `- [x]` as each completes)
-4. **verify** to check implementation matches the proposal
-5. **archive** to move the change to `changes/archive/YYYY-MM-DD-<name>/`
+1. **init** a project to create `.spec-driven/` with config.yaml and specs/
+2. **propose** a change to scaffold all four artifacts
+3. **modify** artifacts to refine the plan
+4. **apply** to implement tasks (marks `- [x]` as each completes; keeps delta spec accurate)
+5. **verify** to check implementation matches the proposal and specs
+6. **archive** to merge delta specs into `specs/` and move the change to `changes/archive/YYYY-MM-DD-<name>/`
 
 ## Project Structure
 
@@ -73,30 +76,54 @@ After running `/spec-driven-propose` in a project, you get:
 ├── specs/               # Current-state specs (what the system does)
 └── changes/
     ├── <change-name>/
-    │   ├── proposal.md  # What & why
-    │   ├── design.md    # How (approach, decisions)
-    │   └── tasks.md     # Implementation checklist
-    └── archive/         # Completed changes
+    │   ├── proposal.md      # What & why
+    │   ├── specs/
+    │   │   └── delta.md     # Spec changes (ADDED/MODIFIED/REMOVED Requirements)
+    │   ├── design.md        # How (approach, decisions)
+    │   └── tasks.md         # Implementation checklist
+    └── archive/             # Completed changes
 ```
+
+## Spec Format
+
+Specs use a structured format with RFC 2119 keywords:
+
+```markdown
+### Requirement: <name>
+The system MUST/SHOULD/MAY <observable behavior>.
+
+#### Scenario: <name>
+- GIVEN <precondition>
+- WHEN <action>
+- THEN <expected outcome>
+```
+
+Delta specs (`specs/delta.md`) use `## ADDED Requirements`, `## MODIFIED Requirements`, and `## REMOVED Requirements` sections. At archive time, these are merged into the main `specs/` collection.
 
 ## Scripts
 
 Scripts handle filesystem mechanics only — skills handle intelligent content.
+All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project root.
 
 ```bash
-node dist/scripts/propose.js <name>   # Create change scaffold
-node dist/scripts/modify.js [name]    # List changes or show artifact paths
-node dist/scripts/apply.js <name>     # Parse tasks.md → JSON status
-node dist/scripts/verify.js <name>    # Validate artifact format → JSON
-node dist/scripts/archive.js <name>   # Move to archive/YYYY-MM-DD-<name>/
+node dist/scripts/spec-driven.js propose <name>  # Create change scaffold
+node dist/scripts/spec-driven.js modify [name]   # List changes or show artifact paths
+node dist/scripts/spec-driven.js apply <name>    # Parse tasks.md → JSON status
+node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → JSON
+node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/
+node dist/scripts/spec-driven.js cancel <name>   # Delete change (no archive)
+node dist/scripts/spec-driven.js init [path]     # Bootstrap .spec-driven/ scaffold
 ```
 
 ## Initialize a Project
 
-Copy the template into your project:
-
 ```bash
-cp -r ~/Code/slim-spec-driven/template /your/project/.spec-driven
+/spec-driven-init
 ```
 
-Then edit `.spec-driven/config.yaml` to add project context.
+Or directly:
+
+```bash
+node dist/scripts/spec-driven.js init /your/project
+# Then edit /your/project/.spec-driven/config.yaml to add project context
+```

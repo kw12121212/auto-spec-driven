@@ -48,7 +48,7 @@ User invokes skill (e.g. /spec-driven-apply)
         ├── reads .spec-driven/specs/           (current state specs)
         ├── reads .spec-driven/changes/<name>/  (artifacts)
         │
-        ├── calls node dist/scripts/*.js        (filesystem operations)
+        ├── calls node dist/scripts/spec-driven.js <cmd>  (filesystem operations)
         │       └── reads/writes .spec-driven/changes/<name>/
         │
         └── reads/writes codebase files         (actual implementation)
@@ -60,7 +60,7 @@ The AI orchestrates everything. Scripts are called by the AI during skill execut
 
 ## The .spec-driven/ Directory
 
-Created by copying `template/` into a project root:
+Created by running `spec-driven.js init` (or `/spec-driven-init`):
 
 ```
 .spec-driven/
@@ -70,6 +70,8 @@ Created by copying `template/` into a project root:
 └── changes/
     ├── <change-name>/   # One directory per active change
     │   ├── proposal.md  # What & why
+    │   ├── specs/
+    │   │   └── delta.md # Spec changes (ADDED/MODIFIED/REMOVED Requirements)
     │   ├── design.md    # How (approach, decisions)
     │   └── tasks.md     # Checklist of - [ ] / - [x] items
     └── archive/         # Completed changes, prefixed YYYY-MM-DD-<name>/
@@ -95,111 +97,68 @@ The `context` field is the most important — it's what skills inject when gener
 
 **proposal.md** — describes *what* and *why*. Sections: `## What`, `## Why`, `## Scope`. No implementation details.
 
+**specs/delta.md** — describes spec impact using `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`. Each requirement uses `### Requirement: <name>` headings and RFC 2119 keywords (MUST/SHOULD/MAY). Scenarios use `#### Scenario:` with GIVEN/WHEN/THEN. At archive time the skill merges these into the main `specs/` collection.
+
 **design.md** — describes *how*. Sections: `## Approach`, `## Key Decisions`, `## Alternatives Considered`.
 
 **tasks.md** — the implementation checklist. Uses standard markdown checkboxes:
 - `- [ ]` incomplete task
 - `- [x]` complete task (case-insensitive `x`)
 
-The `apply.js` script parses these with regex: `^\s*-\s*\[x\]\s+` and `^\s*-\s*\[ \]\s+`.
+The `apply` subcommand parses these with regex: `^\s*-\s*\[x\]\s+` and `^\s*-\s*\[ \]\s+`.
 
 ---
 
 ## Scripts
 
-All scripts live in `scripts/*.ts`, compiled to `dist/scripts/*.js`. They must be run from the **project root** (the directory containing `.spec-driven/`).
+All subcommands live in a single file: `scripts/spec-driven.ts`, compiled to `dist/scripts/spec-driven.js`. Run from the **project root** (the directory containing `.spec-driven/`).
 
-### propose.ts
-
-**Purpose:** Scaffold a new change directory with seed artifact files.
-
-**Usage:**
 ```bash
-node dist/scripts/propose.js <kebab-case-name>
+node dist/scripts/spec-driven.js <subcommand> [args]
 ```
 
-**What it does:**
-1. Validates the name matches `^[a-z0-9]+(-[a-z0-9]+)*$`
-2. Checks `.spec-driven/changes/<name>/` does not already exist
-3. Creates the directory
-4. Writes `proposal.md`, `design.md`, `tasks.md` with placeholder content
+### propose `<name>`
 
-**Output (stdout):**
+Scaffolds a new change directory. Validates the name matches `^[a-z0-9]+(-[a-z0-9]+)*$`. Creates `proposal.md`, `specs/delta.md`, `design.md`, and `tasks.md` with seed content. Exit `1` on duplicate name or invalid name.
+
+**Output:**
 ```
 Created change: .spec-driven/changes/my-feature
   .spec-driven/changes/my-feature/proposal.md
+  .spec-driven/changes/my-feature/specs/delta.md
   .spec-driven/changes/my-feature/design.md
   .spec-driven/changes/my-feature/tasks.md
 ```
 
-**Exit codes:** `0` success, `1` error (duplicate name, invalid name)
-
-**Seed content:** The placeholder text uses `[Describe ...]` and `[List ...]` patterns. `verify.js` checks for these and emits warnings — this is intentional to prompt the AI to fill them in.
+**Seed content:** `proposal.md` and `design.md` use `[Describe ...]`/`[List ...]` placeholders — `verify` checks for these and emits warnings. `specs/delta.md` contains format examples in HTML comments.
 
 ---
 
-### modify.ts
+### modify `[name]`
 
-**Purpose:** List active changes, or show artifact paths for a named change. This is a navigation/discovery utility — it does not modify any files despite its name.
-
-**Usage:**
-```bash
-node dist/scripts/modify.js              # list all active changes
-node dist/scripts/modify.js <name>       # show artifact paths for <name>
-```
-
-**What it does (no name):**
-- Reads `.spec-driven/changes/` directory entries
-- Filters to directories, excludes `archive/`
-- Prints list to stdout
-
-**What it does (with name):**
-- Checks the change directory exists
-- Prints the expected paths for `proposal.md`, `design.md`, `tasks.md`
-- Appends `(missing)` if a file doesn't exist
-
-**Output (no name):**
-```
-Active changes:
-  my-feature
-  another-change
-```
+Navigation/discovery utility — does not modify files. With no argument: lists active changes (excludes `archive/`). With a name: prints paths to all four artifacts, appending `(missing)` if absent. Exit `1` if named change not found.
 
 **Output (with name):**
 ```
 Artifacts for 'my-feature':
   .spec-driven/changes/my-feature/proposal.md
+  .spec-driven/changes/my-feature/specs/delta.md
   .spec-driven/changes/my-feature/design.md
   .spec-driven/changes/my-feature/tasks.md
 ```
 
-**Exit codes:** `0` always (no name case), `0` success / `1` not found (with name)
-
-**Why skills call this:** Skills use the no-argument form to enumerate available changes when the user hasn't specified one. They use the named form to get explicit paths before reading files.
-
 ---
 
-### apply.ts
+### apply `<name>`
 
-**Purpose:** Parse `tasks.md` and output a JSON task status summary.
+Parses `tasks.md` for `- [ ]` and `- [x]` checkboxes (case-insensitive, leading whitespace allowed). Outputs JSON task status. Exit `1` if change or tasks.md missing.
 
-**Usage:**
-```bash
-node dist/scripts/apply.js <name>
-```
-
-**What it does:**
-1. Reads `.spec-driven/changes/<name>/tasks.md`
-2. Scans every line with regex for `- [x]` (complete) and `- [ ]` (incomplete)
-3. Extracts task text by stripping the checkbox prefix
-4. Outputs JSON
-
-**Output (stdout):**
+**Output:**
 ```json
 {
-  "total": 5,
+  "total": 4,
   "complete": 2,
-  "remaining": 3,
+  "remaining": 2,
   "tasks": [
     { "text": "Add the feature", "complete": true },
     { "text": "Write tests", "complete": false }
@@ -207,80 +166,44 @@ node dist/scripts/apply.js <name>
 }
 ```
 
-**Exit codes:** `0` success, `1` error (missing change, missing tasks.md)
-
-**Important detail:** The regex is case-insensitive for `x` — both `- [x]` and `- [X]` count as complete. The regex also allows leading whitespace, so indented tasks in nested lists are counted.
-
-**Skills use this for two purposes:**
-1. Display progress to the user before starting implementation
-2. Confirm all tasks are done after implementation (`remaining === 0`)
+Skills call this twice: before implementation (to show progress) and after (to confirm `remaining === 0`).
 
 ---
 
-### verify.ts
+### verify `<name>`
 
-**Purpose:** Validate artifact format and content quality. Outputs structured JSON — always exits `0`, errors are in the JSON payload.
+Validates artifact format and content quality. Always exits `0`; errors are in the JSON payload. `valid` is `false` only when `errors` is non-empty.
 
-**Usage:**
-```bash
-node dist/scripts/verify.js <name>
-```
+**Checks performed:**
+1. `specs/delta.md` exists (error if missing)
+2. `specs/delta.md` has real content beyond the seed template (warning if empty)
+3. `specs/delta.md` content uses `### Requirement:` headings (error if not — format is mandatory)
+4. `proposal.md`, `design.md`, `tasks.md` exist and are non-empty (error if not)
+5. Unfilled placeholders (`[Describe`, `[List`) in artifacts → warning
+6. `tasks.md` has no checkboxes → warning; has incomplete tasks → warning
 
-**What it does:**
-1. Checks change directory exists (error if not)
-2. For each of `proposal.md`, `design.md`, `tasks.md`:
-   - Checks file exists (error if missing)
-   - Checks file is non-empty (error if empty)
-   - Checks for unfilled placeholders (`[Describe`, `[List`) → warning
-3. Checks `tasks.md` has at least one checkbox → warning if none
-4. Checks all tasks are complete → warning if any remain
-
-**Output (stdout):**
+**Output:**
 ```json
-{
-  "valid": true,
-  "warnings": [
-    "proposal.md contains unfilled placeholders",
-    "tasks.md has incomplete tasks"
-  ],
-  "errors": []
-}
+{ "valid": true, "warnings": ["..."], "errors": [] }
 ```
-
-**`valid` field:** `true` when `errors` is empty. Warnings do not affect `valid`.
-
-**Exit codes:** Always `0`. The calling skill decides how to handle errors/warnings.
-
-**Design rationale:** `verify.js` does format/completeness checking only — it cannot check whether the *implementation* actually matches the proposal. That semantic check is the skill's responsibility (`spec-driven-verify` reads actual code files).
 
 ---
 
-### archive.ts
+### archive `<name>`
 
-**Purpose:** Move a completed change to the archive directory with a date prefix.
+Moves `.spec-driven/changes/<name>/` to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/`. Creates `archive/` if needed. Exit `1` if source not found or target already exists. This is a move, not a delete — archive accumulates all completed changes as a historical record.
 
-**Usage:**
-```bash
-node dist/scripts/archive.js <name>
-```
+---
 
-**What it does:**
-1. Checks `.spec-driven/changes/<name>/` exists
-2. Computes today's date as `YYYY-MM-DD` using `new Date().toISOString().slice(0, 10)`
-3. Checks `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` does not already exist
-4. Creates `archive/` if needed
-5. Moves the directory with `fs.renameSync`
+### cancel `<name>`
 
-**Output (stdout):**
-```
-Archived: .spec-driven/changes/my-feature → .spec-driven/changes/archive/2026-03-17-my-feature
-```
+Deletes `.spec-driven/changes/<name>/` without archiving. Exit `1` if not found. The skill requires explicit user confirmation before calling this — deletion is irreversible.
 
-**Exit codes:** `0` success, `1` error (not found, archive target already exists)
+---
 
-**Important:** This is a move, not a delete. The archive directory accumulates all completed changes as a historical record.
+### init `[path]`
 
-**Edge case:** If the same change name is archived twice on the same day, the second attempt fails because the target path already exists. The skill handles this by warning the user before calling the script.
+Creates `.spec-driven/` scaffold at the given path (or CWD): `config.yaml`, `specs/README.md`, and `changes/` directory. Exit `1` if `.spec-driven/` already exists.
 
 ---
 
@@ -301,39 +224,47 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 
 `description` is critical — it's what the AI uses to decide whether to auto-invoke the skill. Keep it precise.
 
+### spec-driven-init
+
+**Trigger:** User wants to set up the spec-driven workflow in a project.
+
+**Flow:**
+1. Confirms target directory
+2. Runs `spec-driven.js init [path]` to create scaffold
+3. Guides the user to fill in `config.yaml` context (project description, tech stack, conventions)
+4. Suggests `/spec-driven-propose` to create the first change
+
+---
+
 ### spec-driven-propose
 
 **Trigger:** User wants to start planning a new change.
 
 **Flow:**
 1. Gets change name from user (or asks)
-2. Reads `.spec-driven/config.yaml` for project context
-3. Runs `node dist/scripts/propose.js <name>` to create scaffold
+2. Reads `.spec-driven/config.yaml` for project context and rules
+3. Runs `spec-driven.js propose <name>` to create scaffold
 4. Fills `proposal.md` — what and why, no implementation detail
-5. Fills `design.md` — approach, decisions, alternatives
-6. Fills `tasks.md` — atomic, independently-completable checkboxes
-7. Shows user the three files and asks for adjustments
+5. Fills `specs/delta.md` — ADDED/MODIFIED/REMOVED requirements using `### Requirement:` format and RFC 2119 keywords
+6. Fills `design.md` — approach, decisions, alternatives
+7. Fills `tasks.md` — atomic, independently-completable checkboxes (no "Update specs" task — delta spec is the spec artifact)
+8. Shows user the four files and asks for adjustments
 
-**Key constraint:** Planning only — does not touch codebase files. The rule "do not implement anything" is explicit in the prompt.
-
-**How it uses the script:** The script creates the directory structure and seed files with placeholders. The skill then overwrites the placeholder content with real content. The script's role is purely filesystem scaffolding.
+**Key constraint:** Planning only — does not touch codebase files.
 
 ---
 
 ### spec-driven-modify
 
-**Trigger:** User wants to edit an existing change's proposal, design, or task list.
+**Trigger:** User wants to edit an existing change artifact.
 
 **Flow:**
-1. Runs `node dist/scripts/modify.js` to list changes (if user hasn't specified one)
-2. Runs `node dist/scripts/modify.js <name>` to get artifact paths
-3. Reads the selected artifact
-4. Asks what to change (if not specified)
-5. Applies edits, shows summary
+1. Runs `spec-driven.js modify` to list changes
+2. Runs `spec-driven.js modify <name>` to get artifact paths
+3. Reads the selected artifact (`proposal.md`, `specs/delta.md`, `design.md`, or `tasks.md`)
+4. Applies edits, shows summary
 
-**Key constraint:** For `tasks.md`, never uncheck a `- [x]` task unless explicitly asked. This protects implementation progress from being accidentally erased during plan refinement.
-
-**Why it exists as a separate skill from propose:** Modifying mid-flight requires reading existing content, understanding what's already done, and making targeted edits. Propose starts from scratch. Different mental model, different rules.
+**Key constraint:** Never uncheck a `- [x]` task unless the user explicitly asks.
 
 ---
 
@@ -342,19 +273,15 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 **Trigger:** User wants to implement a change.
 
 **Flow:**
-1. Runs `node dist/scripts/modify.js` to list changes
-2. Reads all three artifacts + `config.yaml` + `specs/` for full context
-3. Runs `node dist/scripts/apply.js <name>` to show task summary
-4. For each `- [ ]` task:
-   - Reads relevant code
-   - Implements the task
-   - Marks `- [x]` in `tasks.md` immediately
-5. Runs `node dist/scripts/apply.js <name>` again at end to confirm `remaining === 0`
-6. Suggests `/spec-driven-verify`
+1. Runs `spec-driven.js modify` to list changes
+2. Reads all four artifacts + `config.yaml` + `specs/` for full context
+3. Runs `spec-driven.js apply <name>` to show task summary
+4. For each `- [ ]` task: reads relevant code, implements, marks `- [x]` immediately
+5. After all tasks: reviews `specs/delta.md` and updates it to reflect what was actually implemented
+6. Runs `spec-driven.js apply <name>` again to confirm `remaining === 0`
+7. Suggests `/spec-driven-verify`
 
-**Key constraint:** Mark tasks complete one at a time, immediately after completing each — not in bulk at the end. This keeps the task list as an accurate progress tracker if the session is interrupted.
-
-**Context loading pattern:** The skill loads all three artifacts before writing a single line of code. This prevents the AI from making up an approach that contradicts the design doc.
+**Key constraint:** Mark tasks complete one at a time immediately — not in bulk. Update `specs/delta.md` to stay accurate with the actual implementation.
 
 ---
 
@@ -363,23 +290,17 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 **Trigger:** User wants to confirm a change is complete and correct before archiving.
 
 **Flow:**
-1. Runs `node dist/scripts/verify.js <name>` → format/completeness check
-2. Runs `node dist/scripts/apply.js <name>` → task completion check
+1. Runs `spec-driven.js verify <name>` → format/completeness check (including delta spec format)
+2. Runs `spec-driven.js apply <name>` → task completion check
 3. For each completed task, reads actual code to verify evidence exists
-4. Reads `specs/` and `proposal.md` to check alignment
+4. Reads `specs/`, `config.yaml`, `proposal.md`, and `specs/delta.md` to check alignment
 5. Outputs tiered report: CRITICAL / WARNING / SUGGESTION
 6. Recommends next step based on severity
 
 **Tiers:**
-- **CRITICAL** — blocks archive (incomplete tasks, missing files, implementation doesn't match proposal)
-- **WARNING** — should address but user decides (no tests, specs not updated)
+- **CRITICAL** — blocks archive (incomplete tasks, missing/invalid artifacts, delta spec format violation, implementation doesn't match proposal)
+- **WARNING** — should address but user decides
 - **SUGGESTION** — optional quality improvements
-
-**What the script does vs what the skill does:**
-- `verify.js` checks: files exist, non-empty, no placeholders, checkbox counts
-- The skill checks: does the code actually do what was proposed? are tests passing? are specs updated?
-
-The script is fast and deterministic. The skill's verification requires reading and reasoning about code.
 
 ---
 
@@ -388,13 +309,27 @@ The script is fast and deterministic. The skill's verification requires reading 
 **Trigger:** User wants to close out a completed change.
 
 **Flow:**
-1. Runs `node dist/scripts/modify.js` to list changes
-2. Runs `node dist/scripts/apply.js <name>` → checks for incomplete tasks
-3. If `remaining > 0`: warns user and waits for explicit confirmation
-4. Runs `node dist/scripts/archive.js <name>`
-5. Reports destination path, suggests `/spec-driven-propose` for follow-up work
+1. Runs `spec-driven.js modify` to list changes
+2. Runs `spec-driven.js apply <name>` → checks for incomplete tasks; warns if any remain
+3. Reads `specs/delta.md` and merges into `.spec-driven/specs/`: ADDED requirements appended, MODIFIED replaced by `### Requirement:` name, REMOVED deleted by name
+4. Runs `spec-driven.js archive <name>`
+5. Reports destination path
 
-**Key constraint:** Never skip the incomplete-task warning. The user must make an informed decision. The skill doesn't automatically abort — it waits for confirmation so the user can archive partial work intentionally.
+**Key constraint:** Delta spec merge is mandatory before archiving — cannot be skipped.
+
+---
+
+### spec-driven-cancel
+
+**Trigger:** User wants to abandon an in-progress change.
+
+**Flow:**
+1. Runs `spec-driven.js modify` to list changes
+2. Shows explicit warning: deletion is permanent and irreversible
+3. Waits for user confirmation
+4. Runs `spec-driven.js cancel <name>`
+
+**Key constraint:** Always confirm before deleting. If the change is fully implemented, suggest `/spec-driven-archive` instead.
 
 ---
 
@@ -403,30 +338,37 @@ The script is fast and deterministic. The skill's verification requires reading 
 Each skill orchestrates multiple scripts. Here's the full call graph:
 
 ```
+spec-driven-init
+  └── spec-driven.js init [path]
+
 spec-driven-propose
-  └── propose.js <name>
+  └── spec-driven.js propose <name>
 
 spec-driven-modify
-  ├── modify.js             (list changes)
-  └── modify.js <name>      (get artifact paths)
+  ├── spec-driven.js modify             (list changes)
+  └── spec-driven.js modify <name>      (get artifact paths)
 
 spec-driven-apply
-  ├── modify.js             (list changes)
-  ├── apply.js <name>       (show progress before)
-  └── apply.js <name>       (confirm completion after)
+  ├── spec-driven.js modify             (list changes)
+  ├── spec-driven.js apply <name>       (show progress before)
+  └── spec-driven.js apply <name>       (confirm completion after)
 
 spec-driven-verify
-  ├── modify.js             (list changes)
-  ├── verify.js <name>      (format check)
-  └── apply.js <name>       (task completion check)
+  ├── spec-driven.js modify             (list changes)
+  ├── spec-driven.js verify <name>      (format check)
+  └── spec-driven.js apply <name>       (task completion check)
 
 spec-driven-archive
-  ├── modify.js             (list changes)
-  ├── apply.js <name>       (incomplete task check)
-  └── archive.js <name>     (move to archive)
+  ├── spec-driven.js modify             (list changes)
+  ├── spec-driven.js apply <name>       (incomplete task check)
+  └── spec-driven.js archive <name>     (move to archive)
+
+spec-driven-cancel
+  ├── spec-driven.js modify             (list changes)
+  └── spec-driven.js cancel <name>      (delete change)
 ```
 
-`apply.js` and `modify.js` are called by multiple skills — they are general-purpose utilities. `propose.js` and `archive.js` are called by a single skill each — they implement a specific lifecycle transition.
+`apply` and `modify` are called by multiple skills — they are general-purpose utilities. `propose`, `archive`, `cancel`, and `init` are called by a single skill each — they implement specific lifecycle transitions.
 
 ---
 
@@ -438,58 +380,47 @@ After installation, skills live in a target directory with the following layout:
 
 **Global install (default `--cli all`):**
 ```
-~/.agents/skills/
+~/.agent/skills/
 ├── spec-driven-propose/
 │   ├── SKILL.md
 │   └── scripts/
-│       ├── propose.js
-│       ├── modify.js
-│       ├── apply.js
-│       ├── verify.js
-│       └── archive.js
+│       └── spec-driven.js
 ├── spec-driven-modify/
 │   ├── SKILL.md
-│   └── scripts/ → (same scripts)
+│   └── scripts/ → spec-driven.js (same file)
 ├── spec-driven-apply/  ...
 ├── spec-driven-verify/ ...
-└── spec-driven-archive/...
+├── spec-driven-archive/...
+├── spec-driven-init/   ...
+└── spec-driven-cancel/ ...
 ```
 
 **Global install `--cli claude`:**
 ```
 ~/.claude/skills/
-└── spec-driven-propose/
-    ├── SKILL.md
-    └── scripts/
+└── spec-driven-propose/ → ~/.agent/skills/spec-driven-propose/  (symlink)
+    ...
 ```
 
 **Global install `--cli opencode`:**
 ```
 ~/.config/opencode/skills/
-└── spec-driven-propose/
-    ├── SKILL.md
-    └── scripts/
+└── spec-driven-propose/ → ~/.agent/skills/spec-driven-propose/  (symlink)
+    ...
 ```
 
 **Project-local install (`--project` or `--project /path`):**
 ```
 <project-root>/
-└── .agents/skills/          # --cli all (default)
-    └── spec-driven-propose/
-        ├── SKILL.md
-        └── scripts/
-
-<project-root>/
-└── .claude/skills/          # --cli claude
-    └── spec-driven-propose/
-        ├── SKILL.md
-        └── scripts/
-
-<project-root>/
-└── .opencode/skills/        # --cli opencode
-    └── spec-driven-propose/
-        ├── SKILL.md
-        └── scripts/
+├── .agent/skills/           # agent store (copies)
+│   └── spec-driven-propose/
+│       ├── SKILL.md
+│       └── scripts/
+│           └── spec-driven.js
+├── .claude/skills/          # symlinks → .agent/skills/
+│   └── spec-driven-propose/ → ../.agent/skills/spec-driven-propose/
+└── .opencode/skills/        # symlinks → .agent/skills/
+    └── spec-driven-propose/ → ../.agent/skills/spec-driven-propose/
 ```
 
 **Local clone vs curl — what `scripts/` contains:**
@@ -548,16 +479,18 @@ Curl-installed directories: only removed if the directory contains exactly `SKIL
 
 ### test/run.sh
 
-Fully repeatable — resets state before and after. All 32 tests must pass before committing script changes.
+Fully repeatable — resets state before and after. All 45 tests must pass before committing script changes.
 
 **Structure:**
 ```bash
 reset_state()     # rm -rf the test change and archive
-[1] propose       # 9 tests
-[2] modify        # 5 tests
+[0] init          # 5 tests
+[1] propose       # 11 tests
+[2] modify        # 6 tests
 [3] apply         # 6 tests
-[4] verify        # 6 tests
+[4] verify        # 7 tests
 [5] archive       # 6 tests
+[6] cancel        # 4 tests
 reset_state()     # leave repo clean
 ```
 
@@ -577,22 +510,20 @@ Add assertions after the relevant section. Use the existing helpers. The `CHANGE
 
 ---
 
-## Adding a New Script
+## Adding a New Subcommand
 
-1. Create `scripts/<name>.ts` following the existing pattern:
-   - Import only `fs` and `path`
-   - Read `process.argv[2]` for the primary argument
+1. Add a new `case` branch in `scripts/spec-driven.ts` and implement the function:
+   - Import only `fs` and `path` (no external deps)
    - Print to stdout on success, stderr on error
    - Exit `0` on success, `1` on error
    - If outputting structured data, use JSON
+   - CWD is assumed to be the target project root — construct paths with `path.join(".spec-driven", ...)`
 
-2. The script's CWD is assumed to be the target project root. Always construct paths with `path.join(".spec-driven", ...)`.
+2. Rebuild: `npm run build` (or `npx tsc`)
 
-3. Rebuild: `npm run build`
+3. Add tests in `test/run.sh`
 
-4. Add tests in `test/run.sh`
-
-5. If the script needs a corresponding skill, see the next section.
+4. If the subcommand needs a corresponding skill, see the next section.
 
 ---
 

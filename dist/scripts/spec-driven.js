@@ -150,7 +150,7 @@ function verify() {
             warnings.push("specs/delta.md has no content — fill in ADDED/MODIFIED/REMOVED or confirm no spec changes");
         }
         else if (!/^### Requirement:/m.test(stripped)) {
-            warnings.push("specs/delta.md has content but no '### Requirement:' headings — use the spec format");
+            errors.push("specs/delta.md has content but no '### Requirement:' headings — use the spec format");
         }
     }
     for (const file of ["proposal.md", "design.md", "tasks.md"]) {

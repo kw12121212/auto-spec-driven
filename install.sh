@@ -12,6 +12,7 @@ SKILLS=(
   spec-driven-init
   spec-driven-cancel
   spec-driven-review
+  spec-driven-auto
 )
 
 # Central agent skills store (skills live here)

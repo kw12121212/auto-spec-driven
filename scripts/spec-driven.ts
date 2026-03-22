@@ -258,7 +258,30 @@ function init() {
 
   fs.writeFileSync(
     path.join(specDir, "config.yaml"),
-    `schema: spec-driven\ncontext: |\n  [Project context — populated by user, injected into skill prompts]\nrules:\n  specs:\n    - Requirements specify observable behavior, not implementation details\n  tasks:\n    - Tasks should be independently completable\n`
+    [
+      "schema: spec-driven",
+      "context: |",
+      "  [Project context — populated by user, injected into skill prompts]",
+      "rules:",
+      "  specs:",
+      "    - Describe observable behavior only — no implementation details, technology",
+      "      choices, or internal structure",
+      "    - MUST = required with no exceptions; SHOULD = default unless explicitly",
+      "      justified; MAY = genuinely optional",
+      "    - Each requirement must be independently verifiable from outside the system",
+      "  change:",
+      "    - Implement only what is in scope in proposal.md — if scope needs to expand,",
+      "      use /spec-driven-modify first, never expand silently",
+      "    - When a requirement or task is ambiguous, ask the user before proceeding —",
+      "      do not assume or guess",
+      "    - Delta specs must reflect what was actually built, not the original plan",
+      "    - Mark tasks [x] immediately upon completion — never batch at the end",
+      "  code:",
+      "    - Read existing code before modifying it",
+      "    - Implement only what the current task requires — no speculative features",
+      "    - No abstractions for hypothetical future needs (YAGNI)",
+      "",
+    ].join("\n")
   );
   fs.writeFileSync(
     path.join(specDir, "specs", "INDEX.md"),

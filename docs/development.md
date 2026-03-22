@@ -70,8 +70,8 @@ Created by running `spec-driven.js init` (or `/spec-driven-init`):
 └── changes/
     ├── <change-name>/   # One directory per active change
     │   ├── proposal.md  # What & why
-    │   ├── specs/
-    │   │   └── delta.md # Spec changes (ADDED/MODIFIED/REMOVED Requirements)
+    │   ├── specs/       # Delta spec files mirroring .spec-driven/specs/ structure
+    │   │   └── <category>/<name>.md  # ADDED/MODIFIED/REMOVED Requirements
     │   ├── design.md    # How (approach, decisions)
     │   └── tasks.md     # Checklist of - [ ] / - [x] items
     └── archive/         # Completed changes, prefixed YYYY-MM-DD-<name>/
@@ -86,18 +86,35 @@ context: |
   Skills read this and use it to generate relevant content.
 rules:
   specs:
-    - Requirements specify observable behavior, not implementation details
-  tasks:
-    - Tasks should be independently completable
+    - Describe observable behavior only — no implementation details, technology
+      choices, or internal structure
+    - MUST = required with no exceptions; SHOULD = default unless explicitly
+      justified; MAY = genuinely optional
+    - Each requirement must be independently verifiable from outside the system
+  change:
+    - Implement only what is in scope in proposal.md — if scope needs to expand,
+      use /spec-driven-modify first, never expand silently
+    - When a requirement or task is ambiguous, ask the user before proceeding —
+      do not assume or guess
+    - Delta specs must reflect what was actually built, not the original plan
+    - Mark tasks [x] immediately upon completion — never batch at the end
+  code:
+    - Read existing code before modifying it
+    - Implement only what the current task requires — no speculative features
+    - No abstractions for hypothetical future needs (YAGNI)
+# fileMatch:              # per-pattern rules applied in addition to global rules above
+#   - pattern: "**/*.test.*"
+#     rules:
+#       - Tests must cover happy path, error cases, and edge cases
 ```
 
-The `context` field is the most important — it's what skills inject when generating proposals, designs, and tasks. A good context describes: what the project is, what language/framework, key architectural decisions.
+The `context` field is the most important — it's what skills inject when generating proposals, designs, and tasks. A good context describes: what the project is, what language/framework, key architectural decisions. The `rules` field has three categories (`specs`, `change`, `code`) that skills treat as binding constraints. Optional `fileMatch` entries apply additional rules per file glob pattern.
 
 ### Artifact files
 
-**proposal.md** — describes *what* and *why*. Sections: `## What`, `## Why`, `## Scope`. No implementation details.
+**proposal.md** — describes *what* and *why*. Sections: `## What`, `## Why`, `## Scope`, `## Unchanged Behavior`. No implementation details.
 
-**specs/delta.md** — describes spec impact using `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`. Each requirement uses `### Requirement: <name>` headings and RFC 2119 keywords (MUST/SHOULD/MAY). Scenarios use `#### Scenario:` with GIVEN/WHEN/THEN. At archive time the skill merges these into the main `specs/` collection.
+**specs/** — a directory of delta spec files mirroring the main `.spec-driven/specs/` structure by path (e.g. `changes/<name>/specs/api/search.md` maps to `specs/api/search.md`). Each file uses `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements` section markers. Requirements use `### Requirement: <name>` headings and RFC 2119 keywords (MUST/SHOULD/MAY). Scenarios use `#### Scenario:` with GIVEN/WHEN/THEN. At archive time the skill merges each delta file into the corresponding main spec file.
 
 **design.md** — describes *how*. Sections: `## Approach`, `## Key Decisions`, `## Alternatives Considered`.
 
@@ -119,18 +136,18 @@ node dist/scripts/spec-driven.js <subcommand> [args]
 
 ### propose `<name>`
 
-Scaffolds a new change directory. Validates the name matches `^[a-z0-9]+(-[a-z0-9]+)*$`. Creates `proposal.md`, `specs/delta.md`, `design.md`, and `tasks.md` with seed content. Exit `1` on duplicate name or invalid name.
+Scaffolds a new change directory. Validates the name matches `^[a-z0-9]+(-[a-z0-9]+)*$`. Creates `proposal.md`, `specs/` directory, `design.md`, and `tasks.md` with seed content. Exit `1` on duplicate name or invalid name.
 
 **Output:**
 ```
 Created change: .spec-driven/changes/my-feature
   .spec-driven/changes/my-feature/proposal.md
-  .spec-driven/changes/my-feature/specs/delta.md
+  .spec-driven/changes/my-feature/specs/ (populate to mirror .spec-driven/specs/ structure)
   .spec-driven/changes/my-feature/design.md
   .spec-driven/changes/my-feature/tasks.md
 ```
 
-**Seed content:** `proposal.md` and `design.md` use `[Describe ...]`/`[List ...]` placeholders — `verify` checks for these and emits warnings. `specs/delta.md` contains format examples in HTML comments.
+**Seed content:** `proposal.md` and `design.md` use `[Describe ...]`/`[List ...]` placeholders — `verify` checks for these and emits warnings. `specs/` starts empty — the skill populates it with delta files mirroring the main specs structure.
 
 ---
 
@@ -142,7 +159,7 @@ Navigation/discovery utility — does not modify files. With no argument: lists 
 ```
 Artifacts for 'my-feature':
   .spec-driven/changes/my-feature/proposal.md
-  .spec-driven/changes/my-feature/specs/delta.md
+  .spec-driven/changes/my-feature/specs/<files or "(empty)">
   .spec-driven/changes/my-feature/design.md
   .spec-driven/changes/my-feature/tasks.md
 ```
@@ -175,12 +192,14 @@ Skills call this twice: before implementation (to show progress) and after (to c
 Validates artifact format and content quality. Always exits `0`; errors are in the JSON payload. `valid` is `false` only when `errors` is non-empty.
 
 **Checks performed:**
-1. `specs/delta.md` exists (error if missing)
-2. `specs/delta.md` has real content beyond the seed template (warning if empty)
-3. `specs/delta.md` content uses `### Requirement:` headings (error if not — format is mandatory)
-4. `proposal.md`, `design.md`, `tasks.md` exist and are non-empty (error if not)
-5. Unfilled placeholders (`[Describe`, `[List`) in artifacts → warning
-6. `tasks.md` has no checkboxes → warning; has incomplete tasks → warning
+1. `specs/` directory exists (error if missing)
+2. `specs/` has `.md` files with real content (warning if empty)
+3. Each spec file uses `### Requirement:` headings (error if not — format is mandatory)
+4. Each spec file has `## ADDED Requirements`, `## MODIFIED Requirements`, or `## REMOVED Requirements` section marker (error if missing)
+5. `proposal.md`, `design.md`, `tasks.md` exist and are non-empty (error if not)
+6. Unfilled placeholders (`[Describe`, `[List`) in artifacts → warning
+7. `[NEEDS CLARIFICATION]` markers in any artifact or spec file → warning
+8. `tasks.md` has no checkboxes → warning; has incomplete tasks → warning
 
 **Output:**
 ```json
@@ -231,8 +250,9 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 **Flow:**
 1. Confirms target directory
 2. Runs `spec-driven.js init [path]` to create scaffold
-3. Guides the user to fill in `config.yaml` context (project description, tech stack, conventions)
-4. Suggests `/spec-driven-propose` to create the first change
+3. Reads existing project files (`README.md`, `AGENTS.md`, etc.) and drafts a `context` value; shows the user for confirmation
+4. Optionally captures existing behavior into initial spec files
+5. Suggests `/spec-driven-propose` to create the first change
 
 ---
 
@@ -245,7 +265,7 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 2. Reads `.spec-driven/config.yaml` for project context and rules
 3. Runs `spec-driven.js propose <name>` to create scaffold
 4. Fills `proposal.md` — what and why, no implementation detail
-5. Fills `specs/delta.md` — ADDED/MODIFIED/REMOVED requirements using `### Requirement:` format and RFC 2119 keywords
+5. Populates `specs/` delta files — creates files mirroring the main specs structure with ADDED/MODIFIED/REMOVED requirements using `### Requirement:` format and RFC 2119 keywords
 6. Fills `design.md` — approach, decisions, alternatives
 7. Fills `tasks.md` — atomic, independently-completable checkboxes (no "Update specs" task — delta spec is the spec artifact)
 8. Shows user the four files and asks for adjustments
@@ -261,7 +281,7 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 **Flow:**
 1. Runs `spec-driven.js modify` to list changes
 2. Runs `spec-driven.js modify <name>` to get artifact paths
-3. Reads the selected artifact (`proposal.md`, `specs/delta.md`, `design.md`, or `tasks.md`)
+3. Reads the selected artifact (`proposal.md`, `specs/` delta files, `design.md`, or `tasks.md`)
 4. Applies edits, shows summary
 
 **Key constraint:** Never uncheck a `- [x]` task unless the user explicitly asks.
@@ -277,11 +297,11 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 2. Reads all four artifacts + `config.yaml` + `specs/` for full context
 3. Runs `spec-driven.js apply <name>` to show task summary
 4. For each `- [ ]` task: reads relevant code, implements, marks `- [x]` immediately
-5. After all tasks: reviews `specs/delta.md` and updates it to reflect what was actually implemented
+5. After all tasks: reviews delta files in `specs/` and updates them to reflect what was actually implemented
 6. Runs `spec-driven.js apply <name>` again to confirm `remaining === 0`
 7. Suggests `/spec-driven-verify`
 
-**Key constraint:** Mark tasks complete one at a time immediately — not in bulk. Update `specs/delta.md` to stay accurate with the actual implementation.
+**Key constraint:** Mark tasks complete one at a time immediately — not in bulk. Update delta files in `specs/` to stay accurate with the actual implementation. Verify each change does not violate any **Unchanged Behavior** listed in proposal.md.
 
 ---
 
@@ -293,7 +313,7 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 1. Runs `spec-driven.js verify <name>` → format/completeness check (including delta spec format)
 2. Runs `spec-driven.js apply <name>` → task completion check
 3. For each completed task, reads actual code to verify evidence exists
-4. Reads `specs/`, `config.yaml`, `proposal.md`, and `specs/delta.md` to check alignment
+4. Reads `specs/`, `config.yaml`, `proposal.md`, and delta files in `specs/` to check alignment
 5. Outputs tiered report: CRITICAL / WARNING / SUGGESTION
 6. Recommends next step based on severity
 
@@ -311,7 +331,7 @@ description: One-line summary    # Shown in CLI autocomplete and used for auto-i
 **Flow:**
 1. Runs `spec-driven.js modify` to list changes
 2. Runs `spec-driven.js apply <name>` → checks for incomplete tasks; warns if any remain
-3. Reads `specs/delta.md` and merges into `.spec-driven/specs/`: ADDED requirements appended, MODIFIED replaced by `### Requirement:` name, REMOVED deleted by name
+3. Lists all delta files in `specs/` and merges each into the corresponding main spec file by path: ADDED requirements appended, MODIFIED replaced by `### Requirement:` name, REMOVED deleted by name
 4. Runs `spec-driven.js archive <name>`
 5. Reports destination path
 
@@ -479,7 +499,7 @@ Curl-installed directories: only removed if the directory contains exactly `SKIL
 
 ### test/run.sh
 
-Fully repeatable — resets state before and after. All 45 tests must pass before committing script changes.
+Fully repeatable — resets state before and after. All 47 tests must pass before committing script changes.
 
 **Structure:**
 ```bash

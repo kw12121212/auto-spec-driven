@@ -21,7 +21,7 @@ slim-spec-driven/
 │   └── <name>/SKILL.md
 ├── template/         # .spec-driven/ starter template
 ├── test/
-│   ├── run.sh        # Test runner (46 tests, fully repeatable)
+│   ├── run.sh        # Test runner (47 tests, fully repeatable)
 │   └── todo-app/     # Fixture project used by tests
 ├── .spec-driven/     # This repo uses its own workflow (dogfooding)
 ├── install.sh

@@ -75,7 +75,7 @@ function propose() {
   );
   fs.writeFileSync(
     path.join(dir, "tasks.md"),
-    `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`
+    `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Testing\n\n- [ ] Lint passes\n- [ ] Unit tests pass\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`
   );
 
   console.log(`Created change: ${dir}`);
@@ -221,6 +221,9 @@ function verify() {
     } else if (/^\s*-\s*\[ \]/im.test(tc)) {
       warnings.push("tasks.md has incomplete tasks");
     }
+    if (!/^## Testing/m.test(tc)) {
+      warnings.push("tasks.md has no '## Testing' section — changes should include test tasks");
+    }
   }
 
   console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors }, null, 2));
@@ -282,6 +285,7 @@ function init() {
       "      do not assume or guess",
       "    - Delta specs must reflect what was actually built, not the original plan",
       "    - Mark tasks [x] immediately upon completion — never batch at the end",
+      "    - Every change must include test tasks (lint + unit tests at minimum)",
       "  code:",
       "    - Read existing code before modifying it",
       "    - Implement only what the current task requires — no speculative features",

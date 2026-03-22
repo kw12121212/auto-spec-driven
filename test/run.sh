@@ -104,9 +104,9 @@ assert_contains "nonexistent change errors" "not found" "$out"
 echo -e "\n${BOLD}[3] apply${RESET}"
 
 out=$($CLI apply "$CHANGE" 2>&1)
-assert_json_field "total > 0"     "total"     "4" "$out"
+assert_json_field "total > 0"     "total"     "6" "$out"
 assert_json_field "complete = 0"  "complete"  "0" "$out"
-assert_json_field "remaining = 4" "remaining" "4" "$out"
+assert_json_field "remaining = 6" "remaining" "6" "$out"
 
 # Mark 2 tasks complete, re-check counts
 TASKS_FILE=".spec-driven/changes/$CHANGE/tasks.md"
@@ -114,7 +114,7 @@ sed -i '0,/- \[ \]/s/- \[ \]/- [x]/' "$TASKS_FILE"
 sed -i '0,/- \[ \]/s/- \[ \]/- [x]/' "$TASKS_FILE"
 out=$($CLI apply "$CHANGE" 2>&1)
 assert_json_field "complete = 2 after marking" "complete"  "2" "$out"
-assert_json_field "remaining = 2 after marking" "remaining" "2" "$out"
+assert_json_field "remaining = 4 after marking" "remaining" "4" "$out"
 
 assert_exit "missing change exits 1" 1 $CLI apply "nonexistent"
 
@@ -126,6 +126,11 @@ assert_json_field "valid=true for seeded change" "valid" "true" "$out"
 assert_contains   "warns about placeholders"     "placeholders" "$out"
 assert_contains   "warns about incomplete tasks"  "incomplete"   "$out"
 assert_contains   "warns about empty specs dir"   "specs/ is empty" "$out"
+
+# Missing ## Testing section
+echo -e "# Tasks\n\n## Implementation\n\n- [ ] Task 1\n\n## Verification\n\n- [ ] Verify\n" > "$TASKS_FILE"
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_contains   "warns about missing testing section" "Testing" "$out"
 
 # Empty artifact → errors
 echo "" > "$TASKS_FILE"

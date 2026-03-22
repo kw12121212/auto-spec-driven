@@ -14,7 +14,7 @@ SKILLS=(
 )
 
 # Central agent skills store (skills live here)
-GLOBAL_AGENT_DIR="$HOME/.agent/skills"
+GLOBAL_AGENT_DIR="$HOME/.slim-spec-driven/skills"
 PROJECT_AGENT_SUBDIR=".agent/skills"
 
 # CLI-specific symlink directories (point into the agent store)
@@ -72,7 +72,7 @@ if [ -n "$PROJECT_DIR" ]; then
   fi
 else
   AGENT_DIR="$GLOBAL_AGENT_DIR"
-  SKILL_DIR_REF="~/.agent/skills"          # tilde expands at runtime, works across users
+  SKILL_DIR_REF="~/.slim-spec-driven/skills"  # tilde expands at runtime, works across users
   if [ "$CLI" = "all" ]; then
     CLI_LINK_DIRS=("${GLOBAL_CLI_DIRS[claude]}" "${GLOBAL_CLI_DIRS[opencode]}")
   else

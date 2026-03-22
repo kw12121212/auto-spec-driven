@@ -380,7 +380,7 @@ After installation, skills live in a target directory with the following layout:
 
 **Global install (default `--cli all`):**
 ```
-~/.agent/skills/
+~/.slim-spec-driven/skills/
 ├── spec-driven-propose/
 │   ├── SKILL.md
 │   └── scripts/
@@ -398,14 +398,14 @@ After installation, skills live in a target directory with the following layout:
 **Global install `--cli claude`:**
 ```
 ~/.claude/skills/
-└── spec-driven-propose/ → ~/.agent/skills/spec-driven-propose/  (symlink)
+└── spec-driven-propose/ → ~/.slim-spec-driven/skills/spec-driven-propose/  (symlink)
     ...
 ```
 
 **Global install `--cli opencode`:**
 ```
 ~/.config/opencode/skills/
-└── spec-driven-propose/ → ~/.agent/skills/spec-driven-propose/  (symlink)
+└── spec-driven-propose/ → ~/.slim-spec-driven/skills/spec-driven-propose/  (symlink)
     ...
 ```
 

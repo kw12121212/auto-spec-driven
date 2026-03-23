@@ -80,23 +80,6 @@ npx skills add kw12121212/slim-spec-driven
 
 When prompted by `skills`, select the AI tools you actually use. For installation scope, prefer the shared/global option so you avoid duplicating skill files inside each project.
 
-**One-line install (curl):**
-```bash
-# Global — works for Claude Code, OpenCode, Trae, Codex, and Gemini CLI
-curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash
-
-# Project-local (.claude/skills/ + .opencode/skills/ + .trae/skills/ + .codex/skills/ + .gemini/skills/ + .agents/skills/)
-curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash -s -- --project
-
-# Target a specific CLI or path
-curl -fsSL .../install.sh | bash -s -- --cli claude
-curl -fsSL .../install.sh | bash -s -- --cli opencode
-curl -fsSL .../install.sh | bash -s -- --cli trae
-curl -fsSL .../install.sh | bash -s -- --cli codex
-curl -fsSL .../install.sh | bash -s -- --cli gemini
-curl -fsSL .../install.sh | bash -s -- --project /path/to/project
-```
-
 **From source (for development or live-edit):**
 ```bash
 git clone https://github.com/kw12121212/slim-spec-driven ~/Code/slim-spec-driven

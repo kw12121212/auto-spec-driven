@@ -77,6 +77,8 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 npx skills add kw12121212/slim-spec-driven
 ```
 
+When prompted by `skills`, select the AI tools you actually use. For installation scope, prefer the shared/global option so you avoid duplicating skill files inside each project.
+
 **One-line install (curl):**
 ```bash
 # Global — works for Claude Code, OpenCode, Trae, Codex, and Gemini CLI

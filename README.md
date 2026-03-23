@@ -72,6 +72,11 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 
 ## Quick Start
 
+**Install via [skills.sh](https://skills.sh) (recommended — no extra files in your project):**
+```bash
+npx skills add kw12121212/slim-spec-driven
+```
+
 **One-line install (curl):**
 ```bash
 # Global — works for Claude Code, OpenCode, Trae, Codex, and Gemini CLI

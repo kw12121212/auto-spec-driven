@@ -23,3 +23,9 @@ Running with `--project` on a directory without `.spec-driven/` initializes it a
 ### Requirement: uninstall
 The `--uninstall` flag MUST remove all CLI symlinks created by the installer.
 Copied agent store directories are only removed if they contain no unexpected files.
+
+### Requirement: optional-openspec-migration
+The installer MUST support an optional OpenSpec migration mode.
+When invoked with `--migrate` (or `--migrate-openspec`), it MUST run the CLI migration flow
+against the target project directory selected by `--project [path]` or the current working directory.
+It MUST NOT run OpenSpec migration unless the flag is explicitly provided.

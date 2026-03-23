@@ -47,6 +47,12 @@ reset_state() {
   rm -rf "$PROJECT/.spec-driven/changes/archive"
 }
 
+create_skill() {
+  local dir="$1" name="$2"
+  mkdir -p "$dir/$name"
+  printf -- '---\nname: %s\ndescription: migrated\n---\n' "$name" > "$dir/$name/SKILL.md"
+}
+
 echo -e "\n${BOLD}spec-driven test suite${RESET} — project: test/todo-app\n"
 reset_state
 
@@ -63,6 +69,42 @@ assert_contains "creates .spec-driven/"  "Initialized:"  "$out"
 
 assert_exit "duplicate init exits 1" 1 $CLI init "$INIT_DIR"
 rm -rf "$INIT_DIR"
+
+# ── 0b. migrate ───────────────────────────────────────────────────────────────
+echo -e "\n${BOLD}[0b] migrate${RESET}"
+
+MIGRATE_DIR="$(mktemp -d)"
+mkdir -p "$MIGRATE_DIR/openspec/specs"
+mkdir -p "$MIGRATE_DIR/.claude/skills" "$MIGRATE_DIR/.claude/commands/opsx"
+mkdir -p "$MIGRATE_DIR/.opencode/skills" "$MIGRATE_DIR/.opencode/commands"
+mkdir -p "$MIGRATE_DIR/.cursor/skills" "$MIGRATE_DIR/.cursor/commands"
+printf '# legacy spec\n' > "$MIGRATE_DIR/openspec/specs/legacy.md"
+create_skill "$MIGRATE_DIR/.claude/skills" "openspec-propose"
+create_skill "$MIGRATE_DIR/.opencode/skills" "openspec-apply-change"
+create_skill "$MIGRATE_DIR/.cursor/skills" "openspec-propose"
+printf 'legacy command\n' > "$MIGRATE_DIR/.claude/commands/opsx/propose.md"
+printf 'legacy command\n' > "$MIGRATE_DIR/.opencode/commands/opsx-apply.md"
+printf 'legacy command\n' > "$MIGRATE_DIR/.cursor/commands/opsx-propose.md"
+
+out=$($CLI migrate "$MIGRATE_DIR" 2>&1)
+assert_contains "migrate renames openspec dir" "Moved openspec/ -> .spec-driven/" "$out"
+assert_contains "migrate installs claude skills" "Migrated claude tool config:" "$out"
+assert_contains "migrate installs opencode skills" "Migrated opencode tool config:" "$out"
+assert_contains "migrate skips unsupported tools" "Skipped unsupported AI tool: .cursor" "$out"
+[ -d "$MIGRATE_DIR/.spec-driven" ] && pass "migrate creates .spec-driven dir" || fail "migrate missing .spec-driven dir"
+[ ! -d "$MIGRATE_DIR/openspec" ] && pass "migrate removes openspec dir" || fail "migrate left openspec dir"
+[ -f "$MIGRATE_DIR/.spec-driven/config.yaml" ] && pass "migrate adds config.yaml" || fail "migrate missing config.yaml"
+[ -d "$MIGRATE_DIR/.claude/skills/spec-driven-propose" ] && pass "migrate adds claude spec-driven skill" || fail "migrate missing claude spec-driven skill"
+[ ! -d "$MIGRATE_DIR/.claude/skills/openspec-propose" ] && pass "migrate removes claude openspec skill" || fail "migrate left claude openspec skill"
+[ ! -e "$MIGRATE_DIR/.claude/commands/opsx" ] && pass "migrate removes claude commands" || fail "migrate left claude commands"
+[ -d "$MIGRATE_DIR/.opencode/skills/spec-driven-apply" ] && pass "migrate adds opencode spec-driven skill" || fail "migrate missing opencode spec-driven skill"
+[ ! -d "$MIGRATE_DIR/.opencode/skills/openspec-apply-change" ] && pass "migrate removes opencode openspec skill" || fail "migrate left opencode openspec skill"
+[ -d "$MIGRATE_DIR/.cursor/skills/openspec-propose" ] && pass "migrate preserves unsupported tool skill" || fail "migrate changed unsupported tool skill"
+
+mkdir -p "$MIGRATE_DIR/openspec"
+out=$($CLI migrate "$MIGRATE_DIR" 2>&1)
+assert_contains "migrate skips rename when spec-driven exists" "Skipped openspec/ rename" "$out"
+rm -rf "$MIGRATE_DIR"
 
 # ── 1. propose ────────────────────────────────────────────────────────────────
 echo -e "${BOLD}[1] propose${RESET}"

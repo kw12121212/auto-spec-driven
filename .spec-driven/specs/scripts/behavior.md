@@ -60,3 +60,21 @@ Exits 1 if the change does not exist.
 `spec-driven.js init [path]` MUST create `.spec-driven/` with `config.yaml`,
 `specs/INDEX.md`, `specs/README.md`, and `changes/` directory at the given path (or CWD).
 Exits 1 if `.spec-driven/` already exists.
+
+### Requirement: migrate-openspec-project
+`spec-driven.js migrate [path]` MUST migrate an OpenSpec-style project in the given path (or CWD)
+to slim-spec-driven conventions.
+It MUST rename `openspec/` to `.spec-driven/` when `.spec-driven/` does not already exist,
+ensure `.spec-driven/config.yaml`, `.spec-driven/specs/INDEX.md`, `.spec-driven/specs/README.md`,
+and `.spec-driven/changes/` exist, remove OpenSpec skills and command files for supported tools,
+and install bundled `spec-driven-*` skills for supported tools.
+
+#### Scenario: unsupported-tool-is-skipped
+- GIVEN a project contains OpenSpec artifacts for an unsupported AI tool
+- WHEN migrate is run
+- THEN migrate reports that tool as skipped and continues
+
+#### Scenario: spec-driven-directory-already-exists
+- GIVEN `.spec-driven/` already exists alongside `openspec/`
+- WHEN migrate is run
+- THEN migrate does not rename `openspec/` over the existing directory and reports the rename as skipped

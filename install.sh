@@ -43,6 +43,7 @@ LOCAL_SKILLS_DIR="$SCRIPT_DIR/skills"
 CLI="all"
 PROJECT_DIR=""
 UNINSTALL=false
+MIGRATE_OPENSPEC=false
 
 i=1
 while [ $i -le $# ]; do
@@ -65,6 +66,7 @@ while [ $i -le $# ]; do
         i=$((i - 1))
       fi
       ;;
+    --migrate|--migrate-openspec) MIGRATE_OPENSPEC=true ;;
     --uninstall) UNINSTALL=true ;;
   esac
   i=$((i + 1))
@@ -226,6 +228,18 @@ fi
 # Initialize .spec-driven/ in project directory when using --project
 if [ -n "$PROJECT_DIR" ]; then
   spec_dir="$PROJECT_DIR/.spec-driven"
+
+  if $MIGRATE_OPENSPEC; then
+    echo ""
+    echo "Migrating OpenSpec artifacts in: $PROJECT_DIR"
+    if node "$AGENT_DIR/spec-driven-init/scripts/spec-driven.js" migrate "$PROJECT_DIR"; then
+      echo "OpenSpec migration complete."
+    else
+      echo "Error: OpenSpec migration failed."
+      exit 1
+    fi
+  fi
+
   if [ -d "$spec_dir" ]; then
     echo ""
     echo ".spec-driven/ already exists — skipped init"
@@ -236,6 +250,16 @@ if [ -n "$PROJECT_DIR" ]; then
     else
       echo "Warning: failed to initialize .spec-driven/ — run '/spec-driven-init' to initialize manually"
     fi
+  fi
+elif $MIGRATE_OPENSPEC; then
+  migrate_dir="$(pwd)"
+  echo ""
+  echo "Migrating OpenSpec artifacts in: $migrate_dir"
+  if node "$AGENT_DIR/spec-driven-init/scripts/spec-driven.js" migrate "$migrate_dir"; then
+    echo "OpenSpec migration complete."
+  else
+    echo "Error: OpenSpec migration failed."
+    exit 1
   fi
 fi
 

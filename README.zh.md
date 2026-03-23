@@ -134,6 +134,27 @@ init → propose → apply → verify → archive
 | `/spec-driven-verify` | 检查完整性、实现证据和规格对齐 |
 | `/spec-driven-archive` | 将 delta specs 合并进 specs/，更新 INDEX.md，移至 archive/ |
 | `/spec-driven-cancel` | 永久删除进行中的变更（需确认） |
+| `/spec-driven-auto` | 自动运行完整工作流（propose → apply → verify → review → archive），仅需一次确认。适合小型、边界清晰的变更。 |
+
+### 自动工作流
+
+`/spec-driven-auto` 适合小型、定义明确的变更：
+
+```bash
+/spec-driven-auto 添加用户头像上传功能
+```
+
+**适用场景：**
+- 变更涉及 ≤3 个模块、≤10 个文件
+- 不涉及数据库迁移、认证/支付、跨服务协调
+- 范围具体且边界清晰
+
+**会拒绝并回退到分步模式：**
+- 范围模糊（如"重构代码库"）
+- 变更较大或涉及多个切面
+- 高风险区域（认证、支付、多仓库）
+
+唯一必须的确认点在 proposal 之后——其余步骤自动执行，除非遇到阻塞问题。
 
 ## 项目结构
 

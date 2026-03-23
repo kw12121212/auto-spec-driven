@@ -134,6 +134,27 @@ Use **modify** to refine any artifact mid-flight. Use **cancel** to abandon a ch
 | `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
 | `/spec-driven-archive` | Merge delta specs into specs/, update INDEX.md, move to archive/ |
 | `/spec-driven-cancel` | Permanently delete an in-progress change (with confirmation) |
+| `/spec-driven-auto` | Run full workflow automatically (propose → apply → verify → review → archive) with one confirmation checkpoint. Best for small, well-scoped changes. |
+
+### Auto Workflow
+
+`/spec-driven-auto` is a convenience for small, well-defined changes:
+
+```bash
+/spec-driven-auto add user avatar upload
+```
+
+**Suitable when:**
+- Change touches ≤3 modules and ≤10 files
+- No database migrations, auth/payments, or cross-service coordination
+- Scope is specific and bounded
+
+**Rejects and falls back to step-by-step when:**
+- Scope is vague ("refactor the codebase")
+- Change is large or cross-cutting
+- High-risk areas (auth, payments, multi-repo)
+
+The only mandatory checkpoint is after the proposal — everything else runs automatically unless blocked.
 
 ## Project Structure
 

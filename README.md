@@ -74,15 +74,18 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 
 **One-line install (curl):**
 ```bash
-# Global — works for both Claude Code and OpenCode
+# Global — works for Claude Code, OpenCode, Trae, Codex, and Gemini CLI
 curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash
 
-# Project-local (.claude/skills/ — works for both CLIs)
+# Project-local (.claude/skills/ + .opencode/skills/ + .trae/skills/ + .codex/skills/ + .gemini/skills/ + .agents/skills/)
 curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash -s -- --project
 
 # Target a specific CLI or path
 curl -fsSL .../install.sh | bash -s -- --cli claude
 curl -fsSL .../install.sh | bash -s -- --cli opencode
+curl -fsSL .../install.sh | bash -s -- --cli trae
+curl -fsSL .../install.sh | bash -s -- --cli codex
+curl -fsSL .../install.sh | bash -s -- --cli gemini
 curl -fsSL .../install.sh | bash -s -- --project /path/to/project
 ```
 
@@ -92,10 +95,13 @@ git clone https://github.com/kw12121212/slim-spec-driven ~/Code/slim-spec-driven
 cd ~/Code/slim-spec-driven
 npm install && npm run build
 
-bash install.sh                                  # global, both CLIs (~/.claude/skills/)
-bash install.sh --cli claude                     # global, Claude Code only
+bash install.sh                                  # global, all CLIs
+bash install.sh --cli claude                     # global, Claude Code only (~/.claude/skills/)
 bash install.sh --cli opencode                   # global, OpenCode only (~/.config/opencode/skills/)
-bash install.sh --project                        # project-local in CWD (.claude/skills/)
+bash install.sh --cli trae                       # global, Trae only (~/.trae/skills/)
+bash install.sh --cli codex                      # global, Codex only (~/.codex/skills/)
+bash install.sh --cli gemini                     # global, Gemini CLI only (~/.gemini/skills/)
+bash install.sh --project                        # project-local in CWD
 bash install.sh --project /path/to/project       # project-local at specified path
 ```
 
@@ -103,11 +109,12 @@ bash install.sh --project /path/to/project       # project-local at specified pa
 
 | `--cli` | Global | Project-local |
 |---------|--------|---------------|
-| `all` (default) | `~/.claude/skills/` | `.claude/skills/` |
+| `all` (default) | `~/.claude/skills/` + `~/.config/opencode/skills/` + `~/.trae/skills/` + `~/.codex/skills/` + `~/.gemini/skills/` | `.claude/skills/` + `.opencode/skills/` + `.trae/skills/` + `.codex/skills/` + `.gemini/skills/` + `.agents/skills/` |
 | `claude` | `~/.claude/skills/` | `.claude/skills/` |
 | `opencode` | `~/.config/opencode/skills/` | `.opencode/skills/` |
-
-> `~/.claude/skills/` is read by both Claude Code and OpenCode, so `--cli all` installs once and works everywhere.
+| `trae` | `~/.trae/skills/` | `.trae/skills/` |
+| `codex` | `~/.codex/skills/` | `.codex/skills/` |
+| `gemini` | `~/.gemini/skills/` | `.gemini/skills/` |
 
 ## Workflow
 

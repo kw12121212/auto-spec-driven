@@ -8,7 +8,7 @@ Instructions for AI agents working in this repository.
 
 - **9 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
 - **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 8 subcommands
-- **`install.sh`** — installs skills to `~/.slim-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/`
+- **`install.sh`** — installs skills to `~/.slim-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/` / `~/.trae/skills/` / `~/.codex/skills/` / `~/.gemini/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
 
@@ -56,7 +56,7 @@ skills/
     └── SKILL.md       ← frontmatter: name, description; body: prompt content
 ```
 
-Frontmatter fields used: `name`, `description`. Both CLIs (Claude Code, OpenCode) read `~/.claude/skills/`.
+Frontmatter fields used: `name`, `description`. CLIs (Claude Code, OpenCode, Trae, Codex, Gemini CLI) read their respective skills directories.
 
 ## Scripts Contract
 
@@ -94,10 +94,13 @@ Changes in progress live in `.spec-driven/changes/`. Completed changes are in `.
 ## install.sh Flags
 
 ```bash
-bash install.sh                          # global: store in ~/.slim-spec-driven/skills/, symlink into both CLIs
+bash install.sh                          # global: store in ~/.slim-spec-driven/skills/, symlink into all CLIs
 bash install.sh --cli claude             # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.claude/skills/ only
 bash install.sh --cli opencode           # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.config/opencode/skills/ only
-bash install.sh --project                # project-local: store in .agent/skills/, symlink into .claude/skills/ + .opencode/skills/
+bash install.sh --cli trae               # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.trae/skills/ only
+bash install.sh --cli codex              # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.codex/skills/ only
+bash install.sh --cli gemini             # global: store in ~/.slim-spec-driven/skills/, symlink into ~/.gemini/skills/ only
+bash install.sh --project                # project-local: store in .agent/skills/, symlink into .claude/skills/ + .opencode/skills/ + .trae/skills/ + .codex/skills/ + .gemini/skills/ + .agents/skills/
 bash install.sh --project /path/to/proj  # project-local at path
 bash install.sh --uninstall              # remove symlinks and agent store entries (same --cli/--project flags)
 ```

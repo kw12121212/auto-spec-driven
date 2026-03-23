@@ -23,10 +23,17 @@ PROJECT_AGENT_SUBDIR=".agent/skills"
 declare -A GLOBAL_CLI_DIRS=(
   [claude]="$HOME/.claude/skills"
   [opencode]="$HOME/.config/opencode/skills"
+  [trae]="$HOME/.trae/skills"
+  [codex]="$HOME/.codex/skills"
+  [gemini]="$HOME/.gemini/skills"
 )
 declare -A PROJECT_CLI_DIRS=(
   [claude]=".claude/skills"
   [opencode]=".opencode/skills"
+  [trae]=".trae/skills"
+  [codex]=".codex/skills"
+  [gemini]=".gemini/skills"
+  [agents]=".agents/skills"
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,8 +51,8 @@ while [ $i -le $# ]; do
     --cli)
       i=$((i + 1))
       CLI="${!i}"
-      if [[ "$CLI" != "claude" && "$CLI" != "opencode" && "$CLI" != "all" ]]; then
-        echo "Error: unknown --cli value '$CLI'. Valid values: claude, opencode, all"
+      if [[ "$CLI" != "claude" && "$CLI" != "opencode" && "$CLI" != "trae" && "$CLI" != "codex" && "$CLI" != "gemini" && "$CLI" != "all" ]]; then
+        echo "Error: unknown --cli value '$CLI'. Valid values: claude, opencode, trae, codex, gemini, all"
         exit 1
       fi
       ;;
@@ -68,7 +75,7 @@ if [ -n "$PROJECT_DIR" ]; then
   AGENT_DIR="$PROJECT_DIR/$PROJECT_AGENT_SUBDIR"
   SKILL_DIR_REF="$PROJECT_AGENT_SUBDIR"   # relative to project root
   if [ "$CLI" = "all" ]; then
-    CLI_LINK_DIRS=("$PROJECT_DIR/${PROJECT_CLI_DIRS[claude]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[opencode]}")
+    CLI_LINK_DIRS=("$PROJECT_DIR/${PROJECT_CLI_DIRS[claude]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[opencode]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[trae]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[codex]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[gemini]}" "$PROJECT_DIR/${PROJECT_CLI_DIRS[agents]}")
   else
     CLI_LINK_DIRS=("$PROJECT_DIR/${PROJECT_CLI_DIRS[$CLI]}")
   fi
@@ -76,7 +83,7 @@ else
   AGENT_DIR="$GLOBAL_AGENT_DIR"
   SKILL_DIR_REF="~/.slim-spec-driven/skills"  # tilde expands at runtime, works across users
   if [ "$CLI" = "all" ]; then
-    CLI_LINK_DIRS=("${GLOBAL_CLI_DIRS[claude]}" "${GLOBAL_CLI_DIRS[opencode]}")
+    CLI_LINK_DIRS=("${GLOBAL_CLI_DIRS[claude]}" "${GLOBAL_CLI_DIRS[opencode]}" "${GLOBAL_CLI_DIRS[trae]}" "${GLOBAL_CLI_DIRS[codex]}" "${GLOBAL_CLI_DIRS[gemini]}")
   else
     CLI_LINK_DIRS=("${GLOBAL_CLI_DIRS[$CLI]}")
   fi

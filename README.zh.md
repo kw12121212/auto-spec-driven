@@ -79,23 +79,6 @@ npx skills add kw12121212/slim-spec-driven
 
 `skills` 提示你选择支持的 AI 工具时，按自己实际使用的工具勾选即可。安装范围建议选择公共/全局安装，避免在每个项目里重复生成一份 skills 文件。
 
-**一行安装（curl）：**
-```bash
-# 全局安装 — 同时支持 Claude Code、OpenCode、Trae、Codex 和 Gemini CLI
-curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash
-
-# 项目本地安装（.claude/skills/ + .opencode/skills/ + .trae/skills/ + .codex/skills/ + .gemini/skills/ + .agents/skills/）
-curl -fsSL https://raw.githubusercontent.com/kw12121212/slim-spec-driven/main/install.sh | bash -s -- --project
-
-# 指定 CLI 或路径
-curl -fsSL .../install.sh | bash -s -- --cli claude
-curl -fsSL .../install.sh | bash -s -- --cli opencode
-curl -fsSL .../install.sh | bash -s -- --cli trae
-curl -fsSL .../install.sh | bash -s -- --cli codex
-curl -fsSL .../install.sh | bash -s -- --cli gemini
-curl -fsSL .../install.sh | bash -s -- --project /path/to/project
-```
-
 **从源码安装（用于开发或实时编辑）：**
 ```bash
 git clone https://github.com/kw12121212/slim-spec-driven ~/Code/slim-spec-driven

@@ -116,10 +116,12 @@ assert_contains "reports proposal.md" "proposal.md" "$out"
 assert_contains "reports specs/ dir"  "specs/"      "$out"
 assert_contains "reports design.md"   "design.md"   "$out"
 assert_contains "reports tasks.md"    "tasks.md"    "$out"
+assert_contains "reports questions.md" "questions.md" "$out"
 [ -f ".spec-driven/changes/$CHANGE/proposal.md" ] && pass "proposal.md exists" || fail "proposal.md missing"
 [ -d ".spec-driven/changes/$CHANGE/specs"       ] && pass "specs/ dir exists"  || fail "specs/ dir missing"
 [ -f ".spec-driven/changes/$CHANGE/design.md"   ] && pass "design.md exists"   || fail "design.md missing"
 [ -f ".spec-driven/changes/$CHANGE/tasks.md"    ] && pass "tasks.md exists"    || fail "tasks.md missing"
+[ -f ".spec-driven/changes/$CHANGE/questions.md" ] && pass "questions.md exists" || fail "questions.md missing"
 
 # duplicate propose should fail
 assert_exit "duplicate propose exits 1" 1 $CLI propose "$CHANGE"
@@ -138,6 +140,7 @@ assert_contains "shows proposal.md path" "proposal.md" "$out"
 assert_contains "shows specs/ dir"       "specs/"      "$out"
 assert_contains "shows design.md path"   "design.md"   "$out"
 assert_contains "shows tasks.md path"    "tasks.md"    "$out"
+assert_contains "shows questions.md path" "questions.md" "$out"
 
 out=$($CLI modify "nonexistent" 2>&1; echo "EXIT:$?") || true
 assert_contains "nonexistent change errors" "not found" "$out"
@@ -157,6 +160,15 @@ assert_contains "list shows in-progress status" "in-progress" "$out"
 
 # Restore task
 sed -i '0,/- \[x\]/s/- \[x\]/- [ ]/' "$TASKS_FILE"
+
+# Add open question to questions.md → blocked status
+QUESTIONS_FILE=".spec-driven/changes/$CHANGE/questions.md"
+printf '# Questions: %s\n\n## Open\n\n- [ ] Q: Is this correct?\n  Context: depends on this\n\n## Resolved\n' "$CHANGE" > "$QUESTIONS_FILE"
+out=$($CLI list 2>&1)
+assert_contains "list shows blocked status on open questions" "blocked" "$out"
+
+# Restore questions.md
+printf '# Questions: %s\n\n## Open\n\n## Resolved\n' "$CHANGE" > "$QUESTIONS_FILE"
 
 # ── 3. apply ──────────────────────────────────────────────────────────────────
 echo -e "\n${BOLD}[3] apply${RESET}"
@@ -207,6 +219,21 @@ out=$($CLI verify "$CHANGE" 2>&1)
 assert_json_field "valid=true after restore" "valid" "true" "$out"
 
 assert_exit "nonexistent change exits 0 with errors" 0 $CLI verify "nonexistent"
+
+# verify errors on open questions in questions.md
+QUESTIONS_FILE=".spec-driven/changes/$CHANGE/questions.md"
+printf '# Questions\n\n## Open\n\n- [ ] Q: What should happen here?\n  Context: unclear\n\n## Resolved\n' > "$QUESTIONS_FILE"
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "verify errors on open questions" "valid" "false" "$out"
+assert_contains   "verify reports open questions message" "open" "$out"
+
+# verify passes when all questions resolved
+printf '# Questions\n\n## Open\n\n## Resolved\n\n- [x] Q: What should happen here?\n  Context: unclear\n  A: Do the right thing\n' > "$QUESTIONS_FILE"
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "verify passes when questions resolved" "valid" "true" "$out"
+
+# Restore questions.md
+printf '# Questions: %s\n\n## Open\n\n## Resolved\n' "$CHANGE" > "$QUESTIONS_FILE"
 
 # ── 5. archive ────────────────────────────────────────────────────────────────
 echo -e "\n${BOLD}[5] archive${RESET}"

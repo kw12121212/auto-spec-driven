@@ -18,7 +18,7 @@ This prevents the AI from introducing conflicting or duplicate behavior — it k
 
 ### Layer 2: change artifacts — structured context per change
 
-Every change is a folder with four files, each serving a distinct purpose:
+Every change is a folder with five files, each serving a distinct purpose:
 
 | File | Content | Effect on AI |
 |------|---------|--------------|
@@ -26,6 +26,7 @@ Every change is a folder with four files, each serving a distinct purpose:
 | `specs/` | Delta (ADDED/MODIFIED/REMOVED) | Makes spec intent explicit, not implicit |
 | `design.md` | How — approach and decisions | Prevents the AI from reinventing the approach mid-task |
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
+| `questions.md` | Open/resolved Q&A | Centralizes ambiguities; open questions block apply and archive |
 
 ### Layer 3: 7 skills — explicit constraints on AI behavior
 
@@ -130,7 +131,7 @@ init → propose → apply → verify → archive
 ```
 
 1. **init** — create `.spec-driven/` with config.yaml, specs/INDEX.md, and specs/
-2. **propose** — read existing specs, scaffold all four artifacts, populate delta specs
+2. **propose** — read existing specs, scaffold all five artifacts, populate delta specs
 3. **apply** — implement tasks one by one; update delta specs to match what was built
 4. **verify** — check task completion, implementation evidence, spec format, and alignment
 5. **archive** — merge delta specs into `specs/` by file path, update INDEX.md, move to archive/
@@ -142,7 +143,7 @@ Use **modify** to refine any artifact mid-flight. Use **cancel** to abandon a ch
 | Skill | What it does |
 |-------|-------------|
 | `/spec-driven-init` | Initialize `.spec-driven/` in a project and fill config.yaml |
-| `/spec-driven-propose` | Read existing specs, scaffold a new change with all four artifacts |
+| `/spec-driven-propose` | Read existing specs, scaffold a new change with all five artifacts |
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-apply` | Implement tasks one by one, update delta specs when done |
 | `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
@@ -187,7 +188,8 @@ The only mandatory checkpoint is after the proposal — everything else runs aut
     │   │   └── <category>/
     │   │       └── <topic>.md  # ADDED / MODIFIED / REMOVED Requirements
     │   ├── design.md        # How (approach, decisions, alternatives)
-    │   └── tasks.md         # Implementation checklist
+    │   ├── tasks.md         # Implementation checklist
+    │   └── questions.md     # Open questions and resolved Q&A
     └── archive/             # Completed changes (YYYY-MM-DD-<name>/)
 ```
 

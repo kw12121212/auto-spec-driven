@@ -65,8 +65,8 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 
 | Subcommand | Input | Output |
 |------------|-------|--------|
-| `propose <name>` | kebab-case name | creates `.spec-driven/changes/<name>/` with `proposal.md`, `specs/`, `design.md`, `tasks.md` |
-| `modify [name]` | optional name | stdout: active change list, or paths to all four artifacts |
+| `propose <name>` | kebab-case name | creates `.spec-driven/changes/<name>/` with `proposal.md`, `specs/`, `design.md`, `tasks.md`, `questions.md` |
+| `modify [name]` | optional name | stdout: active change list, or paths to all five artifacts |
 | `apply <name>` | change name | stdout: JSON `{total, complete, remaining, tasks}` |
 | `verify <name>` | change name | stdout: JSON `{valid, warnings[], errors[]}` |
 | `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |

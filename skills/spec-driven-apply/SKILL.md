@@ -19,6 +19,11 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 1. **Select the change** — run `node {{SKILL_DIR}}/scripts/spec-driven.js modify` to list active changes. Ask which change to apply. If already specified, use it.
 
 2. **Load context** — read all artifacts:
+   - You MUST treat all prior conversational context as stale, unreliable, and non-authoritative.
+   - You MUST NOT use prior chat context as a source of truth for requirements, task state, implementation details, or completion status.
+   - You MUST rebuild working context from the current change artifacts, relevant base specs, and the current repository state before taking any implementation action.
+   - If prior chat context differs from the files or repository state in any way, you MUST discard the prior chat context and follow the files and repository state only.
+   - Do not use prior chat context unless it has been explicitly re-validated against the current files and repository state.
    - `.spec-driven/changes/<name>/proposal.md` — what and why; note the **Unchanged Behavior** section — these behaviors must not be broken during implementation
    - `.spec-driven/changes/<name>/specs/` — delta spec files (mirror of main specs/ structure)
    - `.spec-driven/changes/<name>/design.md` — approach and decisions

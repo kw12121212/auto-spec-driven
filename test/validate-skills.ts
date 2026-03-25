@@ -32,6 +32,7 @@ type SectionRequirement = {
 };
 
 type TypeRule = {
+  allowAdditionalSections: boolean;
   allowPreamble: boolean;
   preambleType?: string;
   propertySchemas: Record<string, PropertySchema>;
@@ -255,6 +256,7 @@ function loadSchemaRules(schemaText: string, schemaPath: string): SchemaRules {
     const requirePreamble = thenAst.require_preamble === true;
 
     typeRules[typeName] = {
+      allowAdditionalSections: thenAst.allow_additional_sections === true,
       allowPreamble: thenAst.allow_preamble === true || requirePreamble,
       preambleType: typeof thenAst.preamble_type === "string" ? thenAst.preamble_type : undefined,
       propertySchemas: recordOfPropertySchemas(thenFrontmatter?.properties),
@@ -616,7 +618,7 @@ function validateAstStructure(
   }
 
   const variantErrors = rule.sectionVariants.map((variant) =>
-    collectSectionErrors(astStructure.sections, variant),
+    collectSectionErrors(astStructure.sections, variant, rule.allowAdditionalSections),
   );
   const matchingVariant = variantErrors.find((variant) => variant.length === 0);
 
@@ -633,22 +635,41 @@ function validateAstStructure(
 function collectSectionErrors(
   sections: ParsedSection[],
   expected: SectionRequirement[],
+  allowAdditionalSections: boolean,
 ): ValidationError[] {
   const errors: ValidationError[] = [];
+  let actualIndex = 0;
 
   for (let index = 0; index < expected.length; index += 1) {
-    const actual = sections[index];
     const expectedSection = expected[index];
+    let matchedIndex = -1;
+
+    if (allowAdditionalSections) {
+      for (let searchIndex = actualIndex; searchIndex < sections.length; searchIndex += 1) {
+        if (sections[searchIndex].headingText === expectedSection.exactText) {
+          matchedIndex = searchIndex;
+          break;
+        }
+      }
+    } else {
+      matchedIndex = index < sections.length ? index : -1;
+    }
+
+    const actual = matchedIndex === -1 ? undefined : sections[matchedIndex];
 
     if (!actual) {
       errors.push({
         code: "ast_structure.missing_section",
         expected: expectedSection.exactText,
-        message: `Missing section "${expectedSection.exactText}" at position ${index + 1}`,
+        message: allowAdditionalSections
+          ? `Missing required section "${expectedSection.exactText}" in the expected order`
+          : `Missing section "${expectedSection.exactText}" at position ${index + 1}`,
         path: `ast_structure[${index}]`,
       });
       continue;
     }
+
+    actualIndex = matchedIndex + 1;
 
     if (actual.headingText !== expectedSection.exactText) {
       errors.push({
@@ -699,7 +720,7 @@ function collectSectionErrors(
     }
   }
 
-  if (sections.length > expected.length) {
+  if (!allowAdditionalSections && sections.length > expected.length) {
     for (let index = expected.length; index < sections.length; index += 1) {
       errors.push({
         actual: sections[index].headingText,

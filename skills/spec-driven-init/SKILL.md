@@ -9,6 +9,12 @@ version: 1.0.0
 
 You are helping the user initialize the spec-driven workflow in a project.
 
+## Prerequisites
+
+The target project directory must be accessible from the current environment.
+Before proceeding, verify the path you plan to initialize exists and is the
+intended project root.
+
 ## Steps
 
 1. **Confirm the target project** — ask which project to initialize. If the user is already in the project root, use the current directory. Accept either `.` or an explicit path.

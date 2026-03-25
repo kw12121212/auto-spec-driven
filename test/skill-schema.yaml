@@ -181,13 +181,10 @@ allOf:
       properties:
         ast_structure:
           allow_preamble: true
+          allow_additional_sections: true
           require_preamble: true
           preamble_type: "paragraph"
-          anyOf:
-            - items:
-                - { properties: { exact_text: { const: "Prerequisites" }, followed_by: { const: "paragraph" } } }
-                - { properties: { exact_text: { const: "Steps" }, followed_by: { const: "list" } } }
-                - { properties: { exact_text: { const: "Rules" }, followed_by: { const: "list" } } }
-            - items:
-                - { properties: { exact_text: { const: "Steps" }, followed_by: { const: "list" } } }
-                - { properties: { exact_text: { const: "Rules" }, followed_by: { const: "list" } } }
+          items:
+            - { properties: { exact_text: { const: "Prerequisites" }, followed_by: { const: "paragraph" } } }
+            - { properties: { exact_text: { const: "Steps" }, followed_by: { const: "list" } } }
+            - { properties: { exact_text: { const: "Rules" }, followed_by: { const: "list" } } }

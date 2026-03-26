@@ -107,7 +107,52 @@ bash install.sh --project /path/to/project       # 项目本地，指定路径
 | `codex` | `~/.agents/skills/` | `.codex/skills/` |
 | `gemini` | `~/.agents/skills/` | `.gemini/skills/` |
 
-## 工作流
+## 三种使用流程
+
+根据任务性质选择：
+
+| 场景 | 流程 | 命令 |
+|------|------|------|
+| 小型 issue，范围清晰 | **auto**（一键完成） | `/spec-driven-auto 添加用户头像` |
+| 普通 ticket，需求明确 | **propose → apply → verify → archive** | `/spec-driven-propose` → `/spec-driven-apply` → ... |
+| 模糊概念，需要探索 | **brainstorm → propose → apply → ...** | `/spec-driven-brainstorm` → 确认 → `/spec-driven-apply` → ... |
+
+### 1. 自动流程（小型 Issue）
+
+适合范围清晰的小改动——单一功能、少量文件、无跨切面逻辑：
+
+```bash
+/spec-driven-auto 添加用户头像上传功能
+```
+
+自动执行 propose → apply → verify → review → archive，仅需一次确认。若范围过大或模糊，会回退到分步模式。
+
+### 2. 标准流程（普通 Ticket）
+
+适合需求明确但实现较复杂的常规任务：
+
+```
+/spec-driven-propose 添加订单追踪功能
+/spec-driven-apply
+/spec-driven-verify
+/spec-driven-archive
+```
+
+中途可用 `/spec-driven-modify` 调整 artifacts，用 `/spec-driven-spec-content` 精准放置规格内容。
+
+### 3. 探索流程（模糊概念）
+
+适合方向、范围或问题本身都还不清晰的需求：
+
+```
+/spec-driven-brainstorm 改进大型变更的任务规划方式
+```
+
+进入讨论阶段——读取上下文、帮助收敛目标和取舍、给出变更名。显式确认后，生成与 `/spec-driven-propose` 相同的五个 artifacts，之后进入标准流程。
+
+---
+
+## 完整工作流参考
 
 ```
 init → [brainstorm] → propose → apply → verify → archive
@@ -120,9 +165,7 @@ init → [brainstorm] → propose → apply → verify → archive
 5. **verify** — 检查任务完整性、实现证据、规格格式和对齐情况
 6. **archive** — 按文件路径将 delta specs 合并进 `specs/`，更新 INDEX.md，移至 archive/
 
-想法还不清晰时先用 **brainstorm**，需求已经明确时直接用 **propose**。中途可用
-**modify** 调整任意 artifact，用 **spec-content** 只改规格内容归位，用
-**cancel** 放弃变更。
+中途可用 **modify** 调整任意 artifact，用 **spec-content** 只改规格内容归位，用 **cancel** 放弃变更。
 
 ## 技能列表
 

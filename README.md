@@ -107,7 +107,52 @@ bash install.sh --project /path/to/project       # project-local at specified pa
 | `codex` | `~/.agents/skills/` | `.codex/skills/` |
 | `gemini` | `~/.agents/skills/` | `.gemini/skills/` |
 
-## Workflow
+## Three Workflows
+
+Choose based on the nature of your task:
+
+| Scenario | Workflow | Command |
+|----------|----------|---------|
+| Small issue, clear scope | **auto** (one-shot) | `/spec-driven-auto add user avatar` |
+| Regular ticket, defined requirements | **propose → apply → verify → archive** | `/spec-driven-propose` → `/spec-driven-apply` → ... |
+| Fuzzy concept, needs exploration | **brainstorm → propose → apply → ...** | `/spec-driven-brainstorm` → confirm → `/spec-driven-apply` → ... |
+
+### 1. Auto Workflow (Small Issues)
+
+For small, well-scoped changes — single feature, few files, no cross-cutting concerns:
+
+```bash
+/spec-driven-auto add user avatar upload
+```
+
+Runs propose → apply → verify → review → archive with one confirmation checkpoint. Falls back to step-by-step if scope is too large or vague.
+
+### 2. Standard Workflow (Regular Tickets)
+
+For typical tasks with clear requirements but non-trivial implementation:
+
+```
+/spec-driven-propose add order tracking
+/spec-driven-apply
+/spec-driven-verify
+/spec-driven-archive
+```
+
+Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-content` to place spec content correctly.
+
+### 3. Brainstorm Workflow (Fuzzy Concepts)
+
+For exploratory work where scope, approach, or even the problem itself is unclear:
+
+```
+/spec-driven-brainstorm improve task planning for large changes
+```
+
+This enters a discussion phase — reads context, helps narrow scope and tradeoffs, proposes a change name. After explicit confirmation, it generates the same five artifacts as `/spec-driven-propose`, then you proceed with the standard workflow.
+
+---
+
+## Full Workflow Reference
 
 ```
 init → [brainstorm] → propose → apply → verify → archive
@@ -120,10 +165,7 @@ init → [brainstorm] → propose → apply → verify → archive
 5. **verify** — check task completion, implementation evidence, spec format, and alignment
 6. **archive** — merge delta specs into `specs/` by file path, update INDEX.md, move to archive/
 
-Use **brainstorm** when the idea is still fuzzy and **propose** when the change
-is already concrete. Use **modify** to refine any artifact mid-flight. Use
-**spec-content** when the content is clear but the correct spec category/file is
-not. Use **cancel** to abandon a change.
+Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **cancel** to abandon a change.
 
 ## Skills
 

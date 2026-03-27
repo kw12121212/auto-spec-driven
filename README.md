@@ -59,13 +59,14 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | | spec-driven | OpenSpec |
 |--|-------------|----------|
 | Spec format | RFC 2119 enforced — `### Requirement:` + MUST/SHOULD/MAY + GIVEN/WHEN/THEN; violations are script errors | No required format |
-| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, and `spec-content` must read INDEX.md then every relevant spec file before generating anything | "Searches existing specs" (vague) |
+| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, and `spec-content` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
 | Delta spec structure | Mirrors `specs/` by path — `changes/<name>/specs/auth/login.md` maps to `specs/auth/login.md` | Not path-bound |
-| Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | File organization only |
-| Runtime dependencies | Node.js stdlib only — one ~640-line TypeScript file | Global npm package (`npm install -g`, Node 20.19+) |
+| Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | Specs updated on archive, no formal merge gate |
+| Ambiguity tracking | `questions.md` centralizes open questions; unresolved questions block apply and archive | Not built in |
+| Runtime dependencies | Node.js stdlib only — one ~640-line TypeScript file | Global npm package (`npm install -g @fission-ai/openspec`, Node 20.19+) |
 | Project-level AI rules | `config.yaml` rules injected into every skill prompt | None |
-| Philosophy | Enforcement over flexibility — constraints are the point | "Fluid not rigid" |
-| Tool support | Claude Code, OpenCode | 30+ AI tools |
+| Philosophy | Enforcement over flexibility — constraints are the point | Fluid, iterative, easy, scalable |
+| Tool support | Any Agent Skills-compatible CLI (Claude Code, OpenCode, Trae, Codex, Gemini CLI) | 20+ AI assistants |
 
 **When to use spec-driven**: you want the AI constrained by a spec standard it cannot silently ignore, and you're working in Claude Code or OpenCode.
 

@@ -6,8 +6,8 @@ Instructions for AI agents working in this repository.
 
 `slim-spec-driven` is a lightweight spec-driven development framework. It ships:
 
-- **10 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
-- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 8 subcommands
+- **11 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
+- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 9 subcommands
 - **`install.sh`** — installs skills to `~/.slim-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/` / `~/.trae/skills/` / `~/.agents/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
@@ -21,7 +21,7 @@ slim-spec-driven/
 │   └── <name>/SKILL.md
 ├── template/         # .spec-driven/ starter template
 ├── test/
-│   ├── run.sh        # Test runner (50 tests, fully repeatable)
+│   ├── run.sh        # Test runner (fully repeatable)
 │   └── todo-app/     # Fixture project used by tests
 ├── .spec-driven/     # This repo uses its own workflow (dogfooding)
 ├── install.sh
@@ -44,7 +44,7 @@ Always rebuild after editing any `scripts/*.ts` file. Tests run against `dist/`.
 bash test/run.sh
 ```
 
-Tests are fully repeatable — they reset state before and after each run. All 46 must pass before committing changes to scripts.
+Tests are fully repeatable — they reset state before and after each run. All tests must pass before committing changes to scripts.
 
 ## Skill Format
 

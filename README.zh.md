@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-轻量级规范驱动开发框架：11 个 agent skills + 少量 TypeScript 脚手架。
+轻量级规范驱动开发框架：12 个 agent skills + 少量 TypeScript 脚手架。
 
 ## 如何辅助 AI 编程
 
@@ -30,7 +30,7 @@ AI 不靠通读代码来理解"系统做什么"，而是读 `specs/`：
 | `tasks.md` | `- [ ]` 任务清单 | 控制步伐，一次一个任务 |
 | `questions.md` | 开放/已解决问题 | 把歧义集中管理，未解决问题会阻塞 apply 和 archive |
 
-### 第三层：11 个技能——AI 行为的精确约束
+### 第三层：12 个技能——AI 行为的精确约束
 
 每个技能都是一份精确的提示词，明确指定：
 - 读哪些文件（逐一列出，不模糊）
@@ -176,6 +176,7 @@ init → [brainstorm] → propose → apply → verify → archive
 |------|------|
 | `/spec-driven-brainstorm` | 从模糊想法开始讨论，收敛范围与变更名，确认后生成完整的五个 proposal artifacts |
 | `/spec-driven-init` | 初始化 `.spec-driven/`，填写 config.yaml |
+| `/spec-driven-maintenance` | 查看或运行纯手动 maintenance 工作流，只执行仓库显式配置的安全自动修复 |
 | `/spec-driven-propose` | 读取现有规格，生成全部五个变更 artifacts |
 | `/spec-driven-modify` | 编辑现有变更的某个 artifact |
 | `/spec-driven-spec-content` | 读取 `specs/INDEX.md`，把 spec 内容放到正确的 delta spec 文件 |
@@ -270,10 +271,45 @@ node dist/scripts/spec-driven.js verify <name>   # 验证 artifact 格式 → JS
 node dist/scripts/spec-driven.js archive <name>  # 移至 archive/YYYY-MM-DD-<name>/
 node dist/scripts/spec-driven.js cancel <name>   # 永久删除变更目录
 node dist/scripts/spec-driven.js init [path]     # 初始化 .spec-driven/ 脚手架
+node dist/scripts/spec-driven.js run-maintenance [path]      # 立即运行手动 maintenance 工作流
 node dist/scripts/spec-driven.js migrate [path]  # 迁移 openspec/ 产物
 node dist/scripts/spec-driven.js list            # 列出所有变更（活跃 + 已归档）
+```
+
+## 手动 Maintenance 工作流
+
+`run-maintenance` 会读取 `.spec-driven/maintenance/config.json`，只执行仓库显式配置的检查项与安全自动修复。
+
+配置示例：
+
+```json
+{
+  "changePrefix": "maintenance",
+  "branchPrefix": "maintenance",
+  "commitMessagePrefix": "chore: maintenance",
+  "checks": [
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "fixCommand": "npm run lint:fix"
+    }
+  ]
+}
+```
+
+配置行为：
+- `checks` 是必填项；只允许执行其中列出的检查与 `fixCommand`
+- `changePrefix`、`branchPrefix`、`commitMessagePrefix` 为可选项，缺省时会回退到 maintenance 默认值
+- 不会安装任何定时器或后台任务；maintenance 只会在显式触发时运行
+
+`run-maintenance`：
+- 当 maintenance 配置缺失或无效时会报错退出
+- 当仓库有未提交修改、没有配置检查项，或已经存在活跃 maintenance change 时会跳过
+- 当所有配置检查都通过时会 clean 退出
+- 当失败检查没有安全的 `fixCommand` 时，会报告 unfixable
+- 当 fix、archive、commit 或切回原分支失败时，会报告 blocked
+- 当可安全修复时，会创建独立的 maintenance branch/change，执行修复、归档变更、在 maintenance 分支上提交结果，并在成功后切回原分支
 
 ## 许可证
 
 [Apache License 2.0](LICENSE)
-```

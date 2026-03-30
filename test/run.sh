@@ -30,7 +30,7 @@ assert_exit() {
 
 assert_contains() {
   local label="$1" needle="$2" haystack="$3"
-  if echo "$haystack" | grep -qF "$needle"; then pass "$label";
+  if echo "$haystack" | grep -qF -- "$needle"; then pass "$label";
   else fail "$label (expected to find: $needle)"; fi
 }
 
@@ -95,6 +95,9 @@ out=$(HOME="$INSTALL_HOME" bash "$ROOT/install.sh" --cli codex 2>&1)
 assert_contains "install reports brainstorm skill copy" "copied: spec-driven-brainstorm/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-brainstorm/SKILL.md" ] && pass "install copies brainstorm skill into agent store" || fail "install missing brainstorm skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/spec-driven-brainstorm" ] && pass "install links brainstorm skill for codex" || fail "install missing brainstorm symlink for codex"
+assert_contains "install reports maintenance skill copy" "copied: spec-driven-maintenance/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-maintenance/SKILL.md" ] && pass "install copies maintenance skill into agent store" || fail "install missing maintenance skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/spec-driven-maintenance" ] && pass "install links maintenance skill for codex" || fail "install missing maintenance symlink for codex"
 assert_contains "install reports spec-content skill copy" "copied: spec-driven-spec-content/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content/SKILL.md" ] && pass "install copies spec-content skill into agent store" || fail "install missing spec-content skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/spec-driven-spec-content" ] && pass "install links spec-content skill for codex" || fail "install missing spec-content symlink for codex"
@@ -137,6 +140,180 @@ mkdir -p "$MIGRATE_DIR/openspec"
 out=$($CLI migrate "$MIGRATE_DIR" 2>&1)
 assert_contains "migrate skips rename when spec-driven exists" "Skipped openspec/ rename" "$out"
 rm -rf "$MIGRATE_DIR"
+
+# ── 1d. maintenance ───────────────────────────────────────────────────────────
+echo -e "\n${BOLD}[1d] maintenance${RESET}"
+
+MAINT_DIR="$(mktemp -d)"
+$CLI init "$MAINT_DIR" >/dev/null
+mkdir -p "$MAINT_DIR/scripts"
+printf '{\n  "name": "maintenance-fixture",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js",\n    "lint:fix": "node scripts/fix-status.js"\n  }\n}\n' > "$MAINT_DIR/package.json"
+mkdir -p "$MAINT_DIR/.spec-driven/maintenance"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint",\n      "fixCommand": "npm run lint:fix"\n    }\n  ]\n}\n' > "$MAINT_DIR/.spec-driven/maintenance/config.json"
+printf 'import fs from "fs";\nconst status = fs.readFileSync("status.txt", "utf-8").trim();\nif (status !== "fixed") {\n  console.error("status is not fixed");\n  process.exit(1);\n}\nconsole.log("status ok");\n' > "$MAINT_DIR/scripts/check-status.js"
+printf 'import fs from "fs";\nfs.writeFileSync("status.txt", "fixed\\n");\nconsole.log("fixed");\n' > "$MAINT_DIR/scripts/fix-status.js"
+printf 'broken\n' > "$MAINT_DIR/status.txt"
+git -C "$MAINT_DIR" init >/dev/null
+git -C "$MAINT_DIR" config user.email "spec-driven@example.com"
+git -C "$MAINT_DIR" config user.name "spec-driven"
+git -C "$MAINT_DIR" add .
+git -C "$MAINT_DIR" commit -m "initial maintenance fixture" >/dev/null
+BASE_BRANCH="$(git -C "$MAINT_DIR" branch --show-current)"
+
+out=$($CLI run-maintenance "$MAINT_DIR" 2>&1)
+assert_contains "run-maintenance reports repaired status" "\"status\": \"repaired\"" "$out"
+assert_contains "run-maintenance reports fixed lint check" "\"fixedChecks\": [" "$out"
+maintenance_branch="$(echo "$out" | grep -m 1 -oP '"branch":\s*"\K[^"]+')"
+maintenance_change="$(echo "$out" | grep -m 1 -oP '"change":\s*"\K[^"]+')"
+status_content="$(git -C "$MAINT_DIR" show "$maintenance_branch:status.txt")"
+assert_contains "run-maintenance applies fix command on maintenance branch" "fixed" "$status_content"
+archive_tasks="$(git -C "$MAINT_DIR" show "$maintenance_branch:.spec-driven/changes/archive/$(date +%Y-%m-%d)-$maintenance_change/tasks.md")"
+assert_contains "run-maintenance archives successful change on maintenance branch" "- [x] Verify the maintenance change is valid and archive it" "$archive_tasks"
+current_branch="$(git -C "$MAINT_DIR" branch --show-current)"
+if [ "$current_branch" = "$BASE_BRANCH" ]; then pass "run-maintenance restores original branch"; else fail "run-maintenance did not restore original branch"; fi
+last_commit="$(git -C "$MAINT_DIR" log --oneline -1 "$maintenance_branch")"
+assert_contains "run-maintenance creates maintenance commit" "chore: maintenance" "$last_commit"
+
+out=$(cd "$MAINT_DIR" && $CLI propose "maintenance-pending" 2>&1)
+assert_contains "creates active maintenance change for duplicate test" "Created change:" "$out"
+out=$($CLI run-maintenance "$MAINT_DIR" 2>&1)
+assert_contains "run-maintenance skips when active maintenance change exists" "\"reason\": \"active-maintenance-change\"" "$out"
+rm -rf "$MAINT_DIR"
+
+MISSING_CONFIG_DIR="$(mktemp -d)"
+$CLI init "$MISSING_CONFIG_DIR" >/dev/null
+git -C "$MISSING_CONFIG_DIR" init >/dev/null
+git -C "$MISSING_CONFIG_DIR" config user.email "spec-driven@example.com"
+git -C "$MISSING_CONFIG_DIR" config user.name "spec-driven"
+out=$($CLI run-maintenance "$MISSING_CONFIG_DIR" 2>&1; true)
+assert_contains "run-maintenance errors when config missing" '"status": "error"' "$out"
+assert_contains "run-maintenance reports config hint" 'Create .spec-driven/maintenance/config.json' "$out"
+rm -rf "$MISSING_CONFIG_DIR"
+
+NO_CHECKS_DIR="$(mktemp -d)"
+$CLI init "$NO_CHECKS_DIR" >/dev/null
+mkdir -p "$NO_CHECKS_DIR/.spec-driven/maintenance"
+printf '{\n  "checks": []\n}\n' > "$NO_CHECKS_DIR/.spec-driven/maintenance/config.json"
+git -C "$NO_CHECKS_DIR" init >/dev/null
+git -C "$NO_CHECKS_DIR" config user.email "spec-driven@example.com"
+git -C "$NO_CHECKS_DIR" config user.name "spec-driven"
+out=$($CLI run-maintenance "$NO_CHECKS_DIR" 2>&1)
+assert_contains "run-maintenance skips with no configured checks" '"reason": "no-configured-checks"' "$out"
+rm -rf "$NO_CHECKS_DIR"
+
+CLEAN_DIR="$(mktemp -d)"
+$CLI init "$CLEAN_DIR" >/dev/null
+mkdir -p "$CLEAN_DIR/scripts" "$CLEAN_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-clean",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js"\n  }\n}\n' > "$CLEAN_DIR/package.json"
+printf 'console.log("status ok");\n' > "$CLEAN_DIR/scripts/check-status.js"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint"\n    }\n  ]\n}\n' > "$CLEAN_DIR/.spec-driven/maintenance/config.json"
+git -C "$CLEAN_DIR" init >/dev/null
+git -C "$CLEAN_DIR" config user.email "spec-driven@example.com"
+git -C "$CLEAN_DIR" config user.name "spec-driven"
+git -C "$CLEAN_DIR" add .
+git -C "$CLEAN_DIR" commit -m "initial clean fixture" >/dev/null
+out=$($CLI run-maintenance "$CLEAN_DIR" 2>&1)
+assert_contains "run-maintenance reports clean status" '"status": "clean"' "$out"
+rm -rf "$CLEAN_DIR"
+
+DIRTY_DIR="$(mktemp -d)"
+$CLI init "$DIRTY_DIR" >/dev/null
+mkdir -p "$DIRTY_DIR/scripts" "$DIRTY_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-dirty",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js",\n    "lint:fix": "node scripts/fix-status.js"\n  }\n}\n' > "$DIRTY_DIR/package.json"
+printf 'process.exit(1);\n' > "$DIRTY_DIR/scripts/check-status.js"
+printf 'process.exit(0);\n' > "$DIRTY_DIR/scripts/fix-status.js"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint",\n      "fixCommand": "npm run lint:fix"\n    }\n  ]\n}\n' > "$DIRTY_DIR/.spec-driven/maintenance/config.json"
+git -C "$DIRTY_DIR" init >/dev/null
+git -C "$DIRTY_DIR" config user.email "spec-driven@example.com"
+git -C "$DIRTY_DIR" config user.name "spec-driven"
+git -C "$DIRTY_DIR" add .
+git -C "$DIRTY_DIR" commit -m "initial dirty fixture" >/dev/null
+printf 'uncommitted\n' >> "$DIRTY_DIR/package.json"
+out=$($CLI run-maintenance "$DIRTY_DIR" 2>&1)
+assert_contains "run-maintenance skips dirty working tree" '"reason": "dirty-working-tree"' "$out"
+rm -rf "$DIRTY_DIR"
+
+UNFIXABLE_DIR="$(mktemp -d)"
+$CLI init "$UNFIXABLE_DIR" >/dev/null
+mkdir -p "$UNFIXABLE_DIR/scripts"
+mkdir -p "$UNFIXABLE_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-unfixable",\n  "type": "module",\n  "scripts": {\n    "test": "node scripts/fail.js"\n  }\n}\n' > "$UNFIXABLE_DIR/package.json"
+printf '{\n  "checks": [\n    {\n      "name": "test",\n      "command": "npm test"\n    }\n  ]\n}\n' > "$UNFIXABLE_DIR/.spec-driven/maintenance/config.json"
+printf 'console.error("still failing");\nprocess.exit(1);\n' > "$UNFIXABLE_DIR/scripts/fail.js"
+git -C "$UNFIXABLE_DIR" init >/dev/null
+git -C "$UNFIXABLE_DIR" config user.email "spec-driven@example.com"
+git -C "$UNFIXABLE_DIR" config user.name "spec-driven"
+git -C "$UNFIXABLE_DIR" add .
+git -C "$UNFIXABLE_DIR" commit -m "initial unfixable fixture" >/dev/null
+out=$($CLI run-maintenance "$UNFIXABLE_DIR" 2>&1)
+assert_contains "run-maintenance reports unfixable status" "\"status\": \"unfixable\"" "$out"
+assert_contains "run-maintenance identifies unfixable check" "\"unfixableChecks\": [" "$out"
+[ -z "$(find "$UNFIXABLE_DIR/.spec-driven/changes" -maxdepth 1 -mindepth 1 -type d -name 'maintenance-*' | head -n 1)" ] && pass "run-maintenance does not create unfixable change directory" || fail "run-maintenance created unexpected unfixable change directory"
+rm -rf "$UNFIXABLE_DIR"
+
+COMMIT_FAIL_DIR="$(mktemp -d)"
+$CLI init "$COMMIT_FAIL_DIR" >/dev/null
+mkdir -p "$COMMIT_FAIL_DIR/scripts" "$COMMIT_FAIL_DIR/.git/hooks"
+mkdir -p "$COMMIT_FAIL_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-commit-fail",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js",\n    "lint:fix": "node scripts/fix-status.js"\n  }\n}\n' > "$COMMIT_FAIL_DIR/package.json"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint",\n      "fixCommand": "npm run lint:fix"\n    }\n  ]\n}\n' > "$COMMIT_FAIL_DIR/.spec-driven/maintenance/config.json"
+printf 'import fs from "fs";\nconst status = fs.readFileSync("status.txt", "utf-8").trim();\nif (status !== "fixed") {\n  console.error("status is not fixed");\n  process.exit(1);\n}\n' > "$COMMIT_FAIL_DIR/scripts/check-status.js"
+printf 'import fs from "fs";\nfs.writeFileSync("status.txt", "fixed\\n");\n' > "$COMMIT_FAIL_DIR/scripts/fix-status.js"
+printf 'broken\n' > "$COMMIT_FAIL_DIR/status.txt"
+git -C "$COMMIT_FAIL_DIR" init >/dev/null
+git -C "$COMMIT_FAIL_DIR" config user.email "spec-driven@example.com"
+git -C "$COMMIT_FAIL_DIR" config user.name "spec-driven"
+git -C "$COMMIT_FAIL_DIR" add .
+git -C "$COMMIT_FAIL_DIR" commit -m "initial commit failure fixture" >/dev/null
+printf '#!/usr/bin/env bash\necho "blocked by pre-commit" >&2\nexit 1\n' > "$COMMIT_FAIL_DIR/.git/hooks/pre-commit"
+chmod +x "$COMMIT_FAIL_DIR/.git/hooks/pre-commit"
+out=$($CLI run-maintenance "$COMMIT_FAIL_DIR" 2>&1)
+assert_contains "run-maintenance reports blocked commit failure" '"reason": "git-commit-failed"' "$out"
+assert_contains "run-maintenance reports pre-commit stderr" 'blocked by pre-commit' "$out"
+rm -rf "$COMMIT_FAIL_DIR"
+
+RESTORE_FAIL_DIR="$(mktemp -d)"
+$CLI init "$RESTORE_FAIL_DIR" >/dev/null
+mkdir -p "$RESTORE_FAIL_DIR/scripts"
+mkdir -p "$RESTORE_FAIL_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-restore-fail",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js",\n    "lint:fix": "node scripts/fix-status.js"\n  }\n}\n' > "$RESTORE_FAIL_DIR/package.json"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint",\n      "fixCommand": "npm run lint:fix"\n    }\n  ]\n}\n' > "$RESTORE_FAIL_DIR/.spec-driven/maintenance/config.json"
+printf 'import fs from "fs";\nconst status = fs.readFileSync("status.txt", "utf-8").trim();\nif (status !== "fixed") {\n  console.error("status is not fixed");\n  process.exit(1);\n}\n' > "$RESTORE_FAIL_DIR/scripts/check-status.js"
+printf 'import fs from "fs";\nfs.writeFileSync("status.txt", "fixed\\n");\n' > "$RESTORE_FAIL_DIR/scripts/fix-status.js"
+printf 'broken\n' > "$RESTORE_FAIL_DIR/status.txt"
+git -C "$RESTORE_FAIL_DIR" init >/dev/null
+git -C "$RESTORE_FAIL_DIR" config user.email "spec-driven@example.com"
+git -C "$RESTORE_FAIL_DIR" config user.name "spec-driven"
+git -C "$RESTORE_FAIL_DIR" add .
+git -C "$RESTORE_FAIL_DIR" commit -m "initial restore failure fixture" >/dev/null
+RESTORE_BASE_BRANCH="$(git -C "$RESTORE_FAIL_DIR" branch --show-current)"
+printf '#!/usr/bin/env bash\ngit branch -D %s >/dev/null 2>&1 || true\n' "$RESTORE_BASE_BRANCH" > "$RESTORE_FAIL_DIR/.git/hooks/post-commit"
+chmod +x "$RESTORE_FAIL_DIR/.git/hooks/post-commit"
+out=$($CLI run-maintenance "$RESTORE_FAIL_DIR" 2>&1)
+assert_contains "run-maintenance reports blocked restore failure" '"reason": "restore-branch-failed"' "$out"
+assert_contains "run-maintenance keeps maintenance branch in blocked output" '"branch": "maintenance-' "$out"
+rm -rf "$RESTORE_FAIL_DIR"
+
+ARCHIVE_FAIL_DIR="$(mktemp -d)"
+$CLI init "$ARCHIVE_FAIL_DIR" >/dev/null
+mkdir -p "$ARCHIVE_FAIL_DIR/scripts" "$ARCHIVE_FAIL_DIR/.spec-driven/maintenance"
+printf '{\n  "name": "maintenance-archive-fail",\n  "type": "module",\n  "scripts": {\n    "lint": "node scripts/check-status.js",\n    "lint:fix": "node scripts/fix-status.js"\n  }\n}\n' > "$ARCHIVE_FAIL_DIR/package.json"
+printf '{\n  "checks": [\n    {\n      "name": "lint",\n      "command": "npm run lint",\n      "fixCommand": "npm run lint:fix"\n    }\n  ]\n}\n' > "$ARCHIVE_FAIL_DIR/.spec-driven/maintenance/config.json"
+printf 'import fs from "fs";\nconst status = fs.readFileSync("status.txt", "utf-8").trim();\nif (status !== "fixed") process.exit(1);\n' > "$ARCHIVE_FAIL_DIR/scripts/check-status.js"
+printf 'import fs from "fs";\nfs.writeFileSync("status.txt", "fixed\\n");\n' > "$ARCHIVE_FAIL_DIR/scripts/fix-status.js"
+printf 'broken\n' > "$ARCHIVE_FAIL_DIR/status.txt"
+git -C "$ARCHIVE_FAIL_DIR" init >/dev/null
+git -C "$ARCHIVE_FAIL_DIR" config user.email "spec-driven@example.com"
+git -C "$ARCHIVE_FAIL_DIR" config user.name "spec-driven"
+git -C "$ARCHIVE_FAIL_DIR" add .
+git -C "$ARCHIVE_FAIL_DIR" commit -m "initial archive failure fixture" >/dev/null
+rm -rf "$ARCHIVE_FAIL_DIR/.spec-driven/changes/archive"
+printf 'not-a-directory\n' > "$ARCHIVE_FAIL_DIR/.spec-driven/changes/archive"
+git -C "$ARCHIVE_FAIL_DIR" add .spec-driven/changes/archive
+git -C "$ARCHIVE_FAIL_DIR" commit -m "add archive blocker" >/dev/null
+out=$($CLI run-maintenance "$ARCHIVE_FAIL_DIR" 2>&1)
+assert_contains "run-maintenance reports blocked archive failure" '"reason": "archive-failed"' "$out"
+rm -rf "$ARCHIVE_FAIL_DIR"
 
 # ── 2. propose ────────────────────────────────────────────────────────────────
 echo -e "${BOLD}[2] propose${RESET}"

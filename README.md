@@ -1,6 +1,6 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 11 agent skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 12 agent skills + thin TypeScript scaffolding.
 
 **[中文说明](README.zh.md)**
 
@@ -176,6 +176,7 @@ Use **modify** to refine any artifact mid-flight. Use **spec-content** when the 
 |-------|-------------|
 | `/spec-driven-brainstorm` | Discuss a rough idea, converge on scope and a change name, then generate the full five-artifact proposal after confirmation |
 | `/spec-driven-init` | Initialize `.spec-driven/` in a project and fill config.yaml |
+| `/spec-driven-maintenance` | Inspect or run the manual maintenance workflow for explicitly configured safe auto-fixes |
 | `/spec-driven-propose` | Read existing specs, scaffold a new change with all five artifacts |
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-spec-content` | Read `specs/INDEX.md`, classify spec content, and place it in the correct delta spec file |
@@ -272,9 +273,45 @@ node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → 
 node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/
 node dist/scripts/spec-driven.js cancel <name>   # Delete change (no archive)
 node dist/scripts/spec-driven.js init [path]     # Bootstrap .spec-driven/ scaffold
+node dist/scripts/spec-driven.js run-maintenance [path]      # Run the manual maintenance workflow now
 node dist/scripts/spec-driven.js migrate [path]  # Migrate openspec/ artifacts
 node dist/scripts/spec-driven.js list            # List all changes (active + archived)
 ```
+
+## Manual Maintenance Workflow
+
+`run-maintenance` reads `.spec-driven/maintenance/config.json` and executes only
+the checks and safe auto-fixes that the repository explicitly configures.
+
+Example config:
+
+```json
+{
+  "changePrefix": "maintenance",
+  "branchPrefix": "maintenance",
+  "commitMessagePrefix": "chore: maintenance",
+  "checks": [
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "fixCommand": "npm run lint:fix"
+    }
+  ]
+}
+```
+
+Config behavior:
+- `checks` is required; only listed checks and `fixCommand`s are allowed to run
+- `changePrefix`, `branchPrefix`, and `commitMessagePrefix` are optional and fall back to maintenance defaults
+- No scheduler or background job is installed; maintenance runs only when explicitly invoked
+
+`run-maintenance`:
+- errors when the maintenance config is missing or invalid
+- skips when the repo is dirty, has no configured checks, or already has an active maintenance change
+- exits cleanly when configured checks already pass
+- reports unfixable failures when a failing check has no configured `fixCommand`
+- reports blocked results when fix, archive, commit, or branch restore steps fail
+- creates a dedicated maintenance branch/change, applies configured fixes, archives the change, commits the result on the maintenance branch, and returns to the original branch on success
 
 ## License
 

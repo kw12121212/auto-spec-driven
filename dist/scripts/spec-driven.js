@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 const [command, ...args] = process.argv.slice(2);
@@ -39,6 +40,9 @@ const INIT_CONFIG_YAML = [
 ].join("\n");
 const INIT_INDEX_MD = `# Specs Index\n\n<!-- One entry per spec file. Updated by /spec-driven-archive after each change. -->\n`;
 const INIT_README_MD = `# Specs\n\nSpecs describe the current state of the system — what it does, not how it was built.\n\n## Format\n\n\`\`\`markdown\n### Requirement: <name>\nThe system MUST/SHOULD/MAY <observable behavior>.\n\n#### Scenario: <name>\n- GIVEN <precondition>\n- WHEN <action>\n- THEN <expected outcome>\n\`\`\`\n\n**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).\n\n## Organization\n\nGroup specs by domain area. Use kebab-case directory names (e.g. \`core/\`, \`api/\`, \`auth/\`).\n\n## Conventions\n\n- Write in present tense ("the system does X")\n- Describe observable behavior, not implementation details\n- Keep each spec focused on one area\n`;
+const DEFAULT_MAINTENANCE_CHANGE_PREFIX = "maintenance";
+const DEFAULT_MAINTENANCE_BRANCH_PREFIX = "maintenance";
+const DEFAULT_MAINTENANCE_COMMIT_PREFIX = "chore: maintenance";
 const supportedMigrationTools = [
     {
         name: "claude",
@@ -103,6 +107,9 @@ switch (command) {
     case "init":
         init();
         break;
+    case "run-maintenance":
+        runMaintenance();
+        break;
     case "migrate":
         migrate();
         break;
@@ -111,7 +118,7 @@ switch (command) {
         break;
     default:
         console.error("Usage: node spec-driven.js <command> [args]");
-        console.error("Commands: propose, modify, apply, verify, archive, cancel, init, migrate, list");
+        console.error("Commands: propose, modify, apply, verify, archive, cancel, init, run-maintenance, migrate, list");
         process.exit(1);
 }
 function propose() {
@@ -344,6 +351,163 @@ function init() {
         console.log(`  ${line}`);
     console.log(`  Edit config.yaml to add project context`);
 }
+function runMaintenance() {
+    const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();
+    const specDir = path.join(targetDir, ".spec-driven");
+    if (!fs.existsSync(specDir) || !fs.statSync(specDir).isDirectory()) {
+        console.error(JSON.stringify({ status: "error", message: `.spec-driven/ not found in ${targetDir}` }, null, 2));
+        process.exit(1);
+    }
+    process.chdir(targetDir);
+    const config = loadMaintenanceConfig(targetDir);
+    if (config.checks.length === 0) {
+        console.log(JSON.stringify({ status: "skipped", reason: "no-configured-checks" }, null, 2));
+        process.exit(0);
+    }
+    const activeChange = findActiveMaintenanceChange(targetDir, config.changePrefix);
+    if (activeChange) {
+        console.log(JSON.stringify({ status: "skipped", reason: "active-maintenance-change", change: activeChange }, null, 2));
+        process.exit(0);
+    }
+    const repoCheck = runShellCommand("git rev-parse --show-toplevel", targetDir);
+    if (repoCheck.status !== 0) {
+        console.error(JSON.stringify({ status: "error", message: "target is not a git repository", stderr: repoCheck.stderr.trim() }, null, 2));
+        process.exit(1);
+    }
+    const dirty = runShellCommand("git status --porcelain", targetDir);
+    if (dirty.status !== 0) {
+        console.error(JSON.stringify({ status: "error", message: "failed to inspect git working tree", stderr: dirty.stderr.trim() }, null, 2));
+        process.exit(1);
+    }
+    if (dirty.stdout.trim()) {
+        console.log(JSON.stringify({ status: "skipped", reason: "dirty-working-tree" }, null, 2));
+        process.exit(0);
+    }
+    const initialResults = config.checks.map((check) => ({
+        check,
+        result: runShellCommand(check.command, targetDir),
+    }));
+    const failingChecks = initialResults.filter(({ result }) => result.status !== 0);
+    if (failingChecks.length === 0) {
+        console.log(JSON.stringify({ status: "clean", checks: config.checks.map((check) => check.name) }, null, 2));
+        process.exit(0);
+    }
+    const unfixable = failingChecks.filter(({ check }) => !check.fixCommand);
+    if (unfixable.length > 0) {
+        console.log(JSON.stringify({
+            status: "unfixable",
+            failedChecks: failingChecks.map(({ check }) => check.name),
+            unfixableChecks: unfixable.map(({ check }) => check.name),
+        }, null, 2));
+        process.exit(0);
+    }
+    const originalBranch = runShellCommand("git branch --show-current", targetDir);
+    if (originalBranch.status !== 0) {
+        console.error(JSON.stringify({ status: "error", message: "failed to resolve current branch", stderr: originalBranch.stderr.trim() }, null, 2));
+        process.exit(1);
+    }
+    const stamp = makeMaintenanceStamp();
+    const changeName = `${config.changePrefix}-${stamp}`;
+    const branchName = `${config.branchPrefix}-${stamp}`;
+    const branchCreate = runShellCommand(`git switch -c ${shellQuote(branchName)}`, targetDir);
+    if (branchCreate.status !== 0) {
+        console.error(JSON.stringify({ status: "error", message: "failed to create maintenance branch", stderr: branchCreate.stderr.trim() }, null, 2));
+        process.exit(1);
+    }
+    seedMaintenanceChange(targetDir, changeName, branchName, failingChecks.map(({ check }) => check), config);
+    const implementationTask = "Apply configured auto-fixes for the failing maintenance checks";
+    const testingTask = "Re-run the configured maintenance checks and confirm they pass";
+    const verificationTask = "Verify the maintenance change is valid and archive it";
+    for (const { check } of failingChecks) {
+        const fixResult = runShellCommand(check.fixCommand, targetDir);
+        if (fixResult.status !== 0) {
+            console.log(JSON.stringify({
+                status: "blocked",
+                reason: "fix-command-failed",
+                branch: branchName,
+                change: changeName,
+                failedCheck: check.name,
+                stderr: fixResult.stderr.trim(),
+            }, null, 2));
+            process.exit(0);
+        }
+    }
+    markTaskComplete(path.join(changeDir(changeName), "tasks.md"), implementationTask);
+    const verificationResults = config.checks.map((check) => ({
+        check,
+        result: runShellCommand(check.command, targetDir),
+    }));
+    const stillFailing = verificationResults.filter(({ result }) => result.status !== 0);
+    if (stillFailing.length > 0) {
+        console.log(JSON.stringify({
+            status: "blocked",
+            reason: "checks-still-failing",
+            branch: branchName,
+            change: changeName,
+            failedChecks: stillFailing.map(({ check }) => check.name),
+        }, null, 2));
+        process.exit(0);
+    }
+    markTaskComplete(path.join(changeDir(changeName), "tasks.md"), testingTask);
+    const changeVerify = verifyChangeArtifacts(changeName);
+    if (!changeVerify.valid) {
+        console.log(JSON.stringify({
+            status: "blocked",
+            reason: "invalid-maintenance-change",
+            branch: branchName,
+            change: changeName,
+            errors: changeVerify.errors,
+            warnings: changeVerify.warnings,
+        }, null, 2));
+        process.exit(0);
+    }
+    markTaskComplete(path.join(changeDir(changeName), "tasks.md"), verificationTask);
+    const archiveResult = tryArchiveChange(changeName);
+    if (!archiveResult.ok) {
+        console.log(JSON.stringify({
+            status: "blocked",
+            reason: "archive-failed",
+            branch: branchName,
+            change: changeName,
+            error: archiveResult.error,
+        }, null, 2));
+        process.exit(0);
+    }
+    const archivePath = archiveResult.archivePath;
+    const commitMessage = `${config.commitMessagePrefix} ${stamp}`;
+    const commitResult = runShellCommand(`git add -A && git commit -m ${shellQuote(commitMessage)}`, targetDir);
+    if (commitResult.status !== 0) {
+        console.log(JSON.stringify({
+            status: "blocked",
+            reason: "git-commit-failed",
+            branch: branchName,
+            archivePath,
+            stderr: commitResult.stderr.trim(),
+        }, null, 2));
+        process.exit(0);
+    }
+    const branchBefore = originalBranch.stdout.trim();
+    if (branchBefore) {
+        const switchBack = runShellCommand(`git switch ${shellQuote(branchBefore)}`, targetDir);
+        if (switchBack.status !== 0) {
+            console.log(JSON.stringify({
+                status: "blocked",
+                reason: "restore-branch-failed",
+                branch: branchName,
+                archivePath,
+                stderr: switchBack.stderr.trim(),
+            }, null, 2));
+            process.exit(0);
+        }
+    }
+    console.log(JSON.stringify({
+        status: "repaired",
+        branch: branchName,
+        change: changeName,
+        archivePath,
+        fixedChecks: failingChecks.map(({ check }) => check.name),
+    }, null, 2));
+}
 function migrate() {
     const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();
     if (!fs.existsSync(targetDir) || !fs.statSync(targetDir).isDirectory()) {
@@ -404,7 +568,7 @@ function migrate() {
         if (removedCommands > 0)
             lines.push(`  removed ${removedCommands} openspec command artifact(s)`);
         if (installed > 0)
-            lines.push(`  installed ${installed} slim-spec-driven skill(s)`);
+            lines.push(`  installed ${installed} auto-spec-driven skill(s)`);
         if (removedSkills === 0 && removedCommands === 0 && installed === 0) {
             lines.push(`  no changes needed`);
         }
@@ -454,6 +618,214 @@ function list() {
     if (active.length === 0 && (!fs.existsSync(archiveDir) || fs.readdirSync(archiveDir).length === 0)) {
         console.log("No changes.");
     }
+}
+function loadMaintenanceConfig(targetDir) {
+    const configPath = path.join(targetDir, ".spec-driven", "maintenance", "config.json");
+    if (!fs.existsSync(configPath)) {
+        console.error(JSON.stringify({
+            status: "error",
+            message: `maintenance config not found: ${configPath}`,
+            hint: "Create .spec-driven/maintenance/config.json with explicit checks before running maintenance.",
+        }, null, 2));
+        process.exit(1);
+    }
+    let parsed = null;
+    try {
+        parsed = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    }
+    catch {
+        parsed = null;
+    }
+    if (!parsed || typeof parsed !== "object") {
+        console.error(JSON.stringify({ status: "error", message: `invalid maintenance config: ${configPath}` }, null, 2));
+        process.exit(1);
+    }
+    return {
+        changePrefix: typeof parsed.changePrefix === "string" && parsed.changePrefix.trim() ? parsed.changePrefix : DEFAULT_MAINTENANCE_CHANGE_PREFIX,
+        branchPrefix: typeof parsed.branchPrefix === "string" && parsed.branchPrefix.trim() ? parsed.branchPrefix : DEFAULT_MAINTENANCE_BRANCH_PREFIX,
+        commitMessagePrefix: typeof parsed.commitMessagePrefix === "string" && parsed.commitMessagePrefix.trim() ? parsed.commitMessagePrefix : DEFAULT_MAINTENANCE_COMMIT_PREFIX,
+        checks: Array.isArray(parsed.checks) ? parsed.checks.filter(isMaintenanceCheck) : [],
+    };
+}
+function isMaintenanceCheck(value) {
+    if (!value || typeof value !== "object")
+        return false;
+    const maybe = value;
+    return typeof maybe.name === "string"
+        && typeof maybe.command === "string"
+        && (maybe.fixCommand === undefined || typeof maybe.fixCommand === "string");
+}
+function runShellCommand(commandText, cwd) {
+    const result = spawnSync("/bin/sh", ["-lc", commandText], {
+        cwd,
+        encoding: "utf-8",
+    });
+    return {
+        status: result.status ?? 1,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+    };
+}
+function findActiveMaintenanceChange(targetDir, changePrefix) {
+    const targetChangesDir = path.join(targetDir, ".spec-driven", "changes");
+    if (!fs.existsSync(targetChangesDir))
+        return null;
+    for (const entry of fs.readdirSync(targetChangesDir, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name === "archive")
+            continue;
+        if (entry.name.startsWith(changePrefix))
+            return entry.name;
+    }
+    return null;
+}
+function makeMaintenanceStamp() {
+    const iso = new Date().toISOString().replace(/[-:]/g, "");
+    return iso.slice(0, 8) + "-" + iso.slice(9, 15);
+}
+function seedMaintenanceChange(targetDir, name, branchName, failingChecks, config) {
+    const dir = path.join(targetDir, ".spec-driven", "changes", name);
+    fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
+    const checkList = failingChecks.map((check) => `\`${check.name}\``).join(", ");
+    fs.writeFileSync(path.join(dir, "proposal.md"), [
+        `# ${name}`,
+        "",
+        "## What",
+        "",
+        `Apply the configured maintenance auto-fixes for the failing checks ${checkList} on branch \`${branchName}\`.`,
+        "",
+        "## Why",
+        "",
+        "The manual maintenance workflow detected checks that are explicitly configured as safe to auto-fix.",
+        "",
+        "## Scope",
+        "",
+        "- Apply only the configured maintenance fix commands for the currently failing checks",
+        "- Re-run the configured maintenance checks",
+        "- Archive the completed maintenance change automatically on success",
+        "",
+        "## Unchanged Behavior",
+        "",
+        "- Do not modify unrelated active changes",
+        "- Do not guess at failures that are not explicitly configured as safe to auto-fix",
+        "",
+    ].join("\n"));
+    fs.writeFileSync(path.join(dir, "design.md"), [
+        `# Design: ${name}`,
+        "",
+        "## Approach",
+        "",
+        "Run the configured auto-fix commands for the failing checks, then re-run the configured maintenance checks and archive the change if they pass.",
+        "",
+        "## Key Decisions",
+        "",
+        `- Use the configured branch prefix \`${config.branchPrefix}\` and change prefix \`${config.changePrefix}\``,
+        `- Limit fixes to the configured failing checks: ${checkList}`,
+        "",
+        "## Alternatives Considered",
+        "",
+        "- Skip the failing checks entirely",
+        "- Attempt speculative repairs beyond the configured maintenance commands",
+        "",
+    ].join("\n"));
+    fs.writeFileSync(path.join(dir, "tasks.md"), [
+        `# Tasks: ${name}`,
+        "",
+        "## Implementation",
+        "",
+        "- [ ] Apply configured auto-fixes for the failing maintenance checks",
+        "",
+        "## Testing",
+        "",
+        "- [ ] Re-run the configured maintenance checks and confirm they pass",
+        "",
+        "## Verification",
+        "",
+        "- [ ] Verify the maintenance change is valid and archive it",
+        "",
+    ].join("\n"));
+    fs.writeFileSync(path.join(dir, "questions.md"), [
+        `# Questions: ${name}`,
+        "",
+        "## Open",
+        "",
+        "<!-- No open questions -->",
+        "",
+        "## Resolved",
+        "",
+        "<!-- Scheduled maintenance change generated without open questions -->",
+        "",
+    ].join("\n"));
+}
+function markTaskComplete(tasksPath, taskText) {
+    const content = fs.readFileSync(tasksPath, "utf-8");
+    const escaped = escapeRegExp(taskText);
+    const pattern = new RegExp(`^- \\[ \\] ${escaped}$`, "m");
+    if (!pattern.test(content))
+        return;
+    fs.writeFileSync(tasksPath, content.replace(pattern, `- [x] ${taskText}`));
+}
+function verifyChangeArtifacts(name) {
+    const dir = changeDir(name);
+    const warnings = [];
+    const errors = [];
+    if (!fs.existsSync(dir)) {
+        errors.push(`Change directory not found: ${dir}`);
+        return { valid: false, warnings, errors };
+    }
+    const specsDir = path.join(dir, "specs");
+    if (!fs.existsSync(specsDir)) {
+        errors.push("Missing required directory: specs/");
+    }
+    else if (findMdFiles(specsDir).length === 0) {
+        warnings.push("specs/ is empty — add delta files mirroring the main .spec-driven/specs/ structure");
+    }
+    for (const file of ["proposal.md", "design.md", "tasks.md", "questions.md"]) {
+        const filePath = path.join(dir, file);
+        if (!fs.existsSync(filePath))
+            errors.push(`Missing required artifact: ${file}`);
+    }
+    const tasksPath = path.join(dir, "tasks.md");
+    if (fs.existsSync(tasksPath) && /^\s*-\s*\[ \]/im.test(fs.readFileSync(tasksPath, "utf-8"))) {
+        warnings.push("tasks.md has incomplete tasks");
+    }
+    return { valid: errors.length === 0, warnings, errors };
+}
+function archiveChange(name) {
+    const src = requireChange(name);
+    const date = new Date().toISOString().slice(0, 10);
+    const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
+    if (fs.existsSync(archivePath)) {
+        console.error(`Error: archive target already exists: ${archivePath}`);
+        process.exit(1);
+    }
+    fs.mkdirSync(path.join(changesDir, "archive"), { recursive: true });
+    fs.renameSync(src, archivePath);
+    return archivePath;
+}
+function tryArchiveChange(name) {
+    const src = changeDir(name);
+    if (!fs.existsSync(src)) {
+        return { ok: false, error: `Change directory not found: ${src}` };
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
+    if (fs.existsSync(archivePath)) {
+        return { ok: false, error: `archive target already exists: ${archivePath}` };
+    }
+    try {
+        fs.mkdirSync(path.join(changesDir, "archive"), { recursive: true });
+        fs.renameSync(src, archivePath);
+        return { ok: true, archivePath };
+    }
+    catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+}
+function shellQuote(value) {
+    return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function ensureSpecDrivenScaffold(specDir, lines) {
     let changed = 0;

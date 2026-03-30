@@ -90,3 +90,19 @@ and install bundled `spec-driven-*` skills for supported tools.
 - GIVEN `.spec-driven/` already exists alongside `openspec/`
 - WHEN migrate is run
 - THEN migrate does not rename `openspec/` over the existing directory and reports the rename as skipped
+
+### Requirement: run-maintenance-executes-manual-maintenance-flow
+`spec-driven.js run-maintenance [path]` MUST execute the configured manual
+maintenance flow for the target repository. It MUST report whether the run was
+clean, skipped, unfixable, blocked, or repaired.
+
+### Requirement: run-maintenance-requires-explicit-config
+If `.spec-driven/maintenance/config.json` is missing or invalid,
+`run-maintenance` MUST exit with an error instead of guessing maintenance checks
+or repair commands.
+
+### Requirement: run-maintenance-reads-configured-prefixes-and-checks
+`run-maintenance` MUST read `changePrefix`, `branchPrefix`,
+`commitMessagePrefix`, and `checks` from `.spec-driven/maintenance/config.json`.
+It MAY fall back to default prefixes when those optional fields are omitted, but
+it MUST only run checks and fixes that are explicitly configured.

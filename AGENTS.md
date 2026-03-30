@@ -6,8 +6,8 @@ Instructions for AI agents working in this repository.
 
 `auto-spec-driven` is a lightweight spec-driven development framework. It ships:
 
-- **11 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
-- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 9 subcommands
+- **12 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
+- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 10 subcommands
 - **`install.sh`** — installs skills to `~/.auto-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/` / `~/.trae/skills/` / `~/.agents/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
@@ -72,6 +72,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
 | `cancel <name>` | change name | deletes `.spec-driven/changes/<name>/` |
 | `init [path]` | optional path | creates `.spec-driven/` scaffold at path (or CWD) |
+| `run-maintenance [path]` | optional path | stdout: JSON status for clean/skipped/unfixable/blocked/repaired maintenance runs |
 | `migrate [path]` | optional path | migrates `openspec/` artifacts to auto-spec-driven where supported |
 | `list` | none | stdout: all changes (active with status, archived) |
 

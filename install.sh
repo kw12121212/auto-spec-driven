@@ -3,6 +3,7 @@ set -euo pipefail
 
 SKILLS=(
   spec-driven-brainstorm
+  spec-driven-maintenance
   spec-driven-propose
   spec-driven-modify
   spec-driven-spec-content

@@ -1,9 +1,10 @@
 # Skills Workflow
 
 ### Requirement: planning-skills-do-not-implement-code
-`spec-driven-init`, `spec-driven-propose`, and `spec-driven-modify` MUST stay in the
-planning/documentation layer. They MAY create or edit workflow artifacts under
-`.spec-driven/`, but they MUST NOT implement product code changes.
+`spec-driven-init`, `spec-driven-propose`, `spec-driven-modify`, and
+`spec-driven-spec-content` MUST stay in the planning/documentation layer. They MAY
+create or edit workflow artifacts under `.spec-driven/`, but they MUST NOT
+implement product code changes.
 
 ### Requirement: execution-and-lifecycle-skills-follow-artifacts-as-source-of-truth
 `spec-driven-apply`, `spec-driven-verify`, `spec-driven-review`, `spec-driven-archive`,

@@ -1,6 +1,6 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 12 agent skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 13 agent skills + thin TypeScript scaffolding.
 
 **[中文说明](README.zh.md)**
 
@@ -14,7 +14,7 @@ Instead of reading the entire codebase to understand what the system does, the A
 
 - `INDEX.md` navigates the full spec collection at a glance
 - Each spec file describes observable behavior using RFC 2119 format (`### Requirement:`, GIVEN/WHEN/THEN scenarios)
-- `brainstorm`, `propose`, `apply`, and `spec-content` are required to read INDEX.md and the relevant spec files before generating anything
+- `brainstorm`, `propose`, `apply`, `spec-content`, and `sync-specs` are required to read INDEX.md and the relevant spec files before generating anything
 
 This prevents the AI from introducing conflicting or duplicate behavior — it knows what already exists.
 
@@ -30,7 +30,7 @@ Every change is a folder with five files, each serving a distinct purpose:
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
 | `questions.md` | Open/resolved Q&A | Centralizes ambiguities; open questions block apply and archive |
 
-### Layer 3: 11 skills — explicit constraints on AI behavior
+### Layer 3: 13 skills — explicit constraints on AI behavior
 
 Each skill is a precise prompt that specifies:
 - Exactly which files to read (no vague "read the codebase")
@@ -59,7 +59,7 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | | spec-driven | OpenSpec |
 |--|-------------|----------|
 | Spec format | RFC 2119 enforced — `### Requirement:` + MUST/SHOULD/MAY + GIVEN/WHEN/THEN; violations are script errors | No required format |
-| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, and `spec-content` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
+| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, `spec-content`, and `sync-specs` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
 | Delta spec structure | Mirrors `specs/` by path — `changes/<name>/specs/auth/login.md` maps to `specs/auth/login.md` | Not path-bound |
 | Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | Specs updated on archive, no formal merge gate |
 | Ambiguity tracking | `questions.md` centralizes open questions; unresolved questions block apply and archive | Not built in |
@@ -110,7 +110,7 @@ bash install.sh --project /path/to/project       # project-local at specified pa
 | `codex` | `~/.agents/skills/` | `.codex/skills/` |
 | `gemini` | `~/.agents/skills/` | `.gemini/skills/` |
 
-## Three Workflows
+## Four Workflows
 
 Choose based on the nature of your task:
 
@@ -118,6 +118,7 @@ Choose based on the nature of your task:
 |----------|----------|---------|
 | Small issue, clear scope | **auto** (one-shot) | `/spec-driven-auto add user avatar` |
 | Regular ticket, defined requirements | **propose → apply → verify → archive** | `/spec-driven-propose` → `/spec-driven-apply` → ... |
+| Existing code is ahead of specs | **sync-specs** | `/spec-driven-sync-specs` |
 | Fuzzy concept, needs exploration | **brainstorm → auto** | `/spec-driven-brainstorm` → confirm → `/spec-driven-auto` |
 
 ### 1. Auto Workflow (Small Issues)
@@ -141,9 +142,24 @@ For typical tasks with clear requirements but non-trivial implementation:
 /spec-driven-archive
 ```
 
-Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-content` to place spec content correctly.
+Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-content` to place spec content correctly, and `/spec-driven-sync-specs` when code has moved ahead of the specs and you need to catch them up.
 
-### 3. Brainstorm Workflow (Fuzzy Concepts)
+### 3. Sync Specs Workflow (Code Ahead of Spec)
+
+For initialization and catch-up work when the repository already contains
+behavior that the specs do not fully describe:
+
+```bash
+/spec-driven-sync-specs
+/spec-driven-sync-specs scan the CLI only
+```
+
+This reads config and existing specs first, scans either the whole repository or
+a requested scope, creates a dedicated spec-only change, and summarizes
+confirmed gaps plus open questions in chat. It does not write product code and
+does not create a standalone report file.
+
+### 4. Brainstorm Workflow (Fuzzy Concepts)
 
 For exploratory work where scope, approach, or even the problem itself is unclear:
 
@@ -168,7 +184,7 @@ init → [brainstorm] → propose → apply → verify → archive
 5. **verify** — check task completion, implementation evidence, spec format, and alignment
 6. **archive** — merge delta specs into `specs/` by file path, update INDEX.md, move to archive/
 
-Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **cancel** to abandon a change.
+Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
 
 ## Skills
 
@@ -180,6 +196,7 @@ Use **modify** to refine any artifact mid-flight. Use **spec-content** when the 
 | `/spec-driven-propose` | Read existing specs, scaffold a new change with all five artifacts |
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-spec-content` | Read `specs/INDEX.md`, classify spec content, and place it in the correct delta spec file |
+| `/spec-driven-sync-specs` | Scan code and existing specs for drift, create a dedicated spec-only change, and report the gaps in chat |
 | `/spec-driven-apply` | Implement tasks one by one, update delta specs when done |
 | `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
 | `/spec-driven-review` | Review a completed change for code quality before archive |

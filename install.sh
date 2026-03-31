@@ -7,6 +7,7 @@ SKILLS=(
   spec-driven-propose
   spec-driven-modify
   spec-driven-spec-content
+  spec-driven-sync-specs
   spec-driven-apply
   spec-driven-verify
   spec-driven-archive

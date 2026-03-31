@@ -101,6 +101,9 @@ assert_contains "install reports maintenance skill copy" "copied: spec-driven-ma
 assert_contains "install reports spec-content skill copy" "copied: spec-driven-spec-content/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content/SKILL.md" ] && pass "install copies spec-content skill into agent store" || fail "install missing spec-content skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/spec-driven-spec-content" ] && pass "install links spec-content skill for codex" || fail "install missing spec-content symlink for codex"
+assert_contains "install reports sync-specs skill copy" "copied: spec-driven-sync-specs/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-sync-specs/SKILL.md" ] && pass "install copies sync-specs skill into agent store" || fail "install missing sync-specs skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/spec-driven-sync-specs" ] && pass "install links sync-specs skill for codex" || fail "install missing sync-specs symlink for codex"
 rm -rf "$INSTALL_HOME"
 
 # ── 1c. migrate ───────────────────────────────────────────────────────────────

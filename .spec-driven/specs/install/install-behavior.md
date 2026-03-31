@@ -4,6 +4,11 @@
 The installer MUST copy skills to `~/.auto-spec-driven/skills/<name>/` by default.
 Each skill directory contains `SKILL.md` and a `scripts/` directory.
 
+### Requirement: install-includes-sync-specs-skill
+The installer MUST copy the shipped `spec-driven-sync-specs` skill into the
+agent store and create the same CLI symlinks for it as for the other bundled
+`spec-driven-*` skills.
+
 ### Requirement: cli-symlinks
 The installer MUST create symlinks from CLI-specific directories into the agent store:
 - `~/.claude/skills/<name>` → `~/.auto-spec-driven/skills/<name>` for Claude Code

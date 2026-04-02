@@ -115,28 +115,6 @@ Before completing, `spec-driven-propose` MUST run `verify`, repair any safe-to-f
 artifact format issues, and rerun validation. If any non-question error remains, it
 MUST report the problem to the user instead of presenting the proposal as ready.
 
-### Requirement: spec-content-classifies-spec-targets-from-index
-`spec-driven-spec-content` MUST read `.spec-driven/specs/INDEX.md` before deciding
-where requested spec content belongs. It MUST classify the request into one of:
-editing an existing spec file, adding a new file under an existing category,
-adding a new category with a new file, modifying existing requirements, or
-removing existing requirements.
-
-### Requirement: spec-content-loads-relevant-main-specs-before-editing
-After reading `INDEX.md`, `spec-driven-spec-content` MUST read the relevant main
-spec file or files before editing any delta spec content. If a matching delta spec
-file already exists under `changes/<name>/specs/`, it MUST read that file too
-before appending or revising content.
-
-### Requirement: spec-content-validates-and-names-removals
-After editing delta specs, `spec-driven-spec-content` MUST run the workflow
-verification step and fix any safe-to-repair format issues before finishing. If a
-verify result contains only non-format workflow blockers such as open questions,
-the skill MUST surface them separately and MUST NOT misreport them as spec-format
-failures. If a request removes behavior, the skill MUST name the exact
-`### Requirement:` heading or headings being removed and place them under
-`## REMOVED Requirements` with a reason; it MUST NOT describe removals vaguely.
-
 ### Requirement: sync-specs-reads-spec-context-before-judging-drift
 `spec-driven-sync-specs` MUST read `.spec-driven/config.yaml`,
 `.spec-driven/specs/INDEX.md`, and each relevant main spec file before deciding
@@ -184,6 +162,17 @@ describe observable behavior only rather than implementation details.
 `spec-driven-modify` MUST allow editing `questions.md`, including adding new open
 questions under `## Open` and moving answered questions to `## Resolved` with an
 `A:` answer line.
+
+### Requirement: modify-validates-after-editing
+After modifying any change artifact, `spec-driven-modify` MUST run the
+workflow verification step via the CLI `verify` command. It MUST fix any
+safe-to-repair format issues immediately and rerun `verify`. If a verify
+result contains only non-format workflow blockers such as open questions,
+the skill MUST surface them separately and MUST NOT misreport them as
+spec-format failures. If a request removes spec behavior, the skill MUST
+name the exact `### Requirement:` heading or headings being removed and
+place them under `## REMOVED Requirements` with a reason; it MUST NOT
+describe removals vaguely.
 
 ### Requirement: spec-edit-reads-index-before-choosing-target
 `spec-driven-spec-edit` MUST read `.spec-driven/specs/INDEX.md` and the relevant

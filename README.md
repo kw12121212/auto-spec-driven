@@ -1,6 +1,6 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 16 agent skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 15 agent skills + thin TypeScript scaffolding.
 
 **[中文说明](README.zh.md)**
 
@@ -14,7 +14,7 @@ Instead of reading the entire codebase to understand what the system does, the A
 
 - `INDEX.md` navigates the full spec collection at a glance
 - Each spec file describes observable behavior using RFC 2119 format (`### Requirement:`, GIVEN/WHEN/THEN scenarios)
-- `brainstorm`, `propose`, `apply`, `spec-content`, and `sync-specs` are required to read INDEX.md and the relevant spec files before generating anything
+- `brainstorm`, `propose`, `apply`, `modify`, and `sync-specs` are required to read INDEX.md and the relevant spec files before generating anything
 
 This prevents the AI from introducing conflicting or duplicate behavior — it knows what already exists.
 
@@ -44,7 +44,7 @@ Every change is a folder with five files, each serving a distinct purpose:
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
 | `questions.md` | Open/resolved Q&A | Centralizes ambiguities; open questions block apply and archive |
 
-### Layer 4: 16 skills — explicit constraints on AI behavior
+### Layer 4: 15 skills — explicit constraints on AI behavior
 
 Each skill is a precise prompt that specifies:
 - Exactly which files to read (no vague "read the codebase")
@@ -73,7 +73,7 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | | spec-driven | OpenSpec |
 |--|-------------|----------|
 | Spec format | RFC 2119 enforced — `### Requirement:` + MUST/SHOULD/MAY + GIVEN/WHEN/THEN; violations are script errors | No required format |
-| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, `spec-content`, and `sync-specs` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
+| AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, `modify`, and `sync-specs` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
 | Delta spec structure | Mirrors `specs/` by path — `changes/<name>/specs/auth/login.md` maps to `specs/auth/login.md` | Not path-bound |
 | Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | Specs updated on archive, no formal merge gate |
 | Ambiguity tracking | `questions.md` centralizes open questions; unresolved questions block apply and archive | Not built in |
@@ -157,7 +157,7 @@ For typical tasks with clear requirements but non-trivial implementation:
 /spec-driven-archive
 ```
 
-Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-content` to place spec content correctly, and `/spec-driven-sync-specs` when code has moved ahead of the specs and you need to catch them up.
+Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-edit` to directly create or modify main spec files, and `/spec-driven-sync-specs` when code has moved ahead of the specs and you need to catch them up.
 
 Use `/roadmap-plan`, `/roadmap-milestone`, `/roadmap-recommend`, `/roadmap-propose`, and `/roadmap-sync` when you need a persistent milestone-based roadmap above individual changes. `roadmap-recommend` now behaves like a roadmap-specific brainstorm: after confirmation it scaffolds the accepted change directly, while `roadmap-propose` remains available as a direct path when the planned change is already chosen.
 
@@ -226,7 +226,7 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 5. **verify** — check task completion, implementation evidence, spec format, and alignment
 6. **archive** — AI merges delta specs into `specs/` by file path and updates INDEX.md; the archive script then moves the change into `archive/`
 
-Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
+Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-edit** to directly create or modify main spec files outside the change workflow. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
 
 ## Skills
 
@@ -237,7 +237,7 @@ Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-pr
 | `/spec-driven-maintenance` | Inspect or run the manual maintenance workflow for explicitly configured safe auto-fixes |
 | `/spec-driven-propose` | Read existing specs, scaffold a new change with all five artifacts |
 | `/spec-driven-modify` | Edit an existing change artifact |
-| `/spec-driven-spec-content` | Read `specs/INDEX.md`, classify spec content, and place it in the correct delta spec file |
+| `/spec-driven-spec-edit` | Directly create or modify individual main spec files under `.spec-driven/specs/` (confirm before writing) |
 | `/spec-driven-sync-specs` | Scan code and existing specs for drift, create a dedicated spec-only change, and report the gaps in chat |
 | `/roadmap-plan` | Create or restructure `.spec-driven/roadmap/` into milestone files with explicit stage goals |
 | `/roadmap-milestone` | Refine one milestone's goal, planned changes, risks, and derived status |

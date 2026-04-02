@@ -41,6 +41,18 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 
 5. **Show a summary** — briefly describe what changed across all modified files and confirm with the user.
 
+6. **Validate after editing** — run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
+   ```
+   - Fix any safe format issues immediately and rerun `verify`
+   - If `verify` reports only non-format workflow blockers such as open questions
+     in `questions.md`, surface those separately instead of misreporting them as
+     spec-format failures
+   - If unresolved format or structure errors remain, report them clearly to the
+     user
+   - Do not finish without this check
+
 ## Rules
 - Never uncheck a completed task (`- [x]`) unless the user explicitly asks
 - Don't restructure a file wholesale when a targeted edit is sufficient

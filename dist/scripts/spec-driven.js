@@ -102,6 +102,9 @@ switch (command) {
     case "verify-roadmap":
         verifyRoadmap();
         break;
+    case "roadmap-status":
+        roadmapStatus();
+        break;
     case "archive":
         archive();
         break;
@@ -122,7 +125,7 @@ switch (command) {
         break;
     default:
         console.error("Usage: node spec-driven.js <command> [args]");
-        console.error("Commands: propose, modify, apply, verify, verify-roadmap, archive, cancel, init, run-maintenance, migrate, list");
+        console.error("Commands: propose, modify, apply, verify, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
         process.exit(1);
 }
 function propose() {
@@ -355,6 +358,101 @@ function firstNonEmptyLine(lines) {
             return trimmed;
     }
     return "";
+}
+function readBulletItems(lines) {
+    if (!lines)
+        return [];
+    return lines
+        .map((line) => line.match(/^\s*-\s+(.+)$/)?.[1].trim() ?? "")
+        .filter((line) => line.length > 0);
+}
+function normalizeRoadmapStatus(status) {
+    return status.trim().toLowerCase();
+}
+function deriveMilestoneStatus(plannedChangeStates) {
+    if (plannedChangeStates.length === 0)
+        return "proposed";
+    if (plannedChangeStates.every((state) => state === "archived"))
+        return "complete";
+    if (plannedChangeStates.some((state) => state === "active" || state === "archived"))
+        return "in-progress";
+    return "proposed";
+}
+function roadmapStatus() {
+    const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();
+    const specDir = path.join(targetDir, ".spec-driven");
+    const targetChangesDir = path.join(specDir, "changes");
+    const milestonesDir = path.join(specDir, "roadmap", "milestones");
+    const warnings = [];
+    const errors = [];
+    const milestones = [];
+    if (!fs.existsSync(specDir) || !fs.statSync(specDir).isDirectory()) {
+        errors.push(`.spec-driven/ not found in ${targetDir}`);
+        console.log(JSON.stringify({ valid: false, warnings, errors, milestones }, null, 2));
+        process.exit(0);
+    }
+    if (!fs.existsSync(milestonesDir) || !fs.statSync(milestonesDir).isDirectory()) {
+        errors.push(`Missing roadmap milestones directory: ${path.join(".spec-driven", "roadmap", "milestones")}/`);
+        console.log(JSON.stringify({ valid: false, warnings, errors, milestones }, null, 2));
+        process.exit(0);
+    }
+    const milestoneFiles = findMdFiles(milestonesDir).sort();
+    if (milestoneFiles.length === 0) {
+        warnings.push("roadmap/milestones/ is empty");
+        console.log(JSON.stringify({ valid: true, warnings, errors, milestones }, null, 2));
+        process.exit(0);
+    }
+    const activeChanges = new Set();
+    if (fs.existsSync(targetChangesDir) && fs.statSync(targetChangesDir).isDirectory()) {
+        for (const entry of fs.readdirSync(targetChangesDir, { withFileTypes: true })) {
+            if (entry.isDirectory() && entry.name !== "archive")
+                activeChanges.add(entry.name);
+        }
+    }
+    const archivedChanges = new Set();
+    const archiveDir = path.join(targetChangesDir, "archive");
+    if (fs.existsSync(archiveDir) && fs.statSync(archiveDir).isDirectory()) {
+        for (const entry of fs.readdirSync(archiveDir, { withFileTypes: true })) {
+            if (!entry.isDirectory())
+                continue;
+            const match = entry.name.match(/^\d{4}-\d{2}-\d{2}-(.+)$/);
+            archivedChanges.add(match ? match[1] : entry.name);
+        }
+    }
+    const requiredSections = [
+        "Goal",
+        "Done Criteria",
+        "Candidate Ideas",
+        "Planned Changes",
+        "Dependencies / Risks",
+        "Status",
+    ];
+    for (const file of milestoneFiles) {
+        const content = fs.readFileSync(path.join(milestonesDir, file), "utf-8");
+        const sections = readLevel2Sections(content);
+        const missingSections = requiredSections.filter((section) => !sections.has(section));
+        if (missingSections.length > 0) {
+            errors.push(`roadmap/milestones/${file} is missing required sections: ${missingSections.join(", ")}`);
+            continue;
+        }
+        const goal = firstNonEmptyLine(sections.get("Goal"));
+        const declaredStatus = firstNonEmptyLine(sections.get("Status"));
+        const plannedChangeNames = readBulletItems(sections.get("Planned Changes"));
+        const plannedChanges = plannedChangeNames.map((name) => {
+            if (archivedChanges.has(name))
+                return { name, state: "archived" };
+            if (activeChanges.has(name))
+                return { name, state: "active" };
+            return { name, state: "missing" };
+        });
+        const derivedStatus = deriveMilestoneStatus(plannedChanges.map((change) => change.state));
+        const mismatches = [];
+        if (normalizeRoadmapStatus(declaredStatus) !== derivedStatus) {
+            mismatches.push(`declared status '${declaredStatus}' does not match derived status '${derivedStatus}'`);
+        }
+        milestones.push({ file, goal, declaredStatus, derivedStatus, plannedChanges, mismatches });
+    }
+    console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors, milestones }, null, 2));
 }
 function verifyRoadmap() {
     const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();

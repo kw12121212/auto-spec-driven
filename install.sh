@@ -10,6 +10,8 @@ SKILLS=(
   spec-driven-sync-specs
   roadmap-plan
   roadmap-milestone
+  roadmap-brainstorm
+  roadmap-propose
   roadmap-sync
   spec-driven-apply
   spec-driven-verify

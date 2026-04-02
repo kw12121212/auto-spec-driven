@@ -26,6 +26,27 @@ artifacts, it MUST converge with the user on milestone boundaries, stage goals,
 and completion criteria, then confirm the intended roadmap shape before writing
 files.
 
+### Requirement: roadmap-propose-reads-roadmap-and-spec-context-before-writing
+`roadmap-propose` MUST read `.spec-driven/config.yaml`,
+`.spec-driven/roadmap/INDEX.md`, the relevant milestone file, and
+`.spec-driven/specs/INDEX.md` before it scaffolds a change.
+
+### Requirement: roadmap-propose-creates-standard-change-artifacts
+`roadmap-propose` MUST create the same five artifacts as
+`spec-driven-propose`: `proposal.md`, `specs/`, `design.md`, `tasks.md`, and
+`questions.md`. It MUST NOT implement product code while doing so.
+
+### Requirement: roadmap-brainstorm-reads-roadmap-context-before-recommending
+`roadmap-brainstorm` MUST read `.spec-driven/config.yaml`,
+`.spec-driven/roadmap/INDEX.md`, the relevant milestone files, and
+`.spec-driven/specs/INDEX.md` before it recommends a change.
+
+### Requirement: roadmap-brainstorm-confirms-before-handoff
+`roadmap-brainstorm` MUST recommend a candidate change name and explain the
+reasoning, but it MUST NOT scaffold proposal artifacts. It MUST wait for the
+user to accept or modify the recommendation before handing off to
+`roadmap-propose`.
+
 ### Requirement: propose-scaffolds-five-artifacts
 `spec-driven-propose` MUST scaffold a new change with `proposal.md`, `specs/`,
 `design.md`, `tasks.md`, and `questions.md`, populated from project context.

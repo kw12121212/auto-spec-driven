@@ -71,11 +71,47 @@ refine that milestone's goal, done criteria, candidate ideas, planned changes,
 dependencies, and risks without collapsing multiple milestones into one oversized
 document.
 
+### Requirement: roadmap-propose-promotes-planned-changes-into-normal-changes
+`roadmap-propose` MUST turn a milestone `Planned Changes` item into a normal
+change scaffold under `.spec-driven/changes/<name>/`. It MUST require the target
+work item to already appear under a milestone `## Planned Changes` section
+rather than promoting a `Candidate Idea` implicitly.
+
+#### Scenario: planned-change-becomes-change-scaffold
+- GIVEN a roadmap milestone lists `add-auth-audit-log` under `## Planned Changes`
+- WHEN `roadmap-propose add-auth-audit-log` is used
+- THEN `.spec-driven/changes/add-auth-audit-log/` is scaffolded as a normal change
+
+### Requirement: roadmap-workflow-can-handoff-from-milestone-to-change
+The roadmap workflow MUST support an explicit handoff from milestone planning to
+change execution through `roadmap-propose`, before the user enters
+`spec-driven-apply`, `spec-driven-auto`, or other execution-stage skills.
+
+### Requirement: roadmap-brainstorm-recommends-the-next-change-from-roadmap-context
+`roadmap-brainstorm` MUST analyze roadmap milestone context and recommend a next
+change candidate for the user to consider. The recommendation MUST identify the
+proposed change name, the milestone it comes from, and why it is a good next
+step.
+
+#### Scenario: recommend-a-planned-change
+- GIVEN a milestone contains multiple `Planned Changes`
+- WHEN `roadmap-brainstorm` is used
+- THEN it recommends one candidate change and explains the recommendation before
+  any scaffolding occurs
+
+### Requirement: roadmap-brainstorm-hands-off-to-roadmap-propose
+After the user accepts or revises the recommendation, `roadmap-brainstorm`
+MUST direct the workflow toward `roadmap-propose` for actual change scaffolding
+rather than creating the change itself.
+
 ### Requirement: roadmap-sync-reconciles-roadmap-state-with-change-history
-`roadmap-sync` MUST read roadmap milestone files together with
-`.spec-driven/changes/` and `.spec-driven/changes/archive/` to reconcile status
-and listed change state. It MUST update roadmap status based on repository
-evidence rather than preserving stale manual labels.
+`roadmap-sync` MUST use script assistance to reconcile roadmap state before it
+edits roadmap files. It MUST read roadmap milestone files together with
+`.spec-driven/changes/` and `.spec-driven/changes/archive/`, and it MUST run
+`node {{SKILL_DIR}}/scripts/spec-driven.js roadmap-status` to obtain structured
+milestone and planned change state before it decides what roadmap updates to
+make. It MUST update roadmap status based on repository evidence rather than
+preserving stale manual labels.
 
 ### Requirement: roadmap-skills-run-size-validation-before-finish
 After `roadmap-plan`, `roadmap-milestone`, or `roadmap-sync` edit roadmap

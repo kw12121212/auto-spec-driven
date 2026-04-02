@@ -125,6 +125,41 @@ out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap valid=true for bounded milestone" "valid" "true" "$out"
 assert_contains "verify-roadmap reports milestone summary" "\"plannedChanges\": 2" "$out"
 
+mkdir -p "$ROADMAP_DIR/.spec-driven/changes/add-roadmap-size-validation"
+mkdir -p "$ROADMAP_DIR/.spec-driven/changes/archive/$(date +%Y-%m-%d)-add-roadmap-milestones"
+out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
+assert_json_field "roadmap-status valid=true for bounded milestone" "valid" "true" "$out"
+assert_contains "roadmap-status reports archived planned change" '"name": "add-roadmap-milestones"' "$out"
+assert_contains "roadmap-status reports archived state" '"state": "archived"' "$out"
+assert_contains "roadmap-status reports active state" '"state": "active"' "$out"
+assert_contains "roadmap-status derives in-progress milestone state" '"derivedStatus": "in-progress"' "$out"
+
+cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m3-missing.md"
+# m3-missing
+
+## Goal
+Detect missing change references
+
+## Done Criteria
+- status command exists
+
+## Candidate Ideas
+- future cleanup
+
+## Planned Changes
+- nonexistent-change
+
+## Dependencies / Risks
+- names can drift
+
+## Status
+complete
+EOF
+
+out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
+assert_contains "roadmap-status reports missing planned change" '"state": "missing"' "$out"
+assert_contains "roadmap-status reports status mismatch" "does not match derived status" "$out"
+
 cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m2-too-large.md"
 # m2-too-large
 
@@ -180,6 +215,12 @@ assert_contains "install reports roadmap-plan skill copy" "copied: roadmap-plan/
 assert_contains "install reports roadmap-milestone skill copy" "copied: roadmap-milestone/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/roadmap-milestone/SKILL.md" ] && pass "install copies roadmap-milestone skill into agent store" || fail "install missing roadmap-milestone skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/roadmap-milestone" ] && pass "install links roadmap-milestone skill for codex" || fail "install missing roadmap-milestone symlink for codex"
+assert_contains "install reports roadmap-brainstorm skill copy" "copied: roadmap-brainstorm/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/roadmap-brainstorm/SKILL.md" ] && pass "install copies roadmap-brainstorm skill into agent store" || fail "install missing roadmap-brainstorm skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/roadmap-brainstorm" ] && pass "install links roadmap-brainstorm skill for codex" || fail "install missing roadmap-brainstorm symlink for codex"
+assert_contains "install reports roadmap-propose skill copy" "copied: roadmap-propose/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/roadmap-propose/SKILL.md" ] && pass "install copies roadmap-propose skill into agent store" || fail "install missing roadmap-propose skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/roadmap-propose" ] && pass "install links roadmap-propose skill for codex" || fail "install missing roadmap-propose symlink for codex"
 assert_contains "install reports roadmap-sync skill copy" "copied: roadmap-sync/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/roadmap-sync/SKILL.md" ] && pass "install copies roadmap-sync skill into agent store" || fail "install missing roadmap-sync skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/roadmap-sync" ] && pass "install links roadmap-sync skill for codex" || fail "install missing roadmap-sync symlink for codex"

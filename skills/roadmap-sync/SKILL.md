@@ -30,16 +30,18 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - `.spec-driven/config.yaml`
    - `.spec-driven/roadmap/INDEX.md`
    - every milestone file listed in the roadmap index
-   - active changes under `.spec-driven/changes/`
-   - archived changes under `.spec-driven/changes/archive/`
+   - run `node {{SKILL_DIR}}/scripts/spec-driven.js roadmap-status`
+   - inspect the returned milestone and planned change state summary
 
-2. **Compare roadmap to repository reality** — for each milestone in scope,
+2. **Compare roadmap to repository reality** — use the `roadmap-status` output
+   as the source of deterministic comparison. For each milestone in scope,
    identify:
    - planned changes that are archived
    - planned changes that still exist as active work
    - planned changes that are missing or renamed
-   - candidate ideas that remain only ideas
-   - milestone statuses that no longer match the actual archive state
+   - milestone statuses that no longer match the derived status
+   - any ambiguity the script cannot resolve, such as likely renames or roadmap
+     prose that still needs human judgment
 
 3. **Update roadmap files** — reconcile milestone status and listed change state
    based on the repository evidence you found.
@@ -66,6 +68,6 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 ## Rules
 
 - This is a planning/documentation skill only — do not change product code
-- Use active and archived change directories as the source of truth for status
+- Use `roadmap-status` plus roadmap files as the source of truth for deterministic status comparison
 - Do not preserve stale manual labels that conflict with actual archive state
 - Surface ambiguity explicitly when a roadmap entry no longer matches any change

@@ -32,7 +32,10 @@ roadmap 这一层用于管理跨多个 change 的长期规划。它位于：
 - `questions.md`
 - `changes/<name>/specs/` 下的 delta specs
 
-## 三个 Skills
+## Roadmap Skills
+
+实际上一共有五个 roadmap skills：建立结构、细化单个 milestone、先推荐
+下一个 change、把 planned work 转成普通 change，以及根据执行历史回填状态。
 
 ### `/roadmap-plan`
 
@@ -77,6 +80,48 @@ roadmap 这一层用于管理跨多个 change 的长期规划。它位于：
 - 其余 roadmap 结构保持稳定
 - 保留 milestone 局部规划，而不是重写整个 roadmap
 
+### `/roadmap-propose`
+
+当某个条目已经出现在 milestone 的 `## Planned Changes` 下，并且你想把它
+转成 `.spec-driven/changes/` 下的普通 change 时，用这个。
+
+典型用途：
+- 把某个 planned item 脚手架成正式 change
+- 保持 roadmap 规划和执行 artifacts 分层
+- 从 milestone 规划切换到 apply/auto 执行流
+
+示例：
+
+```bash
+/roadmap-propose add-roadmap-milestones
+```
+
+预期效果：
+- 创建 `.spec-driven/changes/add-roadmap-milestones/`
+- 填充标准的五个 change artifacts
+- roadmap 文件继续保留规划角色，而 change 进入执行层
+
+### `/roadmap-brainstorm`
+
+当你希望 roadmap 先推荐下一个 change，再决定是否接受、修改或改选别的
+条目时，用这个。
+
+典型用途：
+- 问 roadmap 当前最适合推进哪个条目
+- 按依赖顺序、紧急程度或阶段价值来选下一个 change
+- 在创建任何 change artifacts 之前先看推荐
+
+示例：
+
+```bash
+/roadmap-brainstorm 推荐下一个最适合启动的 change
+```
+
+预期效果：
+- 读取 roadmap 上下文和 roadmap-status 输出
+- 推荐一个 candidate change 并解释原因
+- 在你接受或修改之前，不会创建任何 change 文件
+
 ### `/roadmap-sync`
 
 当 roadmap 文件和实际执行历史可能已经发生漂移时，用这个。
@@ -120,16 +165,17 @@ node dist/scripts/spec-driven.js verify-roadmap
 常见模式是：
 
 ```text
-roadmap-plan -> roadmap-milestone -> propose -> auto/apply -> archive -> roadmap-sync
+roadmap-plan -> roadmap-milestone -> roadmap-brainstorm -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
 ```
 
 在实际操作里：
 
 1. 先建立 roadmap 结构。
 2. 再细化当前 milestone。
-3. 把已批准的 planned work 转成一个或多个 change。
-4. 实现并 archive 这些 changes。
-5. 最后运行 roadmap sync，让 milestone 状态回到真实仓库状态。
+3. 如果你想先看建议，用 roadmap-brainstorm 推荐下一个 change。
+4. 用 roadmap-propose 把已批准的 planned work 转成一个或多个 change。
+5. 实现并 archive 这些 changes。
+6. 最后运行 roadmap sync，让 milestone 状态回到真实仓库状态。
 
 ## 示例：初始化 Roadmap
 
@@ -268,14 +314,20 @@ Milestone 完成不是手工标记的。
 /roadmap-milestone 细化 m1-cli，把 migrate polish 保留为 candidate idea，把 add-roadmap-milestones 作为 planned change
 ```
 
-3. 把 planned work 转成普通 change：
+3. 先让 roadmap 推荐下一个 change：
 
 ```bash
-/spec-driven-propose add-roadmap-milestones
+/roadmap-brainstorm 推荐下一个最合理的 roadmap change
+```
+
+4. 把 planned work 转成普通 change：
+
+```bash
+/roadmap-propose add-roadmap-milestones
 /spec-driven-auto
 ```
 
-4. archive 后同步 roadmap 状态：
+5. archive 后同步 roadmap 状态：
 
 ```bash
 /roadmap-sync
@@ -290,6 +342,8 @@ Milestone 完成不是手工标记的。
 
 - 用 `roadmap-plan` 管 roadmap 结构。
 - 用 `roadmap-milestone` 管单个阶段的内容。
+- 用 `roadmap-brainstorm` 在真正创建 change 前先拿一个推荐。
+- 用 `roadmap-propose` 把 planned work 交接成普通 change。
 - 在真实执行进展发生后，用 `roadmap-sync` 做状态对齐。
 - 始终把 `Candidate Ideas` 和 `Planned Changes` 分开。
 - 如果 archive 状态不支持，不要手工把 milestone 当成 done。

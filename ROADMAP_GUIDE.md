@@ -30,7 +30,11 @@ Do not use roadmap files as a replacement for:
 - `questions.md`
 - delta specs under `changes/<name>/specs/`
 
-## The Three Skills
+## The Roadmap Skills
+
+There are five roadmap skills in practice: create structure, refine one
+milestone, recommend the next change, turn planned work into a normal change,
+and sync status back from execution history.
 
 ### `/roadmap-plan`
 
@@ -74,6 +78,48 @@ Expected effect:
 - edits one milestone file
 - keeps the rest of the roadmap stable
 - preserves milestone-local planning instead of rewriting the whole roadmap
+
+### `/roadmap-propose`
+
+Use this when a milestone item is already listed under `## Planned Changes` and
+you want to turn it into a normal change under `.spec-driven/changes/`.
+
+Typical uses:
+- take one planned item from a milestone and scaffold it as a change
+- keep roadmap planning separate from execution artifacts
+- move from milestone planning into apply/auto execution flow
+
+Example:
+
+```bash
+/roadmap-propose add-roadmap-milestones
+```
+
+Expected effect:
+- creates `.spec-driven/changes/add-roadmap-milestones/`
+- fills the standard five change artifacts
+- keeps the roadmap file as planning state while the change becomes execution state
+
+### `/roadmap-brainstorm`
+
+Use this when you want the roadmap to recommend the next change before you
+decide whether to accept it, adjust it, or pick a different roadmap item.
+
+Typical uses:
+- ask which milestone item should come next
+- choose based on dependencies, urgency, or phase impact
+- review a recommendation before creating any change artifacts
+
+Example:
+
+```bash
+/roadmap-brainstorm 推荐下一个最适合启动的 change
+```
+
+Expected effect:
+- reads roadmap context and roadmap-status output
+- recommends one candidate change and explains why
+- waits for you to accept or modify it before handing off to `/roadmap-propose`
 
 ### `/roadmap-sync`
 
@@ -119,16 +165,17 @@ you to split it into smaller milestones.
 A common pattern is:
 
 ```text
-roadmap-plan -> roadmap-milestone -> propose -> auto/apply -> archive -> roadmap-sync
+roadmap-plan -> roadmap-milestone -> roadmap-brainstorm -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
 ```
 
 In practice:
 
 1. Create the roadmap shape.
 2. Refine the current milestone.
-3. Turn approved planned work into one or more changes.
-4. Implement and archive those changes.
-5. Run roadmap sync so milestone state reflects reality.
+3. Use roadmap-brainstorm if you want a recommendation for the next change.
+4. Use roadmap-propose to turn approved planned work into one or more changes.
+5. Implement and archive those changes.
+6. Run roadmap sync so milestone state reflects reality.
 
 ## Example: Initial Roadmap Setup
 
@@ -270,14 +317,20 @@ This rule is intentional. It keeps the roadmap tied to repository reality.
 /roadmap-milestone 细化 m1-cli，把 migrate polish 保留为 candidate idea，把 add-roadmap-milestones 作为 planned change
 ```
 
-3. Turn planned work into a normal change:
+3. Ask for the next recommended change:
 
 ```bash
-/spec-driven-propose add-roadmap-milestones
+/roadmap-brainstorm 推荐下一个最合理的 roadmap change
+```
+
+4. Turn planned work into a normal change:
+
+```bash
+/roadmap-propose add-roadmap-milestones
 /spec-driven-auto
 ```
 
-4. After archive, sync roadmap state:
+5. After archive, sync roadmap state:
 
 ```bash
 /roadmap-sync
@@ -292,6 +345,8 @@ Expected result:
 
 - Use `roadmap-plan` for shape.
 - Use `roadmap-milestone` for one-stage edits.
+- Use `roadmap-brainstorm` when you want a recommendation before you commit.
+- Use `roadmap-propose` to hand off planned work into a normal change.
 - Use `roadmap-sync` after real execution progress.
 - Keep `Candidate Ideas` and `Planned Changes` separate.
 - Do not manually treat a milestone as done if archive state does not support it.

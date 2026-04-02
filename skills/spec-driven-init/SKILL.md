@@ -1,7 +1,7 @@
 ---
 skill_id: spec_driven_init
 name: spec-driven-init
-description: Initialize a .spec-driven/ directory in a project. Creates config.yaml and specs/ scaffold, then guides the user to fill in project context.
+description: Initialize a .spec-driven/ directory in a project. Creates config.yaml, roadmap/, and specs/ scaffold, then guides the user to fill in project context.
 author: auto-spec-driven
 type: agent_skill
 version: 1.0.0
@@ -24,8 +24,10 @@ intended project root.
    node {{SKILL_DIR}}/scripts/spec-driven.js init [path]
    ```
    Pass the path only if it differs from the current directory.
-   - If `.spec-driven/` does not exist, this bootstraps it from scratch
-   - If `.spec-driven/` already exists, this repairs any missing scaffold files and regenerates `specs/INDEX.md` without overwriting existing files
+   - If `.spec-driven/` does not exist, this bootstraps it from scratch,
+     including `roadmap/`, `specs/`, and `changes/`
+   - If `.spec-driven/` already exists, this repairs any missing scaffold files
+     and regenerates `specs/INDEX.md` without overwriting existing files
 
 3. **Draft context** — read any existing project files that describe the project (`README.md`, `AGENTS.md`, `CLAUDE.md`, `package.json`, `pom.xml`, etc.). Draft a `context` value of 3–5 sentences covering:
    - What the project does

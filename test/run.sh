@@ -77,14 +77,19 @@ INIT_DIR="$(mktemp -d)"
 out=$($CLI init "$INIT_DIR" 2>&1)
 assert_contains "creates .spec-driven/"  "Initialized:"  "$out"
 [ -f "$INIT_DIR/.spec-driven/config.yaml"          ] && pass "config.yaml exists"  || fail "config.yaml missing"
+[ -f "$INIT_DIR/.spec-driven/roadmap/INDEX.md"     ] && pass "roadmap INDEX.md exists" || fail "roadmap INDEX.md missing"
+[ -d "$INIT_DIR/.spec-driven/roadmap/milestones"   ] && pass "roadmap milestones/ dir exists" || fail "roadmap milestones/ dir missing"
 [ -f "$INIT_DIR/.spec-driven/specs/INDEX.md"       ] && pass "INDEX.md exists"    || fail "INDEX.md missing"
 [ -d "$INIT_DIR/.spec-driven/specs"                ] && pass "specs/ dir exists"   || fail "specs/ dir missing"
 [ -d "$INIT_DIR/.spec-driven/changes"              ] && pass "changes/ dir exists" || fail "changes/ dir missing"
+
+printf '# custom roadmap\n' > "$INIT_DIR/.spec-driven/roadmap/INDEX.md"
 
 out2=$($CLI init "$INIT_DIR" 2>&1)
 assert_contains "duplicate init exits 0 (idempotent)" "Initialized:" "$out2"
 assert_contains "duplicate init reports index regeneration" "INDEX.md" "$out2"
 [ -f "$INIT_DIR/.spec-driven/config.yaml" ] && pass "duplicate init preserves config.yaml" || fail "duplicate init removed config.yaml"
+[ "$(cat "$INIT_DIR/.spec-driven/roadmap/INDEX.md")" = "# custom roadmap" ] && pass "duplicate init preserves roadmap index content" || fail "duplicate init overwrote roadmap index"
 rm -rf "$INIT_DIR"
 
 # ── 1b. install ───────────────────────────────────────────────────────────────
@@ -104,6 +109,15 @@ assert_contains "install reports spec-content skill copy" "copied: spec-driven-s
 assert_contains "install reports sync-specs skill copy" "copied: spec-driven-sync-specs/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-sync-specs/SKILL.md" ] && pass "install copies sync-specs skill into agent store" || fail "install missing sync-specs skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/spec-driven-sync-specs" ] && pass "install links sync-specs skill for codex" || fail "install missing sync-specs symlink for codex"
+assert_contains "install reports roadmap-plan skill copy" "copied: spec-driven-roadmap-plan/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-roadmap-plan/SKILL.md" ] && pass "install copies roadmap-plan skill into agent store" || fail "install missing roadmap-plan skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/spec-driven-roadmap-plan" ] && pass "install links roadmap-plan skill for codex" || fail "install missing roadmap-plan symlink for codex"
+assert_contains "install reports roadmap-milestone skill copy" "copied: spec-driven-roadmap-milestone/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-roadmap-milestone/SKILL.md" ] && pass "install copies roadmap-milestone skill into agent store" || fail "install missing roadmap-milestone skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/spec-driven-roadmap-milestone" ] && pass "install links roadmap-milestone skill for codex" || fail "install missing roadmap-milestone symlink for codex"
+assert_contains "install reports roadmap-sync skill copy" "copied: spec-driven-roadmap-sync/" "$out"
+[ -f "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-roadmap-sync/SKILL.md" ] && pass "install copies roadmap-sync skill into agent store" || fail "install missing roadmap-sync skill in agent store"
+[ -L "$INSTALL_HOME/.agents/skills/spec-driven-roadmap-sync" ] && pass "install links roadmap-sync skill for codex" || fail "install missing roadmap-sync symlink for codex"
 rm -rf "$INSTALL_HOME"
 
 # ── 1c. migrate ───────────────────────────────────────────────────────────────

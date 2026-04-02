@@ -40,6 +40,7 @@ const INIT_CONFIG_YAML = [
 ].join("\n");
 const INIT_INDEX_MD = `# Specs Index\n\n<!-- One entry per spec file. Updated by /spec-driven-archive after each change. -->\n`;
 const INIT_README_MD = `# Specs\n\nSpecs describe the current state of the system — what it does, not how it was built.\n\n## Format\n\n\`\`\`markdown\n### Requirement: <name>\nThe system MUST/SHOULD/MAY <observable behavior>.\n\n#### Scenario: <name>\n- GIVEN <precondition>\n- WHEN <action>\n- THEN <expected outcome>\n\`\`\`\n\n**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).\n\n## Organization\n\nGroup specs by domain area. Use kebab-case directory names (e.g. \`core/\`, \`api/\`, \`auth/\`).\n\n## Conventions\n\n- Write in present tense ("the system does X")\n- Describe observable behavior, not implementation details\n- Keep each spec focused on one area\n`;
+const INIT_ROADMAP_INDEX_MD = `# Roadmap Index\n\n<!-- One entry per milestone file in execution order. -->\n`;
 const DEFAULT_MAINTENANCE_CHANGE_PREFIX = "maintenance";
 const DEFAULT_MAINTENANCE_BRANCH_PREFIX = "maintenance";
 const DEFAULT_MAINTENANCE_COMMIT_PREFIX = "chore: maintenance";
@@ -831,6 +832,8 @@ function ensureSpecDrivenScaffold(specDir, lines) {
     let changed = 0;
     const changesPath = path.join(specDir, "changes");
     const specsPath = path.join(specDir, "specs");
+    const roadmapPath = path.join(specDir, "roadmap");
+    const roadmapMilestonesPath = path.join(roadmapPath, "milestones");
     if (!fs.existsSync(changesPath)) {
         fs.mkdirSync(changesPath, { recursive: true });
         lines.push(`Created ${path.join(".spec-driven", "changes")}/`);
@@ -839,6 +842,16 @@ function ensureSpecDrivenScaffold(specDir, lines) {
     if (!fs.existsSync(specsPath)) {
         fs.mkdirSync(specsPath, { recursive: true });
         lines.push(`Created ${path.join(".spec-driven", "specs")}/`);
+        changed++;
+    }
+    if (!fs.existsSync(roadmapPath)) {
+        fs.mkdirSync(roadmapPath, { recursive: true });
+        lines.push(`Created ${path.join(".spec-driven", "roadmap")}/`);
+        changed++;
+    }
+    if (!fs.existsSync(roadmapMilestonesPath)) {
+        fs.mkdirSync(roadmapMilestonesPath, { recursive: true });
+        lines.push(`Created ${path.join(".spec-driven", "roadmap", "milestones")}/`);
         changed++;
     }
     if (!fs.existsSync(path.join(specDir, "config.yaml"))) {
@@ -854,6 +867,11 @@ function ensureSpecDrivenScaffold(specDir, lines) {
     if (!fs.existsSync(path.join(specsPath, "README.md"))) {
         fs.writeFileSync(path.join(specsPath, "README.md"), INIT_README_MD);
         lines.push(`Created ${path.join(".spec-driven", "specs", "README.md")}`);
+        changed++;
+    }
+    if (!fs.existsSync(path.join(roadmapPath, "INDEX.md"))) {
+        fs.writeFileSync(path.join(roadmapPath, "INDEX.md"), INIT_ROADMAP_INDEX_MD);
+        lines.push(`Created ${path.join(".spec-driven", "roadmap", "INDEX.md")}`);
         changed++;
     }
     return changed;

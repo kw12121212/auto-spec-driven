@@ -1,12 +1,12 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 13 agent skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 16 agent skills + thin TypeScript scaffolding.
 
 **[中文说明](README.zh.md)**
 
 ## How It Helps AI Programming
 
-AI coding agents are capable but tend to drift — they lose track of existing behavior, expand scope, make inconsistent decisions, and leave no record of why things were built a certain way. spec-driven addresses this with three layers of structure.
+AI coding agents are capable but tend to drift — they lose track of existing behavior, expand scope, make inconsistent decisions, and leave no record of why things were built a certain way. spec-driven addresses this with four layers of structure.
 
 ### Layer 1: `specs/` — the system's long-term memory
 
@@ -18,7 +18,21 @@ Instead of reading the entire codebase to understand what the system does, the A
 
 This prevents the AI from introducing conflicting or duplicate behavior — it knows what already exists.
 
-### Layer 2: change artifacts — structured context per change
+### Layer 2: `roadmap/` — persistent long-horizon planning
+
+When work spans multiple changes, the AI can maintain a roadmap under
+`.spec-driven/roadmap/`:
+
+- `INDEX.md` tracks milestone ordering at a glance
+- Each milestone file defines a bounded stage with goal, done criteria,
+  candidate ideas, planned changes, dependencies, risks, and derived status
+- Milestone completion is derived from archived planned changes, not manual
+  toggles
+
+This prevents long-range planning from collapsing into one oversized document or
+getting lost in chat.
+
+### Layer 3: change artifacts — structured context per change
 
 Every change is a folder with five files, each serving a distinct purpose:
 
@@ -30,7 +44,7 @@ Every change is a folder with five files, each serving a distinct purpose:
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
 | `questions.md` | Open/resolved Q&A | Centralizes ambiguities; open questions block apply and archive |
 
-### Layer 3: 13 skills — explicit constraints on AI behavior
+### Layer 4: 16 skills — explicit constraints on AI behavior
 
 Each skill is a precise prompt that specifies:
 - Exactly which files to read (no vague "read the codebase")
@@ -119,6 +133,7 @@ Choose based on the nature of your task:
 | Small issue, clear scope | **auto** (one-shot) | `/spec-driven-auto add user avatar` |
 | Regular ticket, defined requirements | **propose → apply → verify → archive** | `/spec-driven-propose` → `/spec-driven-apply` → ... |
 | Existing code is ahead of specs | **sync-specs** | `/spec-driven-sync-specs` |
+| Long-horizon planning across phases | **roadmap-plan → roadmap-milestone → roadmap-sync** | `/spec-driven-roadmap-plan` → `/spec-driven-roadmap-milestone` → `/spec-driven-roadmap-sync` |
 | Fuzzy concept, needs exploration | **brainstorm → auto** | `/spec-driven-brainstorm` → confirm → `/spec-driven-auto` |
 
 ### 1. Auto Workflow (Small Issues)
@@ -143,6 +158,8 @@ For typical tasks with clear requirements but non-trivial implementation:
 ```
 
 Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-content` to place spec content correctly, and `/spec-driven-sync-specs` when code has moved ahead of the specs and you need to catch them up.
+
+Use `/spec-driven-roadmap-plan`, `/spec-driven-roadmap-milestone`, and `/spec-driven-roadmap-sync` when you need a persistent milestone-based roadmap above individual changes.
 
 ### 3. Sync Specs Workflow (Code Ahead of Spec)
 
@@ -169,22 +186,40 @@ For exploratory work where scope, approach, or even the problem itself is unclea
 
 This enters a discussion phase — reads context, helps narrow scope and tradeoffs, proposes a change name. After explicit confirmation, it generates the same five artifacts as `/spec-driven-propose`, then offers to enter `/spec-driven-auto` to execute or `/spec-driven-modify` to continue refining.
 
+### 5. Roadmap Workflow (Milestone Planning)
+
+For long-horizon planning that spans multiple changes and needs durable stage
+boundaries:
+
+```bash
+/spec-driven-roadmap-plan
+/spec-driven-roadmap-milestone
+/spec-driven-roadmap-sync
+```
+
+This creates and maintains `.spec-driven/roadmap/` as a milestone-based planning
+layer. Milestones separate `Candidate Ideas` from `Planned Changes`, and
+completion is derived from whether the listed planned changes are archived.
+
+See [ROADMAP_GUIDE.md](ROADMAP_GUIDE.md) for concrete examples, mid-flight edit
+patterns, and expected file-level effects.
+
 ---
 
 ## Full Workflow Reference
 
 ```
-init → [brainstorm] → propose → apply → verify → archive
+init → [roadmap-plan / roadmap-milestone / roadmap-sync] → [brainstorm] → propose → apply → verify → archive
 ```
 
-1. **init** — create `.spec-driven/` with config.yaml, specs/INDEX.md, and specs/
+1. **init** — create `.spec-driven/` with config.yaml, roadmap/, specs/INDEX.md, and specs/
 2. **brainstorm** — discuss a rough idea, converge on scope, and confirm a proposed change name before scaffolding
 3. **propose** — read existing specs, scaffold all five artifacts, populate delta specs
 4. **apply** — implement tasks one by one; update delta specs to match what was built
 5. **verify** — check task completion, implementation evidence, spec format, and alignment
 6. **archive** — merge delta specs into `specs/` by file path, update INDEX.md, move to archive/
 
-Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
+Use **roadmap-plan**, **roadmap-milestone**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **modify** to refine any artifact mid-flight. Use **spec-content** when the content is clear but the correct spec category/file is not. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
 
 ## Skills
 
@@ -197,6 +232,9 @@ Use **modify** to refine any artifact mid-flight. Use **spec-content** when the 
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-spec-content` | Read `specs/INDEX.md`, classify spec content, and place it in the correct delta spec file |
 | `/spec-driven-sync-specs` | Scan code and existing specs for drift, create a dedicated spec-only change, and report the gaps in chat |
+| `/spec-driven-roadmap-plan` | Create or restructure `.spec-driven/roadmap/` into milestone files with explicit stage goals |
+| `/spec-driven-roadmap-milestone` | Refine one milestone's goal, candidate ideas, planned changes, risks, and derived status |
+| `/spec-driven-roadmap-sync` | Reconcile roadmap milestone status against active and archived changes |
 | `/spec-driven-apply` | Implement tasks one by one, update delta specs when done |
 | `/spec-driven-verify` | Check completion, implementation evidence, and spec alignment |
 | `/spec-driven-review` | Review a completed change for code quality before archive |
@@ -246,6 +284,10 @@ continue refining.
 ```
 .spec-driven/
 ├── config.yaml              # Project context and rules (injected into every skill)
+├── roadmap/
+│   ├── INDEX.md             # Milestone ordering for long-horizon planning
+│   └── milestones/
+│       └── <milestone>.md   # Goal, done criteria, candidate ideas, planned changes, status
 ├── specs/
 │   ├── INDEX.md             # Top-level index of all spec files
 │   ├── README.md            # Spec format and conventions

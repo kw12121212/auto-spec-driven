@@ -6,10 +6,10 @@ Instructions for AI agents working in this repository.
 
 `auto-spec-driven` is a lightweight spec-driven development framework. It ships:
 
-- **13 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
+- **16 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
 - **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 10 subcommands
 - **`install.sh`** — installs skills to `~/.auto-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/` / `~/.trae/skills/` / `~/.agents/skills/`
-- **`template/`** — starter `.spec-driven/` directory for target projects
+- **`template/`** — starter `.spec-driven/` directory for target projects, including roadmap/specs/changes scaffold
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
 
 ## Directory Structure
@@ -71,7 +71,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `verify <name>` | change name | stdout: JSON `{valid, warnings[], errors[]}` |
 | `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
 | `cancel <name>` | change name | deletes `.spec-driven/changes/<name>/` |
-| `init [path]` | optional path | creates `.spec-driven/` scaffold at path (or CWD) |
+| `init [path]` | optional path | creates `.spec-driven/` scaffold at path (or CWD), including `roadmap/`, `specs/`, and `changes/` |
 | `run-maintenance [path]` | optional path | stdout: JSON status for clean/skipped/unfixable/blocked/repaired maintenance runs |
 | `migrate [path]` | optional path | migrates `openspec/` artifacts to auto-spec-driven where supported |
 | `list` | none | stdout: all changes (active with status, archived) |
@@ -84,6 +84,9 @@ This repo uses its own workflow. To propose a change to this project:
 
 ```
 /spec-driven-propose   → fills .spec-driven/changes/<name>/
+/spec-driven-roadmap-plan → creates or restructures .spec-driven/roadmap/ by milestone
+/spec-driven-roadmap-milestone → refines one milestone file
+/spec-driven-roadmap-sync → reconciles roadmap status against active/archive changes
 /spec-driven-sync-specs → creates a spec-only sync change from existing code/spec drift
 /spec-driven-apply     → implements tasks, marks [x]
 /spec-driven-verify    → checks completion and spec alignment
@@ -93,6 +96,7 @@ This repo uses its own workflow. To propose a change to this project:
 ```
 
 Changes in progress live in `.spec-driven/changes/`. Completed changes are in `.spec-driven/changes/archive/`.
+Long-horizon planning lives in `.spec-driven/roadmap/`, organized by milestone files.
 
 ## install.sh Flags
 

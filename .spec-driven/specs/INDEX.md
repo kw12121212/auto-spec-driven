@@ -11,4 +11,5 @@
 - [lifecycle.md](skills/lifecycle.md) — archive, cancel, and end-to-end auto workflow behaviors
 - [maintenance.md](skills/maintenance.md) — manual maintenance execution behaviors for explicit safe auto-fixes
 - [planning.md](skills/planning.md) — initialization, proposal, and change-modification behaviors
+- [roadmap.md](skills/roadmap.md) — roadmap assets, milestone structure, and roadmap skill behaviors
 - [workflow.md](skills/workflow.md) — cross-skill workflow invariants and blocking rules

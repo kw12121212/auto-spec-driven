@@ -87,7 +87,7 @@ This repo uses its own workflow. To propose a change to this project:
 /spec-driven-propose   → fills .spec-driven/changes/<name>/
 /roadmap-plan → creates or restructures .spec-driven/roadmap/ by milestone
 /roadmap-milestone → refines one milestone file
-/roadmap-brainstorm → recommends the next roadmap-backed change before scaffolding
+/roadmap-recommend → recommends the next roadmap-backed change before scaffolding
 /roadmap-propose → turns a planned roadmap item into a normal change scaffold
 /roadmap-sync → reconciles roadmap status against active/archive changes
 /spec-driven-sync-specs → creates a spec-only sync change from existing code/spec drift

@@ -100,7 +100,7 @@ Expected effect:
 - fills the standard five change artifacts
 - keeps the roadmap file as planning state while the change becomes execution state
 
-### `/roadmap-brainstorm`
+### `/roadmap-recommend`
 
 Use this when you want the roadmap to recommend the next change before you
 decide whether to accept it, adjust it, or pick a different roadmap item.
@@ -113,7 +113,7 @@ Typical uses:
 Example:
 
 ```bash
-/roadmap-brainstorm 推荐下一个最适合启动的 change
+/roadmap-recommend 推荐下一个最适合启动的 change
 ```
 
 Expected effect:
@@ -165,14 +165,14 @@ you to split it into smaller milestones.
 A common pattern is:
 
 ```text
-roadmap-plan -> roadmap-milestone -> roadmap-brainstorm -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
+roadmap-plan -> roadmap-milestone -> roadmap-recommend -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
 ```
 
 In practice:
 
 1. Create the roadmap shape.
 2. Refine the current milestone.
-3. Use roadmap-brainstorm if you want a recommendation for the next change.
+3. Use roadmap-recommend if you want a recommendation for the next change.
 4. Use roadmap-propose to turn approved planned work into one or more changes.
 5. Implement and archive those changes.
 6. Run roadmap sync so milestone state reflects reality.
@@ -320,7 +320,7 @@ This rule is intentional. It keeps the roadmap tied to repository reality.
 3. Ask for the next recommended change:
 
 ```bash
-/roadmap-brainstorm 推荐下一个最合理的 roadmap change
+/roadmap-recommend 推荐下一个最合理的 roadmap change
 ```
 
 4. Turn planned work into a normal change:
@@ -345,7 +345,7 @@ Expected result:
 
 - Use `roadmap-plan` for shape.
 - Use `roadmap-milestone` for one-stage edits.
-- Use `roadmap-brainstorm` when you want a recommendation before you commit.
+- Use `roadmap-recommend` when you want a recommendation before you commit.
 - Use `roadmap-propose` to hand off planned work into a normal change.
 - Use `roadmap-sync` after real execution progress.
 - Keep `Candidate Ideas` and `Planned Changes` separate.

@@ -11,7 +11,7 @@ agent store and create the same CLI symlinks for it as for the other bundled
 
 ### Requirement: install-includes-roadmap-skills
 The installer MUST copy the shipped `roadmap-plan`, `roadmap-milestone`,
-`roadmap-brainstorm`, `roadmap-propose`, and `roadmap-sync` skills into the
+`roadmap-recommend`, `roadmap-propose`, and `roadmap-sync` skills into the
 agent store and create the same CLI symlinks for them as for the other bundled
 skills.
 

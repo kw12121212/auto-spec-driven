@@ -101,7 +101,7 @@ roadmap 这一层用于管理跨多个 change 的长期规划。它位于：
 - 填充标准的五个 change artifacts
 - roadmap 文件继续保留规划角色，而 change 进入执行层
 
-### `/roadmap-brainstorm`
+### `/roadmap-recommend`
 
 当你希望 roadmap 先推荐下一个 change，再决定是否接受、修改或改选别的
 条目时，用这个。
@@ -114,7 +114,7 @@ roadmap 这一层用于管理跨多个 change 的长期规划。它位于：
 示例：
 
 ```bash
-/roadmap-brainstorm 推荐下一个最适合启动的 change
+/roadmap-recommend 推荐下一个最适合启动的 change
 ```
 
 预期效果：
@@ -165,14 +165,14 @@ node dist/scripts/spec-driven.js verify-roadmap
 常见模式是：
 
 ```text
-roadmap-plan -> roadmap-milestone -> roadmap-brainstorm -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
+roadmap-plan -> roadmap-milestone -> roadmap-recommend -> roadmap-propose -> auto/apply -> archive -> roadmap-sync
 ```
 
 在实际操作里：
 
 1. 先建立 roadmap 结构。
 2. 再细化当前 milestone。
-3. 如果你想先看建议，用 roadmap-brainstorm 推荐下一个 change。
+3. 如果你想先看建议，用 roadmap-recommend 推荐下一个 change。
 4. 用 roadmap-propose 把已批准的 planned work 转成一个或多个 change。
 5. 实现并 archive 这些 changes。
 6. 最后运行 roadmap sync，让 milestone 状态回到真实仓库状态。
@@ -317,7 +317,7 @@ Milestone 完成不是手工标记的。
 3. 先让 roadmap 推荐下一个 change：
 
 ```bash
-/roadmap-brainstorm 推荐下一个最合理的 roadmap change
+/roadmap-recommend 推荐下一个最合理的 roadmap change
 ```
 
 4. 把 planned work 转成普通 change：
@@ -342,7 +342,7 @@ Milestone 完成不是手工标记的。
 
 - 用 `roadmap-plan` 管 roadmap 结构。
 - 用 `roadmap-milestone` 管单个阶段的内容。
-- 用 `roadmap-brainstorm` 在真正创建 change 前先拿一个推荐。
+- 用 `roadmap-recommend` 在真正创建 change 前先拿一个推荐。
 - 用 `roadmap-propose` 把 planned work 交接成普通 change。
 - 在真实执行进展发生后，用 `roadmap-sync` 做状态对齐。
 - 始终把 `Candidate Ideas` 和 `Planned Changes` 分开。

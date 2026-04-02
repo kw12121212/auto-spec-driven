@@ -1,6 +1,6 @@
 ---
-skill_id: roadmap_brainstorm
-name: roadmap-brainstorm
+skill_id: roadmap_recommend
+name: roadmap-recommend
 description: Recommend the next roadmap-backed change for the user to accept or modify before scaffolding.
 author: auto-spec-driven
 type: agent_skill

@@ -7,6 +7,7 @@ SKILLS=(
   spec-driven-propose
   spec-driven-modify
   spec-driven-spec-content
+  spec-driven-spec-edit
   spec-driven-sync-specs
   roadmap-plan
   roadmap-milestone

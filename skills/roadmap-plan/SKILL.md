@@ -40,31 +40,64 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - what major phases or stage goals the roadmap should express
    - whether there are existing changes that already belong to specific
      milestones
+   - whether any existing milestone files are still using a legacy structure,
+     such as an extra `## Candidate Ideas` section, a combined
+     `## Dependencies / Risks` section, or missing `## In Scope`,
+     `## Out of Scope`, or `## Notes` sections
 
 3. **Converge on milestone boundaries before writing** — help the user settle:
-   - milestone names and ordering
-   - each milestone's goal and done criteria
-   - which concrete `Planned Changes` belong in each milestone
-   - key dependencies, risks, and sequencing
+    - milestone names and ordering
+    - each milestone's goal and done criteria
+    - which concrete `Planned Changes` belong in each milestone
+    - key dependencies, risks, and sequencing
+    - which planned changes need extra indented detail lines because the handoff
+      would be underspecified otherwise
+    - any non-obvious legacy-migration interpretation needed to rewrite older
+      milestone files into the canonical format
 
 4. **Confirm the roadmap shape** — before editing files, summarize the intended
    milestone structure and ask for explicit confirmation.
+   If legacy milestone migration is in scope, include any non-obvious content
+   reinterpretation you plan to make while converting older milestone files.
 
 5. **Write roadmap assets** — update:
-   - `.spec-driven/roadmap/INDEX.md`
-   - `.spec-driven/roadmap/milestones/<milestone>.md` for each milestone in scope
+    - `.spec-driven/roadmap/INDEX.md`
+    - `.spec-driven/roadmap/milestones/<milestone>.md` for each milestone in scope
+    When a milestone is in a legacy format, rewrite it into the canonical
+    section set while preserving clearly recoverable meaning. Use the legacy
+    milestone wording itself as migration evidence.
 
 6. **Preserve roadmap rules** — in every milestone file:
-   - use these standard section headings:
-     - `## Goal`
-     - `## Done Criteria`
-     - `## Planned Changes`
-     - `## Dependencies / Risks`
-     - `## Status`
-   - treat `Planned Changes` as the milestone's only work list and keep it
-     limited to concrete approved change work
-   - derive milestone completion from archived planned changes rather than
-     manual toggles
+    - use these standard section headings:
+      - `## Goal`
+      - `## In Scope`
+      - `## Out of Scope`
+      - `## Done Criteria`
+      - `## Planned Changes`
+      - `## Dependencies`
+      - `## Risks`
+      - `## Status`
+      - `## Notes`
+    - write each `Planned Changes` item with a canonical first line,
+      `- \`<change-name>\` - <summary>`
+    - add optional indented continuation lines below that first line when a
+      milestone item needs richer local context
+    - prefer adding those detail lines when a future `roadmap-propose` or
+      `roadmap-recommend` handoff would otherwise lose important scope,
+      sequencing, or constraint information
+    - treat `Planned Changes` as the milestone's only work list and keep it
+      limited to concrete approved change work
+    - derive milestone completion from archived planned changes rather than
+      manual toggles
+    - when migrating a legacy milestone, map content conservatively:
+      - move clearly approved executable work into `## Planned Changes`
+      - split a combined `## Dependencies / Risks` section only when the source
+        distinction is clear enough to preserve confidently
+      - infer `## In Scope` or `## Out of Scope` only when the old milestone
+        wording makes those boundaries clear
+      - preserve useful leftover context in `## Notes` instead of dropping it
+      - surface ambiguity to the user instead of silently inventing an exact
+        migration
 
 7. **Validate roadmap size before finish** — run:
    ```

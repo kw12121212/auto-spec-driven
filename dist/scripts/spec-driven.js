@@ -276,7 +276,10 @@ function reconcileRoadmapAfterArchive(targetDir, name) {
         const filePath = path.join(milestonesDir, file);
         const content = fs.readFileSync(filePath, "utf-8");
         const sections = readLevel2Sections(content);
-        const plannedChangeNames = readBulletItems(sections.get("Planned Changes"));
+        const plannedChangeError = validatePlannedChangeLines(sections.get("Planned Changes"));
+        if (plannedChangeError)
+            continue;
+        const plannedChangeNames = readPlannedChangeEntries(sections.get("Planned Changes")).map((entry) => entry.name);
         if (!plannedChangeNames.includes(name) || !sections.has("Status"))
             continue;
         const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
@@ -568,6 +571,53 @@ function readBulletItems(lines) {
         .map((line) => line.match(/^\s*-\s+(.+)$/)?.[1].trim() ?? "")
         .filter((line) => line.length > 0);
 }
+function readTopLevelBulletItems(lines) {
+    if (!lines)
+        return [];
+    return lines
+        .map((line) => line.match(/^\s{0,3}-\s+(.+)$/)?.[1].trim() ?? "")
+        .filter((line) => line.length > 0);
+}
+function parsePlannedChangeEntry(line) {
+    const match = line.trim().match(/^-\s+`([a-z0-9]+(?:-[a-z0-9]+)*)`\s+-\s+(.+)$/);
+    if (!match)
+        return null;
+    const summary = match[2].trim();
+    if (!summary)
+        return null;
+    return {
+        name: match[1],
+        summary,
+    };
+}
+function readPlannedChangeEntries(lines) {
+    if (!lines)
+        return [];
+    return lines
+        .map((line) => parsePlannedChangeEntry(line))
+        .filter((entry) => entry !== null);
+}
+function validatePlannedChangeLines(lines) {
+    if (!lines)
+        return null;
+    let sawEntry = false;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed)
+            continue;
+        if (/^\s{0,3}-\s+/.test(line)) {
+            if (!parsePlannedChangeEntry(line)) {
+                return "expected '- `\\<change-name>\\` - <summary>'";
+            }
+            sawEntry = true;
+            continue;
+        }
+        if (!/^\s+/.test(line) || !sawEntry) {
+            return "expected indented detail lines to follow a valid planned change entry";
+        }
+    }
+    return null;
+}
 function roadmapStatus() {
     const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();
     const specDir = path.join(targetDir, ".spec-driven");
@@ -593,10 +643,14 @@ function roadmapStatus() {
     }
     const requiredSections = [
         "Goal",
+        "In Scope",
+        "Out of Scope",
         "Done Criteria",
         "Planned Changes",
-        "Dependencies / Risks",
+        "Dependencies",
+        "Risks",
         "Status",
+        "Notes",
     ];
     for (const file of milestoneFiles) {
         const content = fs.readFileSync(path.join(milestonesDir, file), "utf-8");
@@ -613,7 +667,14 @@ function roadmapStatus() {
             continue;
         }
         const declaredStatus = parsedStatus.declaredStatus;
-        const plannedChangeNames = readBulletItems(sections.get("Planned Changes"));
+        const plannedChangeLines = readTopLevelBulletItems(sections.get("Planned Changes"));
+        const plannedChangeEntries = readPlannedChangeEntries(sections.get("Planned Changes"));
+        const plannedChangeError = validatePlannedChangeLines(sections.get("Planned Changes"));
+        if (plannedChangeError) {
+            errors.push(`roadmap/milestones/${file} has invalid planned change entries: ${plannedChangeError}`);
+            continue;
+        }
+        const plannedChangeNames = plannedChangeEntries.map((entry) => entry.name);
         const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
         const plannedChanges = plannedChangeNames.map((name, index) => ({ name, state: plannedChangeStates[index] }));
         const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
@@ -652,10 +713,14 @@ function verifyRoadmap() {
     }
     const requiredSections = [
         "Goal",
+        "In Scope",
+        "Out of Scope",
         "Done Criteria",
         "Planned Changes",
-        "Dependencies / Risks",
+        "Dependencies",
+        "Risks",
         "Status",
+        "Notes",
     ];
     for (const file of milestoneFiles) {
         const content = fs.readFileSync(path.join(milestonesDir, file), "utf-8");
@@ -667,8 +732,15 @@ function verifyRoadmap() {
         }
         const doneCriteria = countBulletItems(sections.get("Done Criteria"));
         const plannedChanges = countBulletItems(sections.get("Planned Changes"));
+        const plannedChangeLines = readTopLevelBulletItems(sections.get("Planned Changes"));
+        const plannedChangeEntries = readPlannedChangeEntries(sections.get("Planned Changes"));
         const parsedStatus = parseDeclaredRoadmapStatus(sections.get("Status"));
         const goal = firstNonEmptyLine(sections.get("Goal"));
+        const plannedChangeError = validatePlannedChangeLines(sections.get("Planned Changes"));
+        if (plannedChangeError) {
+            errors.push(`roadmap/milestones/${file} has invalid planned change entries: ${plannedChangeError}`);
+            continue;
+        }
         if (!parsedStatus.declaredStatus) {
             errors.push(`roadmap/milestones/${file} has invalid status: ${parsedStatus.error}`);
             continue;

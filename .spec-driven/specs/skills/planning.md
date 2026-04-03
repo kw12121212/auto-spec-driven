@@ -20,16 +20,33 @@ initial current-state specs under `.spec-driven/specs/`.
 the active or archived changes needed to understand current execution state
 before they decide what roadmap updates to make.
 
+When legacy milestone migration is in scope, `roadmap-plan` MUST also treat the
+existing milestone wording itself as migration evidence and use that evidence to
+preserve intent conservatively while rewriting the file. That includes reading
+legacy section labels and nearby prose as evidence for whether content should
+map into `## Planned Changes`, `## Dependencies`, `## Risks`, `## In Scope`,
+`## Out of Scope`, or `## Notes`.
+
 ### Requirement: roadmap-plan-confirms-milestone-structure-before-writing
 Before `roadmap-plan` creates or substantially restructures roadmap
 artifacts, it MUST converge with the user on milestone boundaries, stage goals,
 and completion criteria, then confirm the intended roadmap shape before writing
 files.
 
+If the roadmap contains legacy milestone files that need migration, that
+confirmation step MUST also cover any non-obvious content reinterpretation the
+skill plans to make while rewriting those milestones into the canonical format,
+including how it will handle older sections such as `## Candidate Ideas`,
+combined `## Dependencies / Risks`, or missing scope and notes sections.
+
 ### Requirement: roadmap-propose-reads-roadmap-and-spec-context-before-writing
 `roadmap-propose` MUST read `.spec-driven/config.yaml`,
 `.spec-driven/roadmap/INDEX.md`, the relevant milestone file, and
 `.spec-driven/specs/INDEX.md` before it scaffolds a change.
+
+When the selected roadmap item includes indented continuation lines under the
+planned change entry, `roadmap-propose` MUST treat those detail lines as part of
+the planning context it reads before drafting artifacts.
 
 ### Requirement: roadmap-propose-creates-standard-change-artifacts
 `roadmap-propose` MUST create the same five artifacts as
@@ -47,6 +64,11 @@ user's explicit choice.
 `roadmap-recommend` MUST read `.spec-driven/config.yaml`,
 `.spec-driven/roadmap/INDEX.md`, the relevant milestone files, and
 `.spec-driven/specs/INDEX.md` before it recommends a change.
+
+When a candidate roadmap item includes indented continuation lines under the
+planned change entry, `roadmap-recommend` MUST treat those detail lines as part
+of the roadmap context it reads before making and summarizing the
+recommendation.
 
 ### Requirement: roadmap-recommend-confirms-before-scaffolding
 `roadmap-recommend` MUST recommend a candidate change name and explain the

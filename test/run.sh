@@ -110,19 +110,34 @@ cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m1-foundation.md"
 ## Goal
 Ship the first roadmap milestone
 
+## In Scope
+- establish the first roadmap milestone structure
+- add validation and status reporting for roadmap milestones
+
+## Out of Scope
+- broader roadmap automation beyond validation and status reporting
+
 ## Done Criteria
 - Roadmap scaffold exists
 - Validation exists
 
 ## Planned Changes
-- add-roadmap-milestones
-- add-roadmap-size-validation
+- `add-roadmap-milestones` - create the milestone-based roadmap scaffold
+  This is the foundational roadmap change that establishes milestone files.
+- `add-roadmap-size-validation` - validate milestone structure and bounded size
+  It ensures oversized milestones are rejected before roadmap work drifts.
 
-## Dependencies / Risks
+## Dependencies
 - roadmap must stay separate from changes
+
+## Risks
+- roadmap validation should stay easy to interpret for maintainers
 
 ## Status
 - Declared: active
+
+## Notes
+- This milestone should stay small enough to validate the roadmap workflow itself.
 EOF
 
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
@@ -151,22 +166,83 @@ cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m3-missing.md"
 ## Goal
 Detect missing change references
 
+## In Scope
+- detect planned changes that do not exist in active or archived change state
+
+## Out of Scope
+- automatically creating missing changes
+
 ## Done Criteria
 - status command exists
 
 ## Planned Changes
-- nonexistent-change
+- `nonexistent-change` - exercise mismatch reporting when the change is missing
+  The change name is intentionally absent from both active and archived change state.
 
-## Dependencies / Risks
+## Dependencies
+- planned change names must stay aligned with real change directories
+
+## Risks
 - names can drift
 
 ## Status
 - Declared: complete
+
+## Notes
+- The declared status is intentionally stale for mismatch coverage.
 EOF
 
 out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
 assert_contains "roadmap-status reports missing planned change" '"state": "missing"' "$out"
 assert_contains "roadmap-status reports status mismatch" "does not match derived status" "$out"
+
+cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m6-multiline.md"
+# m6-multiline
+
+## Goal
+Accept richer planned change details
+
+## In Scope
+- allow indented detail lines under a valid planned change entry
+
+## Out of Scope
+- freeform planned change prose without a canonical first line
+
+## Done Criteria
+- roadmap validation accepts multiline planned change entries
+
+## Planned Changes
+- `multiline-change` - keep a parseable first line while allowing extra context
+  Scope: cover why this planned change exists and what the next step should focus on.
+  Notes: the CLI should still resolve the change by `multiline-change` only.
+
+## Dependencies
+- top-level planned change parsing must stay deterministic
+
+## Risks
+- multiline details could be mistaken for separate planned changes if indentation is ignored
+
+## Status
+- Declared: proposed
+
+## Notes
+- This fixture verifies multiline planned change detail support.
+EOF
+
+cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/INDEX.md"
+# Roadmap Index
+
+## Milestones
+- [m6-multiline.md](milestones/m6-multiline.md) - m6-multiline - proposed
+EOF
+
+out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
+assert_json_field "verify-roadmap accepts multiline planned change details" "valid" "true" "$out"
+
+mkdir -p "$ROADMAP_DIR/.spec-driven/changes/multiline-change"
+out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
+assert_contains "roadmap-status resolves multiline planned change by name" '"name": "multiline-change"' "$out"
+assert_contains "roadmap-status marks multiline planned change active" '"state": "active"' "$out"
 
 cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m2-too-large.md"
 # m2-too-large
@@ -174,22 +250,34 @@ cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m2-too-large.md"
 ## Goal
 Too much work in one stage
 
+## In Scope
+- show what happens when one milestone grows too large
+
+## Out of Scope
+- automatically splitting the milestone
+
 ## Done Criteria
 - Everything ships
 
 ## Planned Changes
-- change-1
-- change-2
-- change-3
-- change-4
-- change-5
-- change-6
+- `change-1` - first oversized planned change
+- `change-2` - second oversized planned change
+- `change-3` - third oversized planned change
+- `change-4` - fourth oversized planned change
+- `change-5` - fifth oversized planned change
+- `change-6` - sixth oversized planned change
 
-## Dependencies / Risks
+## Dependencies
+- the oversized milestone still follows the required heading structure
+
+## Risks
 - too much scope
 
 ## Status
 - Declared: proposed
+
+## Notes
+- This milestone is intentionally invalid because it exceeds the size limit.
 EOF
 
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
@@ -211,18 +299,67 @@ cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m4-bad-status.md"
 ## Goal
 Use invalid status shape
 
+## In Scope
+- verify that invalid declared statuses are rejected
+
+## Out of Scope
+- testing mismatch behavior for otherwise valid statuses
+
 ## Done Criteria
 - Validation rejects it
 
 ## Planned Changes
-- change-1
+- `change-1` - provide one valid planned change entry while status stays invalid
 
-## Dependencies / Risks
-- malformed markdown
+## Dependencies
+- the milestone should stay structurally valid aside from status
+
+## Risks
+- malformed markdown can hide the real validation error
 
 ## Status
 - Declared: someday
+
+## Notes
+- This fixture isolates the invalid status case.
 EOF
+
+cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m5-bad-planned-change.md"
+# m5-bad-planned-change
+
+## Goal
+Reject malformed planned change entries
+
+## In Scope
+- verify planned change entry format validation
+
+## Out of Scope
+- status mismatch reporting
+
+## Done Criteria
+- malformed planned change entries fail validation
+
+## Planned Changes
+- malformed-change-entry
+
+## Dependencies
+- the rest of the milestone shape stays valid
+
+## Risks
+- malformed change entries could break roadmap status parsing
+
+## Status
+- Declared: proposed
+
+## Notes
+- This fixture intentionally omits the required summary format.
+EOF
+
+out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
+assert_json_field "verify-roadmap rejects malformed planned change entry" "valid" "false" "$out"
+assert_contains "verify-roadmap reports planned change format guidance" "invalid planned change entries" "$out"
+
+rm "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m5-bad-planned-change.md"
 
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap rejects invalid declared status" "valid" "false" "$out"
@@ -237,17 +374,29 @@ cat <<'EOF' > "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/milestones/m1-archive-s
 ## Goal
 Complete a roadmap milestone via archive
 
+## In Scope
+- verify archive-driven roadmap reconciliation
+
+## Out of Scope
+- broader roadmap sync flows beyond archive closeout
+
 ## Done Criteria
 - All planned changes are archived
 
 ## Planned Changes
-- archive-sync-change
+- `archive-sync-change` - archive the last remaining planned change in this milestone
 
-## Dependencies / Risks
+## Dependencies
 - archive must update roadmap
+
+## Risks
+- archive reconciliation could leave roadmap status stale
 
 ## Status
 - Declared: active
+
+## Notes
+- Archiving the only listed change should complete the milestone.
 EOF
 cat <<'EOF' > "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/INDEX.md"
 # Roadmap Index

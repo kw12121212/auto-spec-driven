@@ -31,40 +31,51 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    use it. Otherwise ask which `Planned Changes` item to promote.
 
 2. **Read roadmap and spec context first** — before scaffolding anything, read:
-   - `.spec-driven/config.yaml`
-   - `.spec-driven/roadmap/INDEX.md`
-   - the milestone file that contains the target item
-   - `.spec-driven/specs/INDEX.md`
-   - the relevant main spec files the new change is likely to touch
+    - `.spec-driven/config.yaml`
+    - `.spec-driven/roadmap/INDEX.md`
+    - the milestone file that contains the target item
+    - `.spec-driven/specs/INDEX.md`
+    - the relevant main spec files the new change is likely to touch
+    - the full selected planned change entry, including any indented detail lines
+      attached to its canonical first line
 
 3. **Confirm it is already planned work** — verify that the selected name is
-   present under a milestone `## Planned Changes` section before scaffolding.
+    present under a milestone `## Planned Changes` section before scaffolding.
 
-4. **Scaffold the change** — run:
-   ```
-   node {{SKILL_DIR}}/scripts/spec-driven.js propose <name>
-   ```
-   This creates `.spec-driven/changes/<name>/` with seeded artifact templates.
+4. **Extract the roadmap handoff context** — treat the selected planned change
+   entry as more than a name lookup:
+   - use the canonical first line to identify the change name and summary
+   - treat any indented continuation lines attached to that entry as milestone-local
+     planning context for scope, rationale, sequencing, or constraints
+   - distill that detail into the proposal artifacts instead of copying it
+     mechanically
 
-5. **Fill the standard proposal artifacts** — populate:
-   - `proposal.md`
-   - `design.md`
-   - `tasks.md`
-   - `questions.md`
-   - delta specs under `changes/<name>/specs/`
-   Use the roadmap milestone as planning input, but write the artifacts as a
-   normal spec-driven change proposal.
+5. **Scaffold the change** — run:
+    ```
+    node {{SKILL_DIR}}/scripts/spec-driven.js propose <name>
+    ```
+    This creates `.spec-driven/changes/<name>/` with seeded artifact templates.
 
-6. **Validate artifact format** — run:
-   ```
-   node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
-   ```
-   If the command reports repairable format issues, fix them and rerun verify.
+6. **Fill the standard proposal artifacts** — populate:
+    - `proposal.md`
+    - `design.md`
+    - `tasks.md`
+    - `questions.md`
+    - delta specs under `changes/<name>/specs/`
+    Use the roadmap milestone as planning input, including the selected planned
+    change detail block when present, but write the artifacts as a normal
+    spec-driven change proposal.
 
-7. **Offer the execution handoff** — report the new change path, note which
-   milestone it came from, surface any open questions that must be resolved
-   before implementation, and ask the user whether they want to:
-   - enter `/spec-driven-apply <name>` for the stepwise execution path
+7. **Validate artifact format** — run:
+    ```
+    node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
+    ```
+    If the command reports repairable format issues, fix them and rerun verify.
+
+8. **Offer the execution handoff** — report the new change path, note which
+    milestone it came from, surface any open questions that must be resolved
+    before implementation, and ask the user whether they want to:
+    - enter `/spec-driven-apply <name>` for the stepwise execution path
    - enter `/spec-driven-auto` for the end-to-end execution path
    Do not auto-enter either execution path without the user's explicit choice.
 
@@ -73,4 +84,6 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - This skill creates planning artifacts only — do not implement product code
 - Only turn `Planned Changes` into change scaffolds
 - Create the same five artifacts as `spec-driven-propose`
+- Use indented planned change continuation lines as planning input when they are
+  present under the selected roadmap item
 - Before finishing, rerun `verify` until all repairable format issues are fixed

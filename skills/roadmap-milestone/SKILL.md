@@ -35,22 +35,45 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - any nearby milestone files needed to preserve ordering or avoid overlap
    - active and archived changes that the milestone already references or might
      need to reference
+   - whether the target milestone uses a legacy structure, such as an extra
+     `## Candidate Ideas` section, a combined `## Dependencies / Risks`
+     section, or missing `## In Scope`, `## Out of Scope`, or `## Notes`
+     sections
 
 3. **Refine only one milestone at a time** — help the user settle:
-   - the milestone `Goal`
-   - `Done Criteria`
-   - `Planned Changes`
-   - `Dependencies / Risks`
-   - derived `Status`
-   Use these standard section headings in the file:
-   - `## Goal`
-   - `## Done Criteria`
-   - `## Planned Changes`
-   - `## Dependencies / Risks`
-   - `## Status`
+    - the milestone `Goal`
+    - `In Scope`
+    - `Out of Scope`
+    - `Done Criteria`
+    - `Planned Changes`
+    - `Dependencies`
+    - `Risks`
+    - derived `Status`
+    - `Notes`
+    Use these standard section headings in the file:
+    - `## Goal`
+    - `## In Scope`
+    - `## Out of Scope`
+    - `## Done Criteria`
+    - `## Planned Changes`
+    - `## Dependencies`
+    - `## Risks`
+    - `## Status`
+    - `## Notes`
+    Write each `Planned Changes` item with a canonical first line,
+    `- \`<change-name>\` - <summary>`. Add optional indented continuation lines
+    below that first line when the planned change needs richer local detail.
+    Prefer those continuation lines when the milestone item would otherwise be
+    too thin for a later `roadmap-propose` or `roadmap-recommend` handoff.
+    If the milestone starts in a legacy format and the user wants a one-file
+    migration instead of a whole-roadmap restructure, preserve clearly
+    recoverable content, carry forward useful leftover context into `## Notes`
+    when needed, and surface ambiguity instead of guessing silently.
 
 4. **Write the milestone file** — create or update the milestone markdown file
-   and keep it focused on that milestone only.
+   and keep it focused on that milestone only. If the file started in a legacy
+   format, rewrite it into the canonical section set while preserving intent
+   conservatively.
 
 5. **Update roadmap index if needed** — if the milestone is new, add it to
    `.spec-driven/roadmap/INDEX.md` in the correct sequence.

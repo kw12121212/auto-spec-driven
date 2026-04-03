@@ -248,13 +248,25 @@ function deriveMilestoneStatus(plannedChangeStates: PlannedChangeState[]): Exclu
   return "proposed";
 }
 
-function readMilestoneIndexMetadata(filePath: string): { title: string; declaredStatus: DeclaredRoadmapStatus } {
+function readDeclaredRoadmapStatusLabel(lines: string[] | undefined): string {
+  const parsedStatus = parseDeclaredRoadmapStatus(lines);
+  if (parsedStatus.declaredStatus) return parsedStatus.declaredStatus;
+
+  if (!lines) return "invalid";
+  const nonEmpty = lines.map((line) => line.trim()).filter((line) => line.length > 0);
+  if (nonEmpty.length === 1) {
+    const rawMatch = nonEmpty[0].match(/^-\s+Declared:\s+(.+)$/);
+    if (rawMatch) return rawMatch[1].trim();
+  }
+  return "invalid";
+}
+
+function readMilestoneIndexMetadata(filePath: string): { title: string; declaredStatus: string } {
   const content = fs.readFileSync(filePath, "utf-8");
   const sections = readLevel2Sections(content);
-  const parsedStatus = parseDeclaredRoadmapStatus(sections.get("Status"));
   return {
     title: extractMarkdownTitle(content, path.basename(filePath, ".md")),
-    declaredStatus: parsedStatus.declaredStatus ?? "proposed",
+    declaredStatus: readDeclaredRoadmapStatusLabel(sections.get("Status")),
   };
 }
 
@@ -319,6 +331,19 @@ function validateRoadmapIndex(roadmapDir: string, errors: string[]): void {
     if (label !== path.basename(relativePath)) {
       errors.push(`roadmap/INDEX.md entry label '${label}' must match '${path.basename(relativePath)}'`);
     }
+
+    const milestonePath = path.join(roadmapDir, "milestones", relativePath);
+    if (!fs.existsSync(milestonePath)) {
+      errors.push(`roadmap/INDEX.md entry references missing milestone '${relativePath}'`);
+      continue;
+    }
+
+    const milestoneDeclaredStatus = readMilestoneIndexMetadata(milestonePath).declaredStatus;
+    const indexDeclaredStatus = match[4];
+    if (indexDeclaredStatus !== milestoneDeclaredStatus) {
+      errors.push(`roadmap/INDEX.md entry status '${indexDeclaredStatus}' must match milestone declared status '${milestoneDeclaredStatus}' for '${relativePath}'`);
+    }
+
     if (seenEntries.has(relativePath)) {
       errors.push(`roadmap/INDEX.md contains duplicate entry for '${relativePath}'`);
     }
@@ -354,6 +379,7 @@ function reconcileRoadmapAfterArchive(targetDir: string, name: string): void {
     const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
     const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
     const parsedStatus = parseDeclaredRoadmapStatus(sections.get("Status"));
+    if (!parsedStatus.declaredStatus) continue;
     if (parsedStatus.declaredStatus === derivedStatus) continue;
 
     fs.writeFileSync(filePath, replaceMilestoneDeclaredStatus(content, derivedStatus));

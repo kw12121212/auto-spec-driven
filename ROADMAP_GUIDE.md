@@ -161,7 +161,7 @@ This validates milestone structure and size.
 Today it enforces:
 - standard milestone section headings
 - described planned-change entries using `- \`<change-name>\` - <summary>`
-- optional indented detail lines attached to the preceding planned change entry
+- single-line planned change descriptions only; indented continuation lines are invalid
 - no more than 5 bullet items under `## Planned Changes`
 
 If a milestone exceeds that size, the command reports it as invalid and tells
@@ -233,15 +233,9 @@ And one milestone might look like:
 - README / install / tests 已对齐
 
 ## Planned Changes
-- `add-roadmap-milestones` - add milestone files and roadmap-specific planning flow
-  Creates the long-lived roadmap scaffold and the first roadmap-aware planning
-  workflow entry points.
-- `roadmap-priority-scoring` - explore roadmap-level prioritization guidance
-  This could help later milestone ordering, but it stays secondary to the
-  foundational roadmap mechanics.
-- `improve-sync-specs-reporting` - improve reporting when roadmap and repository state drift
-  Focus on making stale or mismatched roadmap state easier for maintainers to
-  understand quickly.
+- `add-roadmap-milestones` - add milestone files and roadmap-specific planning flow, creating the long-lived roadmap scaffold and the first roadmap-aware planning workflow entry points.
+- `roadmap-priority-scoring` - explore roadmap-level prioritization guidance while keeping it secondary to the foundational roadmap mechanics.
+- `improve-sync-specs-reporting` - improve reporting when roadmap and repository state drift so stale or mismatched roadmap state is easier for maintainers to understand quickly.
 
 ## Dependencies
 - roadmap 不能替代 changes/

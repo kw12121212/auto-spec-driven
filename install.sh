@@ -22,6 +22,12 @@ SKILLS=(
   spec-driven-auto
 )
 
+RETIRED_SKILLS=(
+  spec-driven-spec-content
+)
+
+ALL_KNOWN_SKILLS=("${SKILLS[@]}" "${RETIRED_SKILLS[@]}")
+
 # Central agent skills store (skills live here)
 GLOBAL_AGENT_DIR="$HOME/.auto-spec-driven/skills"
 PROJECT_AGENT_SUBDIR=".agent/skills"
@@ -106,7 +112,7 @@ if $UNINSTALL; then
 
   # Remove CLI symlinks first
   for link_dir in "${CLI_LINK_DIRS[@]}"; do
-    for skill in "${SKILLS[@]}"; do
+    for skill in "${ALL_KNOWN_SKILLS[@]}"; do
       link="$link_dir/$skill"
       if [ -L "$link" ]; then
         rm "$link"
@@ -117,7 +123,7 @@ if $UNINSTALL; then
   done
 
   # Remove from agent store (always a plain directory — never a symlink)
-  for skill in "${SKILLS[@]}"; do
+  for skill in "${ALL_KNOWN_SKILLS[@]}"; do
     target="$AGENT_DIR/$skill"
     if [ -d "$target" ]; then
       extra=$(ls -A "$target" | grep -v '^SKILL\.md$' | grep -v '^scripts$') || true
@@ -146,6 +152,22 @@ echo "CLI symlinks:$(printf ' %s' "${CLI_LINK_DIRS[@]}")"
 mkdir -p "$AGENT_DIR"
 for link_dir in "${CLI_LINK_DIRS[@]}"; do
   mkdir -p "$link_dir"
+done
+
+for retired_skill in "${RETIRED_SKILLS[@]}"; do
+  retired_target="$AGENT_DIR/$retired_skill"
+  if [ -d "$retired_target" ]; then
+    rm -rf "$retired_target"
+    echo "  removed retired skill: $retired_skill/"
+  fi
+
+  for link_dir in "${CLI_LINK_DIRS[@]}"; do
+    retired_link="$link_dir/$retired_skill"
+    if [ -L "$retired_link" ]; then
+      rm "$retired_link"
+      echo "  removed retired symlink: $retired_link"
+    fi
+  done
 done
 
 installed=0

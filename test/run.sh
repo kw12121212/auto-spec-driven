@@ -364,6 +364,50 @@ out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap rejects invalid declared status" "valid" "false" "$out"
 assert_contains "verify-roadmap reports invalid milestone status" "invalid status" "$out"
 
+INVALID_INDEX_DIR="$(mktemp -d)"
+$CLI init "$INVALID_INDEX_DIR" >/dev/null
+cat <<'EOF' > "$INVALID_INDEX_DIR/.spec-driven/roadmap/milestones/m1-invalid-index-status.md"
+# m1-invalid-index-status
+
+## Goal
+Keep roadmap index status aligned with milestone status
+
+## In Scope
+- verify roadmap index validation rejects stale or invalid milestone status labels
+
+## Out of Scope
+- archive reconciliation behavior
+
+## Done Criteria
+- verify-roadmap rejects mismatched roadmap index status
+
+## Planned Changes
+- `index-status-check` - provide one valid planned change while status stays invalid
+
+## Dependencies
+- roadmap index validation must read milestone status from the file itself
+
+## Risks
+- invalid milestone statuses could be hidden by stale roadmap index labels
+
+## Status
+- Declared: someday
+
+## Notes
+- This fixture isolates invalid milestone status handling inside roadmap index validation.
+EOF
+cat <<'EOF' > "$INVALID_INDEX_DIR/.spec-driven/roadmap/INDEX.md"
+# Roadmap Index
+
+## Milestones
+- [m1-invalid-index-status.md](milestones/m1-invalid-index-status.md) - m1-invalid-index-status - proposed
+EOF
+
+out=$($CLI verify-roadmap "$INVALID_INDEX_DIR" 2>&1)
+assert_json_field "verify-roadmap rejects roadmap index status mismatch for invalid milestone status" "valid" "false" "$out"
+assert_contains "verify-roadmap reports roadmap index status mismatch" "must match milestone declared status 'someday'" "$out"
+rm -rf "$INVALID_INDEX_DIR"
+
 ARCHIVE_ROADMAP_DIR="$(mktemp -d)"
 $CLI init "$ARCHIVE_ROADMAP_DIR" >/dev/null
 mkdir -p "$ARCHIVE_ROADMAP_DIR/.spec-driven/changes/archive"
@@ -412,6 +456,7 @@ EOF
 
 assert_contains "archive reconciles milestone declared status" "- Declared: complete" "$(cat "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/milestones/m1-archive-sync.md")"
 assert_contains "archive reconciles roadmap index status" "m1-archive-sync - complete" "$(cat "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/INDEX.md")"
+
 rm -rf "$ARCHIVE_ROADMAP_DIR"
 rm -rf "$ROADMAP_DIR"
 
@@ -447,6 +492,13 @@ assert_contains "install reports roadmap-propose skill copy" "copied: roadmap-pr
 assert_contains "install reports roadmap-sync skill copy" "copied: roadmap-sync/" "$out"
 [ -f "$INSTALL_HOME/.auto-spec-driven/skills/roadmap-sync/SKILL.md" ] && pass "install copies roadmap-sync skill into agent store" || fail "install missing roadmap-sync skill in agent store"
 [ -L "$INSTALL_HOME/.agents/skills/roadmap-sync" ] && pass "install links roadmap-sync skill for codex" || fail "install missing roadmap-sync symlink for codex"
+
+mkdir -p "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content/scripts"
+printf -- '---\nname: stale\ndescription: stale\n---\n' > "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content/SKILL.md"
+ln -s "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content" "$INSTALL_HOME/.agents/skills/spec-driven-spec-content"
+out=$(HOME="$INSTALL_HOME" bash "$ROOT/install.sh" --cli codex 2>&1)
+[ ! -d "$INSTALL_HOME/.auto-spec-driven/skills/spec-driven-spec-content" ] && pass "install removes retired skill from agent store" || fail "install left retired skill in agent store"
+[ ! -L "$INSTALL_HOME/.agents/skills/spec-driven-spec-content" ] && pass "install removes retired skill symlink" || fail "install left retired skill symlink"
 rm -rf "$INSTALL_HOME"
 
 # ── 1c. migrate ───────────────────────────────────────────────────────────────

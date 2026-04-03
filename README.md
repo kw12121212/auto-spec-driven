@@ -200,7 +200,8 @@ boundaries:
 ```
 
 This creates and maintains `.spec-driven/roadmap/` as a milestone-based planning
-layer. Milestones keep a single `Planned Changes` work list,
+layer. Milestones keep a single `Planned Changes` work list with single-line
+entries,
 `roadmap-recommend` now recommends the next roadmap-backed change and, after
 explicit confirmation, scaffolds it directly into a normal change before asking
 the user to choose between `apply` and `auto` for execution. `roadmap-propose`
@@ -296,7 +297,7 @@ continue refining.
 ├── roadmap/
 │   ├── INDEX.md             # Milestone ordering for long-horizon planning
 │   └── milestones/
-│       └── <milestone>.md   # Goal, done criteria, planned changes, risks, status
+│       └── <milestone>.md   # Goal, scope boundaries, planned changes, risks, notes, and status
 ├── specs/
 │   ├── INDEX.md             # Top-level index of all spec files
 │   ├── README.md            # Spec format and conventions

@@ -160,7 +160,7 @@ node dist/scripts/spec-driven.js verify-roadmap
 当前会检查：
 - 是否使用标准 milestone section headings
 - `## Planned Changes` 条目是否使用 `- \`<change-name>\` - <summary>` 的规范格式
-- 该条目下是否允许附带属于上一条 planned change 的缩进细节行
+- `## Planned Changes` 描述是否保持单行，缩进 continuation lines 视为无效
 - `## Planned Changes` 下是否不超过 5 个 bullet items
 
 如果某个 milestone 超过这个大小，命令会报告无效，并提示你把它拆成更小的 milestones。
@@ -230,12 +230,9 @@ roadmap-plan -> roadmap-milestone -> roadmap-recommend -> auto/apply -> archive 
 - README / install / tests 已对齐
 
 ## Planned Changes
-- `add-roadmap-milestones` - 增加 milestone 文件和 roadmap 规划流
-  创建长期存在的 roadmap scaffold，以及第一批 roadmap 感知的 planning 入口。
-- `roadmap-priority-scoring` - 探索 roadmap 级别的优先级建议
-  这有助于后续 milestone 排序，但优先级低于基础 roadmap 机制。
-- `improve-sync-specs-reporting` - 改进 roadmap 与仓库状态漂移时的报告
-  重点是让维护者更快理解 stale 或 mismatch 的 roadmap 状态。
+- `add-roadmap-milestones` - 增加 milestone 文件和 roadmap 规划流，创建长期存在的 roadmap scaffold，以及第一批 roadmap 感知的 planning 入口。
+- `roadmap-priority-scoring` - 探索 roadmap 级别的优先级建议，但优先级低于基础 roadmap 机制。
+- `improve-sync-specs-reporting` - 改进 roadmap 与仓库状态漂移时的报告，让维护者更快理解 stale 或 mismatch 的 roadmap 状态。
 
 ## Dependencies
 - roadmap 不能替代 changes/

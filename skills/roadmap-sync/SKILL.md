@@ -46,6 +46,11 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 3. **Update roadmap files** — reconcile milestone status and each listed planned
    change's declared status based on the repository evidence you found.
 
+   Use only these legal declared status values while interpreting or rewriting
+   roadmap files:
+   - milestone status: `proposed`, `active`, `blocked`, `complete`
+   - planned change status: `planned`, `complete`
+
 4. **Preserve roadmap rules** — during sync:
    - do not mark a milestone complete unless every listed planned change is
      archived

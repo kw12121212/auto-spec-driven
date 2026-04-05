@@ -36,6 +36,10 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     - the planned change entries for the candidates you are considering as
       single-line roadmap items in the canonical format
       `- \`<change-name>\` - Declared: <status> - <summary>`
+    - treat milestone declared statuses as limited to `proposed`, `active`,
+      `blocked`, or `complete`
+    - treat planned change declared statuses as limited to `planned` or
+      `complete`
 
 2. **Understand what the user wants optimized** — determine whether the user
    wants the next change chosen for impact, urgency, dependency order, risk

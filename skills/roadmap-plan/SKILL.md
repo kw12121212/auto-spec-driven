@@ -76,9 +76,16 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       - `## Risks`
       - `## Status`
       - `## Notes`
+    - milestone declared statuses are limited to:
+      - `proposed`
+      - `active`
+      - `blocked`
+      - `complete`
     - write each `Planned Changes` item with a canonical first line,
       `- \`<change-name>\` - Declared: <status> - <summary>`
-    - limit `<status>` to `planned` or `complete`
+    - planned change declared statuses are limited to:
+      - `planned`
+      - `complete`
     - keep each planned change description on that same line; do not add
       indented continuation lines below the bullet
     - default new or unfinished planned changes to `Declared: planned`

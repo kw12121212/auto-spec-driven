@@ -151,7 +151,7 @@ function parseDeclaredRoadmapStatus(lines) {
     if (!DECLARED_ROADMAP_STATUSES.includes(status)) {
         return {
             declaredStatus: null,
-            error: `unsupported declared roadmap status '${match[1]}'`,
+            error: `unsupported declared roadmap status '${match[1]}' (allowed: ${DECLARED_ROADMAP_STATUSES.join(", ")})`,
         };
     }
     return { declaredStatus: status, error: null };
@@ -268,7 +268,7 @@ function validateRoadmapIndex(roadmapDir, errors) {
             continue;
         const match = trimmed.match(/^- \[([^\]]+)\]\(milestones\/([^)]+)\) - (.+) - (proposed|active|blocked|complete)$/);
         if (!match) {
-            errors.push("roadmap/INDEX.md entries must match '- [<file>](milestones/<file>) - <title> - <declared-status>'");
+            errors.push(`roadmap/INDEX.md entries must match '- [<file>](milestones/<file>) - <title> - <declared-status>' where <declared-status> is one of: ${DECLARED_ROADMAP_STATUSES.join(", ")}`);
             continue;
         }
         const [, label, relativePath] = match;
@@ -671,7 +671,7 @@ function validatePlannedChangeLines(lines) {
                 return "expected '- `\\<change-name>\\` - Declared: <planned|complete> - <summary>'";
             }
             if (!isDeclaredPlannedChangeStatus(raw.declaredStatus)) {
-                return `unsupported planned change declared status '${raw.declaredStatus}'`;
+                return `unsupported planned change declared status '${raw.declaredStatus}' (allowed: ${DECLARED_PLANNED_CHANGE_STATUSES.join(", ")})`;
             }
             continue;
         }
@@ -766,22 +766,26 @@ function verifyRoadmap() {
     const milestonesDir = path.join(specDir, "roadmap", "milestones");
     const warnings = [];
     const errors = [];
+    const allowedStatuses = {
+        milestoneDeclaredStatuses: [...DECLARED_ROADMAP_STATUSES],
+        plannedChangeDeclaredStatuses: [...DECLARED_PLANNED_CHANGE_STATUSES],
+    };
     const milestones = [];
     if (!fs.existsSync(specDir) || !fs.statSync(specDir).isDirectory()) {
         errors.push(`.spec-driven/ not found in ${targetDir}`);
-        console.log(JSON.stringify({ valid: false, warnings, errors, milestones }, null, 2));
+        console.log(JSON.stringify({ valid: false, warnings, errors, allowedStatuses, milestones }, null, 2));
         process.exit(0);
     }
     if (!fs.existsSync(milestonesDir) || !fs.statSync(milestonesDir).isDirectory()) {
         errors.push(`Missing roadmap milestones directory: ${path.join(".spec-driven", "roadmap", "milestones")}/`);
-        console.log(JSON.stringify({ valid: false, warnings, errors, milestones }, null, 2));
+        console.log(JSON.stringify({ valid: false, warnings, errors, allowedStatuses, milestones }, null, 2));
         process.exit(0);
     }
     validateRoadmapIndex(roadmapDir, errors);
     const milestoneFiles = findMdFiles(milestonesDir).sort();
     if (milestoneFiles.length === 0) {
         warnings.push("roadmap/milestones/ is empty");
-        console.log(JSON.stringify({ valid: true, warnings, errors, milestones }, null, 2));
+        console.log(JSON.stringify({ valid: true, warnings, errors, allowedStatuses, milestones }, null, 2));
         process.exit(0);
     }
     const requiredSections = [
@@ -822,7 +826,7 @@ function verifyRoadmap() {
             errors.push(`roadmap/milestones/${file} has ${plannedChanges} planned changes; split it into smaller milestones`);
         }
     }
-    console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors, milestones }, null, 2));
+    console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors, allowedStatuses, milestones }, null, 2));
 }
 function archive() {
     const name = requireName("archive");

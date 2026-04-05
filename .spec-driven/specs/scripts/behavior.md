@@ -167,8 +167,14 @@ one bullet in the form `- Declared: <status>`, where `<status>` is one of:
 - `blocked`
 - `complete`
 
+The command's structured JSON output MUST include the allowed milestone declared
+status enum so AI consumers can see the legal values directly from the
+validation result.
+
 If the status bullet is missing, repeated, malformed, or uses an unsupported
 status value, the command MUST report the milestone as invalid.
+When the failure is caused by an unsupported status value, the error MUST list
+the allowed milestone declared status values directly.
 
 ### Requirement: verify-roadmap-validates-planned-change-entry-format
 For each bullet under `## Planned Changes`, `verify-roadmap` MUST require the
@@ -180,10 +186,17 @@ canonical entry format
 `<summary>` MUST be present, non-empty, and fully contained on the same line as
 the planned change bullet.
 
+The command's structured JSON output MUST include the allowed planned change
+declared status enum so AI consumers can see the legal values directly from the
+validation result.
+
 If a planned change bullet omits the declared status, uses an unsupported status
 value, omits the summary, uses a malformed change name, does not follow the
 canonical format, or is followed by attached indented continuation lines, the
 command MUST report the milestone as invalid.
+
+When the failure is caused by an unsupported planned change status value, the
+error MUST list the allowed planned change declared status values directly.
 
 Any non-empty line under `## Planned Changes` that is not itself a valid
 top-level planned change bullet MUST be reported as invalid.

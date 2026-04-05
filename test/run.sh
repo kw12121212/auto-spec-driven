@@ -141,6 +141,8 @@ EOF
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap valid=true for bounded milestone" "valid" "true" "$out"
 assert_contains "verify-roadmap reports milestone summary" "\"plannedChanges\": 2" "$out"
+assert_contains "verify-roadmap reports allowed milestone statuses" '"milestoneDeclaredStatuses": [' "$out"
+assert_contains "verify-roadmap reports allowed planned change statuses" '"plannedChangeDeclaredStatuses": [' "$out"
 
 mkdir -p "$ROADMAP_DIR/.spec-driven/changes/add-roadmap-size-validation"
 mkdir -p "$ROADMAP_DIR/.spec-driven/changes/archive/$(date +%Y-%m-%d)-add-roadmap-milestones"
@@ -360,12 +362,14 @@ EOF
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap rejects malformed planned change entry" "valid" "false" "$out"
 assert_contains "verify-roadmap reports unsupported planned change status" "unsupported planned change declared status" "$out"
+assert_contains "verify-roadmap reports allowed planned change status values" "allowed: planned, complete" "$out"
 
 rm "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m5-bad-planned-change.md"
 
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap rejects invalid declared status" "valid" "false" "$out"
 assert_contains "verify-roadmap reports invalid milestone status" "invalid status" "$out"
+assert_contains "verify-roadmap reports allowed milestone status values" "allowed: proposed, active, blocked, complete" "$out"
 
 INVALID_INDEX_DIR="$(mktemp -d)"
 $CLI init "$INVALID_INDEX_DIR" >/dev/null

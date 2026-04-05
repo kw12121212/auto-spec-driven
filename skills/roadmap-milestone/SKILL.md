@@ -51,23 +51,30 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     - derived `Status`
     - `Notes`
     Use these standard section headings in the file:
-    - `## Goal`
-    - `## In Scope`
-    - `## Out of Scope`
-    - `## Done Criteria`
-    - `## Planned Changes`
-    - `## Dependencies`
-    - `## Risks`
-    - `## Status`
-    - `## Notes`
-    Write each `Planned Changes` item with a canonical first line,
-    `- \`<change-name>\` - Declared: <status> - <summary>`. Limit `<status>`
-    to `planned` or `complete`, and default new or unfinished planned changes
-    to `Declared: planned`. Keep the full planned change description on that
-    same line and do not add indented continuation lines below it. If the
-    milestone needs richer local detail, move that context into another section
-    such as `## Notes` rather than attaching multiline detail under
-    `## Planned Changes`.
+     - `## Goal`
+     - `## In Scope`
+     - `## Out of Scope`
+     - `## Done Criteria`
+     - `## Planned Changes`
+     - `## Dependencies`
+     - `## Risks`
+     - `## Status`
+     - `## Notes`
+     Milestone declared statuses are limited to:
+     - `proposed`
+     - `active`
+     - `blocked`
+     - `complete`
+     Write each `Planned Changes` item with a canonical first line,
+     `- \`<change-name>\` - Declared: <status> - <summary>`.
+     Planned change declared statuses are limited to:
+     - `planned`
+     - `complete`
+     Default new or unfinished planned changes to `Declared: planned`.
+     Keep the full planned change description on that same line and do not add
+     indented continuation lines below it. If the milestone needs richer local
+     detail, move that context into another section such as `## Notes` rather
+     than attaching multiline detail under `## Planned Changes`.
     If the milestone starts in a legacy format and the user wants a one-file
     migration instead of a whole-roadmap restructure, preserve clearly
     recoverable content, carry forward useful leftover context into `## Notes`

@@ -47,6 +47,10 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       the declared status and summary as metadata on that same line
     - use the surrounding milestone sections as context for scope, rationale,
       sequencing, or constraints when the one-line summary is not sufficient
+    - treat milestone declared statuses as limited to `proposed`, `active`,
+      `blocked`, or `complete`
+    - treat planned change declared statuses as limited to `planned` or
+      `complete`
 
 5. **Scaffold the change** — run:
     ```

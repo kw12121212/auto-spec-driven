@@ -5,6 +5,7 @@ import path from "path";
 const [command, ...args] = process.argv.slice(2);
 const changesDir = path.join(".spec-driven", "changes");
 const DECLARED_ROADMAP_STATUSES = ["proposed", "active", "blocked", "complete"];
+const DECLARED_PLANNED_CHANGE_STATUSES = ["planned", "complete"];
 const INIT_CONFIG_YAML = [
     "schema: spec-driven",
     "context: |",
@@ -155,6 +156,9 @@ function parseDeclaredRoadmapStatus(lines) {
     }
     return { declaredStatus: status, error: null };
 }
+function isDeclaredPlannedChangeStatus(value) {
+    return DECLARED_PLANNED_CHANGE_STATUSES.includes(value);
+}
 function readPlannedChangeStates(specDir, plannedChangeNames) {
     const activeChanges = new Set();
     const archivedChanges = new Set();
@@ -191,6 +195,9 @@ function deriveMilestoneStatus(plannedChangeStates) {
     if (plannedChangeStates.some((state) => state === "active"))
         return "active";
     return "proposed";
+}
+function derivePlannedChangeDeclaredStatus(state) {
+    return state === "archived" ? "complete" : "planned";
 }
 function readDeclaredRoadmapStatusLabel(lines) {
     const parsedStatus = parseDeclaredRoadmapStatus(lines);
@@ -287,6 +294,14 @@ function validateRoadmapIndex(roadmapDir, errors) {
 function replaceMilestoneDeclaredStatus(content, declaredStatus) {
     return content.replace(/(^## Status\s*\n)([\s\S]*?)(?=^##\s|$)/m, `$1- Declared: ${declaredStatus}\n\n`);
 }
+function formatPlannedChangeEntry(entry) {
+    return `- \`${entry.name}\` - Declared: ${entry.declaredStatus} - ${entry.summary}`;
+}
+function replacePlannedChangesSection(content, entries) {
+    const body = entries.map((entry) => formatPlannedChangeEntry(entry)).join("\n");
+    const sectionBody = body ? `${body}\n\n` : "\n";
+    return content.replace(/(^## Planned Changes\s*\n)([\s\S]*?)(?=^##\s|$)/m, `$1${sectionBody}`);
+}
 function reconcileRoadmapAfterArchive(targetDir, name) {
     const specDir = path.join(targetDir, ".spec-driven");
     const roadmapDir = path.join(specDir, "roadmap");
@@ -302,17 +317,27 @@ function reconcileRoadmapAfterArchive(targetDir, name) {
         const plannedChangeError = validatePlannedChangeLines(sections.get("Planned Changes"));
         if (plannedChangeError)
             continue;
-        const plannedChangeNames = readPlannedChangeEntries(sections.get("Planned Changes")).map((entry) => entry.name);
+        const plannedChangeEntries = readPlannedChangeEntries(sections.get("Planned Changes"));
+        const plannedChangeNames = plannedChangeEntries.map((entry) => entry.name);
         if (!plannedChangeNames.includes(name) || !sections.has("Status"))
             continue;
         const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
         const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
+        const reconciledEntries = plannedChangeEntries.map((entry, index) => ({
+            ...entry,
+            declaredStatus: derivePlannedChangeDeclaredStatus(plannedChangeStates[index]),
+        }));
         const parsedStatus = parseDeclaredRoadmapStatus(sections.get("Status"));
-        if (!parsedStatus.declaredStatus)
-            continue;
-        if (parsedStatus.declaredStatus === derivedStatus)
-            continue;
-        fs.writeFileSync(filePath, replaceMilestoneDeclaredStatus(content, derivedStatus));
+        let nextContent = content;
+        if (plannedChangeEntries.some((entry, index) => entry.declaredStatus !== reconciledEntries[index].declaredStatus)) {
+            nextContent = replacePlannedChangesSection(nextContent, reconciledEntries);
+        }
+        if (!parsedStatus.declaredStatus || parsedStatus.declaredStatus !== derivedStatus) {
+            nextContent = replaceMilestoneDeclaredStatus(nextContent, derivedStatus);
+        }
+        if (nextContent !== content) {
+            fs.writeFileSync(filePath, nextContent);
+        }
     }
     fs.writeFileSync(path.join(roadmapDir, "INDEX.md"), buildRoadmapIndexContent(roadmapDir));
 }
@@ -603,16 +628,27 @@ function readTopLevelBulletItems(lines) {
         .map((line) => line.match(/^\s{0,3}-\s+(.+)$/)?.[1].trim() ?? "")
         .filter((line) => line.length > 0);
 }
-function parsePlannedChangeEntry(line) {
-    const match = line.trim().match(/^-\s+`([a-z0-9]+(?:-[a-z0-9]+)*)`\s+-\s+(.+)$/);
+function parseRawPlannedChangeEntry(line) {
+    const match = line.trim().match(/^-\s+`([a-z0-9]+(?:-[a-z0-9]+)*)`\s+-\s+Declared:\s+([a-z-]+)\s+-\s+(.+)$/);
     if (!match)
         return null;
-    const summary = match[2].trim();
+    const summary = match[3].trim();
     if (!summary)
         return null;
     return {
         name: match[1],
+        declaredStatus: match[2],
         summary,
+    };
+}
+function parsePlannedChangeEntry(line) {
+    const raw = parseRawPlannedChangeEntry(line);
+    if (!raw || !isDeclaredPlannedChangeStatus(raw.declaredStatus))
+        return null;
+    return {
+        name: raw.name,
+        declaredStatus: raw.declaredStatus,
+        summary: raw.summary,
     };
 }
 function readPlannedChangeEntries(lines) {
@@ -630,8 +666,12 @@ function validatePlannedChangeLines(lines) {
         if (!trimmed)
             continue;
         if (/^\s{0,3}-\s+/.test(line)) {
-            if (!parsePlannedChangeEntry(line)) {
-                return "expected '- `\\<change-name>\\` - <summary>'";
+            const raw = parseRawPlannedChangeEntry(line);
+            if (!raw) {
+                return "expected '- `\\<change-name>\\` - Declared: <planned|complete> - <summary>'";
+            }
+            if (!isDeclaredPlannedChangeStatus(raw.declaredStatus)) {
+                return `unsupported planned change declared status '${raw.declaredStatus}'`;
             }
             continue;
         }
@@ -696,7 +736,20 @@ function roadmapStatus() {
         }
         const plannedChangeNames = plannedChangeEntries.map((entry) => entry.name);
         const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
-        const plannedChanges = plannedChangeNames.map((name, index) => ({ name, state: plannedChangeStates[index] }));
+        const plannedChanges = plannedChangeEntries.map((entry, index) => {
+            const derivedPlannedChangeStatus = derivePlannedChangeDeclaredStatus(plannedChangeStates[index]);
+            const mismatches = [];
+            if (entry.declaredStatus !== derivedPlannedChangeStatus) {
+                mismatches.push(`declared planned change status '${entry.declaredStatus}' does not match derived planned change status '${derivedPlannedChangeStatus}'`);
+            }
+            return {
+                name: entry.name,
+                declaredStatus: entry.declaredStatus,
+                state: plannedChangeStates[index],
+                derivedStatus: derivedPlannedChangeStatus,
+                mismatches,
+            };
+        });
         const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
         const mismatches = [];
         if (declaredStatus !== derivedStatus) {

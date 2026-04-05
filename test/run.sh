@@ -122,8 +122,8 @@ Ship the first roadmap milestone
 - Validation exists
 
 ## Planned Changes
-- `add-roadmap-milestones` - create the milestone-based roadmap scaffold that establishes milestone files.
-- `add-roadmap-size-validation` - validate milestone structure and bounded size so oversized milestones are rejected before roadmap work drifts.
+- `add-roadmap-milestones` - Declared: planned - create the milestone-based roadmap scaffold that establishes milestone files.
+- `add-roadmap-size-validation` - Declared: planned - validate milestone structure and bounded size so oversized milestones are rejected before roadmap work drifts.
 
 ## Dependencies
 - roadmap must stay separate from changes
@@ -147,7 +147,9 @@ mkdir -p "$ROADMAP_DIR/.spec-driven/changes/archive/$(date +%Y-%m-%d)-add-roadma
 out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
 assert_json_field "roadmap-status valid=true for bounded milestone" "valid" "true" "$out"
 assert_contains "roadmap-status reports archived planned change" '"name": "add-roadmap-milestones"' "$out"
+assert_contains "roadmap-status reports declared planned change status" '"declaredStatus": "planned"' "$out"
 assert_contains "roadmap-status reports archived state" '"state": "archived"' "$out"
+assert_contains "roadmap-status reports derived planned change status" '"derivedStatus": "complete"' "$out"
 assert_contains "roadmap-status reports active state" '"state": "active"' "$out"
 assert_contains "roadmap-status derives active milestone state" '"derivedStatus": "active"' "$out"
 
@@ -174,7 +176,7 @@ Detect missing change references
 - status command exists
 
 ## Planned Changes
-- `nonexistent-change` - exercise mismatch reporting when the change is missing from both active and archived change state.
+- `nonexistent-change` - Declared: complete - exercise mismatch reporting when the change is missing from both active and archived change state.
 
 ## Dependencies
 - planned change names must stay aligned with real change directories
@@ -191,6 +193,7 @@ EOF
 
 out=$($CLI roadmap-status "$ROADMAP_DIR" 2>&1)
 assert_contains "roadmap-status reports missing planned change" '"state": "missing"' "$out"
+assert_contains "roadmap-status reports planned change mismatch" "declared planned change status 'complete' does not match derived planned change status 'planned'" "$out"
 assert_contains "roadmap-status reports status mismatch" "does not match derived status" "$out"
 
 cat <<'EOF' > "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m6-multiline.md"
@@ -209,7 +212,7 @@ Reject multiline planned change details
 - roadmap validation rejects multiline planned change entries
 
 ## Planned Changes
-- `multiline-change` - keep a parseable first line while allowing extra context
+- `multiline-change` - Declared: planned - keep a parseable first line while allowing extra context
   Scope: cover why this planned change exists and what the next step should focus on.
   Notes: the CLI should still resolve the change by `multiline-change` only.
 
@@ -259,12 +262,12 @@ Too much work in one stage
 - Everything ships
 
 ## Planned Changes
-- `change-1` - first oversized planned change
-- `change-2` - second oversized planned change
-- `change-3` - third oversized planned change
-- `change-4` - fourth oversized planned change
-- `change-5` - fifth oversized planned change
-- `change-6` - sixth oversized planned change
+- `change-1` - Declared: planned - first oversized planned change
+- `change-2` - Declared: planned - second oversized planned change
+- `change-3` - Declared: planned - third oversized planned change
+- `change-4` - Declared: planned - fourth oversized planned change
+- `change-5` - Declared: planned - fifth oversized planned change
+- `change-6` - Declared: planned - sixth oversized planned change
 
 ## Dependencies
 - the oversized milestone still follows the required heading structure
@@ -308,7 +311,7 @@ Use invalid status shape
 - Validation rejects it
 
 ## Planned Changes
-- `change-1` - provide one valid planned change entry while status stays invalid
+- `change-1` - Declared: planned - provide one valid planned change entry while status stays invalid
 
 ## Dependencies
 - the milestone should stay structurally valid aside from status
@@ -339,7 +342,7 @@ Reject malformed planned change entries
 - malformed planned change entries fail validation
 
 ## Planned Changes
-- malformed-change-entry
+- `change-1` - Declared: someday - provide one malformed planned change entry while milestone status stays valid
 
 ## Dependencies
 - the rest of the milestone shape stays valid
@@ -356,7 +359,7 @@ EOF
 
 out=$($CLI verify-roadmap "$ROADMAP_DIR" 2>&1)
 assert_json_field "verify-roadmap rejects malformed planned change entry" "valid" "false" "$out"
-assert_contains "verify-roadmap reports planned change format guidance" "invalid planned change entries" "$out"
+assert_contains "verify-roadmap reports unsupported planned change status" "unsupported planned change declared status" "$out"
 
 rm "$ROADMAP_DIR/.spec-driven/roadmap/milestones/m5-bad-planned-change.md"
 
@@ -382,7 +385,7 @@ Keep roadmap index status aligned with milestone status
 - verify-roadmap rejects mismatched roadmap index status
 
 ## Planned Changes
-- `index-status-check` - provide one valid planned change while status stays invalid
+- `index-status-check` - Declared: planned - provide one valid planned change while status stays invalid
 
 ## Dependencies
 - roadmap index validation must read milestone status from the file itself
@@ -427,7 +430,7 @@ Complete a roadmap milestone via archive
 - All planned changes are archived
 
 ## Planned Changes
-- `archive-sync-change` - archive the last remaining planned change in this milestone
+- `archive-sync-change` - Declared: planned - archive the last remaining planned change in this milestone
 
 ## Dependencies
 - archive must update roadmap
@@ -455,6 +458,7 @@ EOF
 )
 
 assert_contains "archive reconciles milestone declared status" "- Declared: complete" "$(cat "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/milestones/m1-archive-sync.md")"
+assert_contains "archive reconciles planned change declared status" '`archive-sync-change` - Declared: complete - archive the last remaining planned change in this milestone' "$(cat "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/milestones/m1-archive-sync.md")"
 assert_contains "archive reconciles roadmap index status" "m1-archive-sync - complete" "$(cat "$ARCHIVE_ROADMAP_DIR/.spec-driven/roadmap/INDEX.md")"
 
 rm -rf "$ARCHIVE_ROADMAP_DIR"

@@ -77,9 +77,11 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       - `## Status`
       - `## Notes`
     - write each `Planned Changes` item with a canonical first line,
-      `- \`<change-name>\` - <summary>`
+      `- \`<change-name>\` - Declared: <status> - <summary>`
+    - limit `<status>` to `planned` or `complete`
     - keep each planned change description on that same line; do not add
       indented continuation lines below the bullet
+    - default new or unfinished planned changes to `Declared: planned`
     - put extra milestone-local context in another section such as `## Notes`
       instead of attaching multiline detail under `## Planned Changes`
     - treat `Planned Changes` as the milestone's only work list and keep it

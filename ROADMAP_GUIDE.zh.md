@@ -159,7 +159,8 @@ node dist/scripts/spec-driven.js verify-roadmap
 
 当前会检查：
 - 是否使用标准 milestone section headings
-- `## Planned Changes` 条目是否使用 `- \`<change-name>\` - <summary>` 的规范格式
+- `## Planned Changes` 条目是否使用
+  `- \`<change-name>\` - Declared: <planned|complete> - <summary>` 的规范格式
 - `## Planned Changes` 描述是否保持单行，缩进 continuation lines 视为无效
 - `## Planned Changes` 下是否不超过 5 个 bullet items
 
@@ -230,9 +231,9 @@ roadmap-plan -> roadmap-milestone -> roadmap-recommend -> auto/apply -> archive 
 - README / install / tests 已对齐
 
 ## Planned Changes
-- `add-roadmap-milestones` - 增加 milestone 文件和 roadmap 规划流，创建长期存在的 roadmap scaffold，以及第一批 roadmap 感知的 planning 入口。
-- `roadmap-priority-scoring` - 探索 roadmap 级别的优先级建议，但优先级低于基础 roadmap 机制。
-- `improve-sync-specs-reporting` - 改进 roadmap 与仓库状态漂移时的报告，让维护者更快理解 stale 或 mismatch 的 roadmap 状态。
+- `add-roadmap-milestones` - Declared: planned - 增加 milestone 文件和 roadmap 规划流，创建长期存在的 roadmap scaffold，以及第一批 roadmap 感知的 planning 入口。
+- `roadmap-priority-scoring` - Declared: planned - 探索 roadmap 级别的优先级建议，但优先级低于基础 roadmap 机制。
+- `improve-sync-specs-reporting` - Declared: planned - 改进 roadmap 与仓库状态漂移时的报告，让维护者更快理解 stale 或 mismatch 的 roadmap 状态。
 
 ## Dependencies
 - roadmap 不能替代 changes/
@@ -292,6 +293,8 @@ roadmap 在执行中途修改是正常的。
 - 预期会在 `.spec-driven/changes/` 下落地成具体 change
 - 最终应该被 propose、实现并 archive
 - 会影响 milestone 完成状态
+- 每一行都带有声明状态，通常在 archive 前是 `planned`，archive 后变成
+  `complete`
 
 它应该是 milestone 唯一的工作列表，而不是一个模糊的“以后也许会做”清单。
 
@@ -305,6 +308,8 @@ Milestone 完成不是手工标记的。
 这意味着：
 - 如果还有一个 planned change 处于 active，这个 milestone 就没完成
 - 如果有一个 planned change 甚至还没创建，这个 milestone 也没完成
+- 如果某一行提前写成 `Declared: complete`，但 change 其实还没 archive，
+  `roadmap-status` 会报告 mismatch
 - 如果 roadmap 文本写着 done，但 archive 状态不支持，roadmap sync 应该纠正它
 
 这个规则是刻意设计的。它保证 roadmap 始终和仓库现实一致。
@@ -344,7 +349,7 @@ Milestone 完成不是手工标记的。
 
 预期结果：
 - milestone 文件仍保留阶段目标和剩余 planned work
-- 已 archive 的 planned changes 会体现在完成状态里
+- 已 archive 的 planned changes 会回写成 `Declared: complete`
 - 只要还有一个 listed planned change 没 archive，这个 milestone 就保持未完成
 
 ## 经验法则

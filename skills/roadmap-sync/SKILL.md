@@ -43,8 +43,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - any ambiguity the script cannot resolve, such as likely renames or roadmap
      prose that still needs human judgment
 
-3. **Update roadmap files** — reconcile milestone status and listed change state
-   based on the repository evidence you found.
+3. **Update roadmap files** — reconcile milestone status and each listed planned
+   change's declared status based on the repository evidence you found.
 
 4. **Preserve roadmap rules** — during sync:
    - do not mark a milestone complete unless every listed planned change is

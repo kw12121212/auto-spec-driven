@@ -43,7 +43,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 
 4. **Extract the roadmap handoff context** — treat the selected planned change
    entry as more than a name lookup:
-    - use the canonical first line to identify the change name and summary
+    - use the canonical first line to identify the change name while treating
+      the declared status and summary as metadata on that same line
     - use the surrounding milestone sections as context for scope, rationale,
       sequencing, or constraints when the one-line summary is not sufficient
 

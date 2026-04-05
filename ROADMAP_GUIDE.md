@@ -160,7 +160,8 @@ This validates milestone structure and size.
 
 Today it enforces:
 - standard milestone section headings
-- described planned-change entries using `- \`<change-name>\` - <summary>`
+- described planned-change entries using
+  `- \`<change-name>\` - Declared: <planned|complete> - <summary>`
 - single-line planned change descriptions only; indented continuation lines are invalid
 - no more than 5 bullet items under `## Planned Changes`
 
@@ -233,9 +234,9 @@ And one milestone might look like:
 - README / install / tests 已对齐
 
 ## Planned Changes
-- `add-roadmap-milestones` - add milestone files and roadmap-specific planning flow, creating the long-lived roadmap scaffold and the first roadmap-aware planning workflow entry points.
-- `roadmap-priority-scoring` - explore roadmap-level prioritization guidance while keeping it secondary to the foundational roadmap mechanics.
-- `improve-sync-specs-reporting` - improve reporting when roadmap and repository state drift so stale or mismatched roadmap state is easier for maintainers to understand quickly.
+- `add-roadmap-milestones` - Declared: planned - add milestone files and roadmap-specific planning flow, creating the long-lived roadmap scaffold and the first roadmap-aware planning workflow entry points.
+- `roadmap-priority-scoring` - Declared: planned - explore roadmap-level prioritization guidance while keeping it secondary to the foundational roadmap mechanics.
+- `improve-sync-specs-reporting` - Declared: planned - improve reporting when roadmap and repository state drift so stale or mismatched roadmap state is easier for maintainers to understand quickly.
 
 ## Dependencies
 - roadmap 不能替代 changes/
@@ -296,6 +297,8 @@ This is the right tool for status reconciliation.
 - concrete work expected to exist under `.spec-driven/changes/`
 - should eventually be proposed, implemented, and archived
 - contributes to milestone completion
+- each line carries a declared status, usually `planned` until archive and then
+  `complete`
 
 Treat it as the milestone's only work list, not as a speculative someday
 backlog.
@@ -310,6 +313,8 @@ under `.spec-driven/changes/archive/`.
 That means:
 - if one planned change is still active, the milestone is not complete
 - if one planned change was never created, the milestone is not complete
+- if a planned change line still says `Declared: complete` before archive,
+  roadmap-status reports that mismatch
 - if roadmap text says "done" but archive state disagrees, roadmap sync should
   correct it
 
@@ -350,7 +355,7 @@ This rule is intentional. It keeps the roadmap tied to repository reality.
 
 Expected result:
 - the milestone file still carries the phase goal and remaining planned work
-- archived planned changes are reflected as complete work
+- archived planned changes are reflected as `Declared: complete`
 - the milestone remains open until every listed planned change is archived
 
 ## Rules Of Thumb

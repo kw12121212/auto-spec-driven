@@ -19,9 +19,9 @@ Implement script-level validation and workflow integration for the new artifact 
 - Authoring and repair expectations are documented for maintainers updating skills or generated artifacts.
 
 ## Planned Changes
-- `add-artifact-yaml-validator-command` - add a script entry point that validates the targeted YAML-backed artifacts while keeping the first rollout scoped to the artifact families defined by the contract milestone.
-- `integrate-artifact-validation-into-verify-workflow` - surface malformed artifact failures during the normal workflow gate where maintainers already expect artifact quality checks.
-- `document-artifact-validation-authoring-rules` - document maintainer expectations for writing and repairing validated artifacts, including examples that show both valid authoring and common repair cases.
+- `add-artifact-yaml-validator-command` - Declared: planned - add a script entry point that validates the targeted YAML-backed artifacts while keeping the first rollout scoped to the artifact families defined by the contract milestone.
+- `integrate-artifact-validation-into-verify-workflow` - Declared: planned - surface malformed artifact failures during the normal workflow gate where maintainers already expect artifact quality checks.
+- `document-artifact-validation-authoring-rules` - Declared: planned - document maintainer expectations for writing and repairing validated artifacts, including examples that show both valid authoring and common repair cases.
 
 ## Dependencies
 - This milestone depends on the artifact contract milestone defining the exact validation target and field rules first.

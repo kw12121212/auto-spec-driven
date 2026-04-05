@@ -7,6 +7,7 @@ const [command, ...args] = process.argv.slice(2);
 
 const changesDir = path.join(".spec-driven", "changes");
 const DECLARED_ROADMAP_STATUSES = ["proposed", "active", "blocked", "complete"] as const;
+const DECLARED_PLANNED_CHANGE_STATUSES = ["planned", "complete"] as const;
 const INIT_CONFIG_YAML = [
   "schema: spec-driven",
   "context: |",
@@ -46,6 +47,7 @@ const INIT_README_MD = `# Specs\n\nSpecs describe the current state of the syste
 const INIT_ROADMAP_INDEX_MD = "# Roadmap Index\n\n## Milestones\n";
 
 type DeclaredRoadmapStatus = (typeof DECLARED_ROADMAP_STATUSES)[number];
+type DeclaredPlannedChangeStatus = (typeof DECLARED_PLANNED_CHANGE_STATUSES)[number];
 type PlannedChangeState = "archived" | "active" | "missing";
 
 type MigrationTool = {
@@ -76,6 +78,13 @@ type ShellResult = {
 
 type PlannedChangeEntry = {
   name: string;
+  declaredStatus: DeclaredPlannedChangeStatus;
+  summary: string;
+};
+
+type RawPlannedChangeEntry = {
+  name: string;
+  declaredStatus: string;
   summary: string;
 };
 
@@ -212,6 +221,10 @@ function parseDeclaredRoadmapStatus(lines: string[] | undefined): {
   return { declaredStatus: status, error: null };
 }
 
+function isDeclaredPlannedChangeStatus(value: string): value is DeclaredPlannedChangeStatus {
+  return DECLARED_PLANNED_CHANGE_STATUSES.includes(value as DeclaredPlannedChangeStatus);
+}
+
 function readPlannedChangeStates(specDir: string, plannedChangeNames: string[]): PlannedChangeState[] {
   const activeChanges = new Set<string>();
   const archivedChanges = new Set<string>();
@@ -246,6 +259,10 @@ function deriveMilestoneStatus(plannedChangeStates: PlannedChangeState[]): Exclu
   if (plannedChangeStates.every((state) => state === "archived")) return "complete";
   if (plannedChangeStates.some((state) => state === "active")) return "active";
   return "proposed";
+}
+
+function derivePlannedChangeDeclaredStatus(state: PlannedChangeState): DeclaredPlannedChangeStatus {
+  return state === "archived" ? "complete" : "planned";
 }
 
 function readDeclaredRoadmapStatusLabel(lines: string[] | undefined): string {
@@ -358,6 +375,19 @@ function replaceMilestoneDeclaredStatus(content: string, declaredStatus: Exclude
   );
 }
 
+function formatPlannedChangeEntry(entry: PlannedChangeEntry): string {
+  return `- \`${entry.name}\` - Declared: ${entry.declaredStatus} - ${entry.summary}`;
+}
+
+function replacePlannedChangesSection(content: string, entries: PlannedChangeEntry[]): string {
+  const body = entries.map((entry) => formatPlannedChangeEntry(entry)).join("\n");
+  const sectionBody = body ? `${body}\n\n` : "\n";
+  return content.replace(
+    /(^## Planned Changes\s*\n)([\s\S]*?)(?=^##\s|$)/m,
+    `$1${sectionBody}`,
+  );
+}
+
 function reconcileRoadmapAfterArchive(targetDir: string, name: string): void {
   const specDir = path.join(targetDir, ".spec-driven");
   const roadmapDir = path.join(specDir, "roadmap");
@@ -373,16 +403,30 @@ function reconcileRoadmapAfterArchive(targetDir: string, name: string): void {
     const sections = readLevel2Sections(content);
     const plannedChangeError = validatePlannedChangeLines(sections.get("Planned Changes"));
     if (plannedChangeError) continue;
-    const plannedChangeNames = readPlannedChangeEntries(sections.get("Planned Changes")).map((entry) => entry.name);
+    const plannedChangeEntries = readPlannedChangeEntries(sections.get("Planned Changes"));
+    const plannedChangeNames = plannedChangeEntries.map((entry) => entry.name);
     if (!plannedChangeNames.includes(name) || !sections.has("Status")) continue;
 
     const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
     const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
+    const reconciledEntries = plannedChangeEntries.map((entry, index) => ({
+      ...entry,
+      declaredStatus: derivePlannedChangeDeclaredStatus(plannedChangeStates[index]),
+    }));
     const parsedStatus = parseDeclaredRoadmapStatus(sections.get("Status"));
-    if (!parsedStatus.declaredStatus) continue;
-    if (parsedStatus.declaredStatus === derivedStatus) continue;
 
-    fs.writeFileSync(filePath, replaceMilestoneDeclaredStatus(content, derivedStatus));
+    let nextContent = content;
+    if (plannedChangeEntries.some((entry, index) => entry.declaredStatus !== reconciledEntries[index].declaredStatus)) {
+      nextContent = replacePlannedChangesSection(nextContent, reconciledEntries);
+    }
+
+    if (!parsedStatus.declaredStatus || parsedStatus.declaredStatus !== derivedStatus) {
+      nextContent = replaceMilestoneDeclaredStatus(nextContent, derivedStatus);
+    }
+
+    if (nextContent !== content) {
+      fs.writeFileSync(filePath, nextContent);
+    }
   }
 
   fs.writeFileSync(path.join(roadmapDir, "INDEX.md"), buildRoadmapIndexContent(roadmapDir));
@@ -669,16 +713,28 @@ function readTopLevelBulletItems(lines: string[] | undefined): string[] {
     .filter((line) => line.length > 0);
 }
 
-function parsePlannedChangeEntry(line: string): PlannedChangeEntry | null {
-  const match = line.trim().match(/^-\s+`([a-z0-9]+(?:-[a-z0-9]+)*)`\s+-\s+(.+)$/);
+function parseRawPlannedChangeEntry(line: string): RawPlannedChangeEntry | null {
+  const match = line.trim().match(/^-\s+`([a-z0-9]+(?:-[a-z0-9]+)*)`\s+-\s+Declared:\s+([a-z-]+)\s+-\s+(.+)$/);
   if (!match) return null;
 
-  const summary = match[2].trim();
+  const summary = match[3].trim();
   if (!summary) return null;
 
   return {
     name: match[1],
+    declaredStatus: match[2],
     summary,
+  };
+}
+
+function parsePlannedChangeEntry(line: string): PlannedChangeEntry | null {
+  const raw = parseRawPlannedChangeEntry(line);
+  if (!raw || !isDeclaredPlannedChangeStatus(raw.declaredStatus)) return null;
+
+  return {
+    name: raw.name,
+    declaredStatus: raw.declaredStatus,
+    summary: raw.summary,
   };
 }
 
@@ -697,8 +753,12 @@ function validatePlannedChangeLines(lines: string[] | undefined): string | null 
     if (!trimmed) continue;
 
     if (/^\s{0,3}-\s+/.test(line)) {
-      if (!parsePlannedChangeEntry(line)) {
-        return "expected '- `\\<change-name>\\` - <summary>'";
+      const raw = parseRawPlannedChangeEntry(line);
+      if (!raw) {
+        return "expected '- `\\<change-name>\\` - Declared: <planned|complete> - <summary>'";
+      }
+      if (!isDeclaredPlannedChangeStatus(raw.declaredStatus)) {
+        return `unsupported planned change declared status '${raw.declaredStatus}'`;
       }
       continue;
     }
@@ -720,7 +780,13 @@ function roadmapStatus() {
     goal: string;
     declaredStatus: string;
     derivedStatus: string;
-    plannedChanges: Array<{ name: string; state: string }>;
+    plannedChanges: Array<{
+      name: string;
+      declaredStatus: DeclaredPlannedChangeStatus;
+      state: string;
+      derivedStatus: DeclaredPlannedChangeStatus;
+      mismatches: string[];
+    }>;
     mismatches: string[];
   }> = [];
 
@@ -781,7 +847,22 @@ function roadmapStatus() {
 
     const plannedChangeNames = plannedChangeEntries.map((entry) => entry.name);
     const plannedChangeStates = readPlannedChangeStates(specDir, plannedChangeNames);
-    const plannedChanges = plannedChangeNames.map((name, index) => ({ name, state: plannedChangeStates[index] }));
+    const plannedChanges = plannedChangeEntries.map((entry, index) => {
+      const derivedPlannedChangeStatus = derivePlannedChangeDeclaredStatus(plannedChangeStates[index]);
+      const mismatches: string[] = [];
+      if (entry.declaredStatus !== derivedPlannedChangeStatus) {
+        mismatches.push(
+          `declared planned change status '${entry.declaredStatus}' does not match derived planned change status '${derivedPlannedChangeStatus}'`,
+        );
+      }
+      return {
+        name: entry.name,
+        declaredStatus: entry.declaredStatus,
+        state: plannedChangeStates[index],
+        derivedStatus: derivedPlannedChangeStatus,
+        mismatches,
+      };
+    });
     const derivedStatus = deriveMilestoneStatus(plannedChangeStates);
     const mismatches: string[] = [];
     if (declaredStatus !== derivedStatus) {

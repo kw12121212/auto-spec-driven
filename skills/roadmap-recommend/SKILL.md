@@ -34,7 +34,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     - the relevant main spec files the recommended change is likely to touch
     - `node {{SKILL_DIR}}/scripts/spec-driven.js roadmap-status`
     - the planned change entries for the candidates you are considering as
-      single-line roadmap items
+      single-line roadmap items in the canonical format
+      `- \`<change-name>\` - Declared: <status> - <summary>`
 
 2. **Understand what the user wants optimized** — determine whether the user
    wants the next change chosen for impact, urgency, dependency order, risk

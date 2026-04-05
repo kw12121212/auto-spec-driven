@@ -201,7 +201,7 @@ boundaries:
 
 This creates and maintains `.spec-driven/roadmap/` as a milestone-based planning
 layer. Milestones keep a single `Planned Changes` work list with single-line
-entries,
+entries in the form `- \`<change-name>\` - Declared: <planned|complete> - <summary>`,
 `roadmap-recommend` now recommends the next roadmap-backed change and, after
 explicit confirmation, scaffolds it directly into a normal change before asking
 the user to choose between `apply` and `auto` for execution. `roadmap-propose`

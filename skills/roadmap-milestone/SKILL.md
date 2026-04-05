@@ -61,10 +61,12 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     - `## Status`
     - `## Notes`
     Write each `Planned Changes` item with a canonical first line,
-    `- \`<change-name>\` - <summary>`. Keep the full planned change description
-    on that same line and do not add indented continuation lines below it. If
-    the milestone needs richer local detail, move that context into another
-    section such as `## Notes` rather than attaching multiline detail under
+    `- \`<change-name>\` - Declared: <status> - <summary>`. Limit `<status>`
+    to `planned` or `complete`, and default new or unfinished planned changes
+    to `Declared: planned`. Keep the full planned change description on that
+    same line and do not add indented continuation lines below it. If the
+    milestone needs richer local detail, move that context into another section
+    such as `## Notes` rather than attaching multiline detail under
     `## Planned Changes`.
     If the milestone starts in a legacy format and the user wants a one-file
     migration instead of a whole-roadmap restructure, preserve clearly

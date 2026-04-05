@@ -74,6 +74,16 @@ lines under `## Planned Changes` as part of the recommendation context.
 reasoning, summarize the intended roadmap-backed change, and wait for the user
 to accept or modify the recommendation before it scaffolds proposal artifacts.
 
+If the recommendation discussion reveals one or more open questions that affect
+scope, behavior, or other proposal-shaping decisions, `roadmap-recommend` MUST
+surface those questions and obtain explicit user answers or confirmation before
+it scaffolds proposal artifacts.
+
+`roadmap-recommend` MAY recommend a preferred answer, but it MUST present that
+recommendation as a suggestion only. It MUST NOT treat its own recommendation as
+the resolved answer or continue to scaffolding until the user has explicitly
+confirmed the resolution.
+
 ### Requirement: roadmap-recommend-produces-standard-change-artifacts
 After confirmation, `roadmap-recommend` MUST create the same five artifacts as
 `spec-driven-propose`: `proposal.md`, `specs/`, `design.md`, `tasks.md`, and

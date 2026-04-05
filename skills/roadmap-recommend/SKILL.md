@@ -59,13 +59,22 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     Then ask for explicit confirmation. If the user wants revisions, continue the
     recommendation discussion and re-summarize until confirmed.
 
-5. **Scaffold the change after confirmation** — run:
+5. **Resolve open questions before scaffolding** — if any unresolved questions
+   remain after the recommendation summary:
+    - list each open question explicitly
+    - ask the user to answer or confirm the decision needed
+    - you MAY recommend a preferred answer, but only as a suggestion
+    - do not treat your recommendation as the resolved answer
+    - do not continue until the user has given an exact answer or explicit
+      confirmation
+
+6. **Scaffold the change after confirmation** — run:
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js propose <name>
    ```
    This creates `.spec-driven/changes/<name>/` with the seeded templates.
 
-6. **Fill the five proposal artifacts** — after scaffolding, complete the same
+7. **Fill the five proposal artifacts** — after scaffolding, complete the same
    proposal workflow used by `/roadmap-propose`:
     - write `proposal.md` with **What**, **Why**, **Scope**, and
       **Unchanged Behavior**
@@ -81,7 +90,7 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     Use the recommended milestone context as planning input, but treat the
     selected planned change itself as a single-line roadmap item.
 
-7. **Validate before presenting the proposal** — run:
+8. **Validate before presenting the proposal** — run:
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
    ```
@@ -91,7 +100,7 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - If any non-question error remains, stop and report it instead of presenting
      the proposal as ready
 
-8. **Offer the execution handoff** — show the user the generated artifacts,
+9. **Offer the execution handoff** — show the user the generated artifacts,
    summarize the final proposed scope, list any open questions that must be
    answered before implementation, and ask whether they want to:
    - enter `/spec-driven-apply <name>` for the stepwise execution path
@@ -106,5 +115,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - Recommend only work that already exists under `Planned Changes`
 - Do not scaffold proposal artifacts until the user explicitly confirms the
   recommendation summary and change name
+- If open questions remain, ask the user to resolve them before scaffolding
+- Recommended answers do not count as question resolution without explicit user
+  confirmation
 - After confirmation, follow the same artifact-writing and validation standard as
   `/roadmap-propose`

@@ -238,6 +238,26 @@ MUST scaffold that roadmap-backed change as a normal change under
 `.spec-driven/changes/<name>/`, rather than stopping at a recommendation-only
 handoff.
 
+If unresolved questions remain after the recommendation summary, and those
+questions affect the content of the proposal to be scaffolded,
+`roadmap-recommend` MUST stop before scaffolding, list each open question, and
+ask the user to answer or confirm the decision needed.
+
+`roadmap-recommend` MAY suggest a preferred answer or option, but it MUST treat
+that suggestion as advisory only. It MUST NOT write the suggestion as though it
+were already confirmed, and it MUST NOT continue to scaffolding until the user
+has explicitly resolved the open questions.
+
+#### Scenario: roadmap-recommend-stops-on-open-questions-before-scaffold
+- GIVEN `roadmap-recommend` has identified a candidate planned change
+- AND one or more unresolved questions still affect the proposal scope or
+  behavior
+- WHEN it reaches the pre-scaffolding confirmation point
+- THEN it lists those open questions to the user
+- AND it may include a recommended answer as a suggestion only
+- AND it waits for explicit user confirmation before creating
+  `.spec-driven/changes/<name>/`
+
 ### Requirement: roadmap-propose-remains-an-explicit-direct-entry
 `roadmap-propose` MAY remain available as a direct entry point when the user
 already knows which planned change should be scaffolded and does not need the

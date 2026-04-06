@@ -15,10 +15,10 @@ const CLI = path.join(ROOT, "dist", "scripts", "spec-driven.js");
 const SKILL_VALIDATOR = path.join(ROOT, "dist", "test", "validate-skills.js");
 const CHANGE = "add-delete-command";
 
-const GREEN = "\u001b[0;32m";
-const RED = "\u001b[0;31m";
-const BOLD = "\u001b[1m";
-const RESET = "\u001b[0m";
+const GREEN = "";
+const RED = "";
+const BOLD = "";
+const RESET = "";
 
 let passed = 0;
 let failed = 0;

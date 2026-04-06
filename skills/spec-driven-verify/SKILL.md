@@ -26,7 +26,10 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
    ```
    Report any errors (blocking) or warnings (non-blocking).
-   - If the script warns that `tasks.md` has no `## Testing` section, promote that to a CRITICAL — every change must include test tasks
+   - Treat any testing-readiness error from the script as a CRITICAL, including:
+     missing `## Testing`, missing lint or validation coverage, missing unit
+     test coverage, or required testing tasks that do not name explicit runnable
+     commands
 
 3. **Task completion check** — run:
    ```

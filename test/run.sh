@@ -776,6 +776,10 @@ assert_contains "list shows in-progress status" "in-progress" "$out"
 # Restore task
 sed -i '0,/- \[x\]/s/- \[x\]/- [ ]/' "$TASKS_FILE"
 
+# Give the seeded change concrete testing commands before verify assertions.
+sed -i 's/- \[ \] Lint passes/- [ ] Run `npm run build` to confirm validation passes/' "$TASKS_FILE"
+sed -i 's/- \[ \] Unit tests pass/- [ ] Run `bash test\/run.sh` to confirm unit tests pass/' "$TASKS_FILE"
+
 # Add open question to questions.md → blocked status
 QUESTIONS_FILE=".spec-driven/changes/$CHANGE/questions.md"
 printf '# Questions: %s\n\n## Open\n\n- [ ] Q: Is this correct?\n  Context: depends on this\n\n## Resolved\n' "$CHANGE" > "$QUESTIONS_FILE"
@@ -815,7 +819,75 @@ assert_contains   "warns about empty specs dir"   "specs/ is empty" "$out"
 # Missing ## Testing section
 echo -e "# Tasks\n\n## Implementation\n\n- [ ] Task 1\n\n## Verification\n\n- [ ] Verify\n" > "$TASKS_FILE"
 out=$($CLI verify "$CHANGE" 2>&1)
-assert_contains   "warns about missing testing section" "Testing" "$out"
+assert_json_field "missing testing section is invalid" "valid" "false" "$out"
+assert_contains   "errors on missing testing section" "Testing" "$out"
+
+# Missing lint or validation command
+cat <<'EOF' > "$TASKS_FILE"
+# Tasks
+
+## Implementation
+
+- [ ] Task 1
+
+## Testing
+
+- [ ] Run `bash test/run.sh` to confirm unit tests pass
+
+## Verification
+
+- [ ] Verify
+EOF
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "missing lint coverage is invalid" "valid" "false" "$out"
+assert_contains   "errors on missing lint coverage" "lint or validation" "$out"
+
+# Missing unit test command
+cat <<'EOF' > "$TASKS_FILE"
+# Tasks
+
+## Implementation
+
+- [ ] Task 1
+
+## Testing
+
+- [ ] Run `npm run build` to confirm validation passes
+
+## Verification
+
+- [ ] Verify
+EOF
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "missing unit test coverage is invalid" "valid" "false" "$out"
+assert_contains   "errors on missing unit coverage" "unit test" "$out"
+
+# Non-unit test coverage does not satisfy the unit requirement
+cat <<'EOF' > "$TASKS_FILE"
+# Tasks
+
+## Implementation
+
+- [ ] Task 1
+
+## Testing
+
+- [ ] Run `npm run build` to confirm validation passes
+- [ ] Run `npm run test:e2e` to confirm integration tests pass
+
+## Verification
+
+- [ ] Verify
+EOF
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "integration tests do not satisfy unit requirement" "valid" "false" "$out"
+assert_contains   "integration tests still report missing unit coverage" "unit test" "$out"
+
+# Vague testing wording without explicit commands
+echo -e "# Tasks\n\n## Implementation\n\n- [ ] Task 1\n\n## Testing\n\n- [ ] Lint passes\n- [ ] Unit tests pass\n\n## Verification\n\n- [ ] Verify\n" > "$TASKS_FILE"
+out=$($CLI verify "$CHANGE" 2>&1)
+assert_json_field "vague testing wording is invalid" "valid" "false" "$out"
+assert_contains   "errors on vague lint wording" "explicit runnable command" "$out"
 
 # Empty artifact → errors
 echo "" > "$TASKS_FILE"
@@ -829,6 +901,8 @@ cp ".spec-driven/changes/$CHANGE/proposal.md" "/tmp/proposal-$$.bak"
 $CLI propose "${CHANGE}-fresh" &>/dev/null || true
 cp ".spec-driven/changes/${CHANGE}-fresh/tasks.md" "$TASKS_FILE"
 rm -rf ".spec-driven/changes/${CHANGE}-fresh"
+sed -i 's/- \[ \] Lint passes/- [ ] Run `npm run build` to confirm validation passes/' "$TASKS_FILE"
+sed -i 's/- \[ \] Unit tests pass/- [ ] Run `bash test\/run.sh` to confirm unit tests pass/' "$TASKS_FILE"
 
 out=$($CLI verify "$CHANGE" 2>&1)
 assert_json_field "valid=true after restore" "valid" "true" "$out"

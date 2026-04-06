@@ -89,6 +89,9 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       the main `.spec-driven/specs/` structure
     - write `tasks.md` with atomic checklist items under `## Implementation`,
       `## Testing`, and `## Verification`
+    - make `## Testing` include at least one explicit lint or validation command
+      task and one explicit unit test command task when those commands are
+      knowable from repository context
     - write `questions.md`, recording every unresolved point under `## Open`, or
       leave `<!-- No open questions -->` if nothing is unclear
 
@@ -121,6 +124,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - Do not scaffold proposal artifacts until the user explicitly confirms the
   recommendation summary and change name
 - If open questions remain, ask the user to resolve them before scaffolding
+- If testing commands are not knowable from repository context, record that as
+  an open question instead of inventing commands
 - Recommended answers do not count as question resolution without explicit user
   confirmation
 - After confirmation, follow the same artifact-writing and validation standard as

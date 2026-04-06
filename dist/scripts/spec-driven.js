@@ -577,11 +577,58 @@ function verify() {
         else if (/^\s*-\s*\[ \]/im.test(tc)) {
             warnings.push("tasks.md has incomplete tasks");
         }
-        if (!/^## Testing/m.test(tc)) {
-            warnings.push("tasks.md has no '## Testing' section — changes should include test tasks");
+        const testingErrors = validateTestingTasks(tc);
+        errors.push(...testingErrors);
+        if (!/^## Testing/m.test(tc) && !testingErrors.some((error) => error.includes("## Testing"))) {
+            errors.push("tasks.md has no '## Testing' section — changes must include concrete test tasks");
         }
     }
     console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors }, null, 2));
+}
+function validateTestingTasks(tasksContent) {
+    const errors = [];
+    const sections = readLevel2Sections(tasksContent);
+    const testingLines = sections.get("Testing");
+    if (!testingLines) {
+        errors.push("tasks.md has no '## Testing' section — changes must include concrete test tasks");
+        return errors;
+    }
+    const testingTasks = testingLines
+        .map((line) => line.match(/^\s*-\s*\[[x ]\]\s+(.+)$/i)?.[1].trim() ?? "")
+        .filter((line) => line.length > 0);
+    if (testingTasks.length === 0) {
+        errors.push("tasks.md '## Testing' section has no checkbox tasks");
+        return errors;
+    }
+    const lintTask = testingTasks.find((task) => isLintOrValidationTask(task));
+    if (!lintTask) {
+        errors.push("tasks.md '## Testing' section must include at least one lint or validation task");
+    }
+    else if (!hasExplicitRunnableCommand(lintTask)) {
+        errors.push("tasks.md lint or validation task must name an explicit runnable command");
+    }
+    const unitTask = testingTasks.find((task) => isUnitTestTask(task));
+    if (!unitTask) {
+        errors.push("tasks.md '## Testing' section must include at least one unit test task");
+    }
+    else if (!hasExplicitRunnableCommand(unitTask)) {
+        errors.push("tasks.md unit test task must name an explicit runnable command");
+    }
+    return errors;
+}
+function isLintOrValidationTask(task) {
+    return /\b(lint|validate|validation|typecheck|type-check|build)\b/i.test(task);
+}
+function isUnitTestTask(task) {
+    return /\b(unit test|unit tests)\b/i.test(task);
+}
+function hasExplicitRunnableCommand(task) {
+    if (/`[^`]+`/.test(task))
+        return true;
+    if (/\b(?:npm|pnpm|yarn|bun|node|bash|sh|pytest|jest|vitest|go|cargo|make|uv|poetry)\b/i.test(task)) {
+        return true;
+    }
+    return false;
 }
 function readLevel2Sections(content) {
     const sections = new Map();
@@ -1294,8 +1341,11 @@ function verifyChangeArtifacts(name) {
             errors.push(`Missing required artifact: ${file}`);
     }
     const tasksPath = path.join(dir, "tasks.md");
-    if (fs.existsSync(tasksPath) && /^\s*-\s*\[ \]/im.test(fs.readFileSync(tasksPath, "utf-8"))) {
-        warnings.push("tasks.md has incomplete tasks");
+    if (fs.existsSync(tasksPath)) {
+        const tasksContent = fs.readFileSync(tasksPath, "utf-8");
+        if (/^\s*-\s*\[ \]/im.test(tasksContent)) {
+            warnings.push("tasks.md has incomplete tasks");
+        }
     }
     return { valid: errors.length === 0, warnings, errors };
 }

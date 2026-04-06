@@ -73,6 +73,9 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      the main `.spec-driven/specs/` structure
    - write `tasks.md` with atomic checklist items under `## Implementation`,
      `## Testing`, and `## Verification`
+   - make `## Testing` include at least one explicit lint or validation command
+     task and one explicit unit test command task when those commands are
+     knowable from repository context
    - write `questions.md`, recording every unresolved point under `## Open`, or
      leave `<!-- No open questions -->` if nothing is unclear
 
@@ -104,5 +107,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
   locking scope or writing delta specs
 - Suggest a kebab-case change name when the user starts with only a rough idea
 - Record unresolved ambiguity in `questions.md`; do not guess silently
+- If testing commands are not knowable from repository context, record that in
+  `questions.md` instead of inventing them
 - After confirmation, follow the same artifact-writing and validation standard as
   `/spec-driven-propose`

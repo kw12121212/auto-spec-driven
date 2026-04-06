@@ -61,7 +61,9 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 6. **Fill the standard proposal artifacts** — populate:
     - `proposal.md`
     - `design.md`
-    - `tasks.md`
+    - `tasks.md` with `## Testing` containing at least one explicit lint or
+      validation command task and one explicit unit test command task when
+      those commands are knowable from repository context
     - `questions.md`
     - delta specs under `changes/<name>/specs/`
     Use the roadmap milestone as planning input, but treat the selected planned
@@ -86,4 +88,6 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - This skill creates planning artifacts only — do not implement product code
 - Only turn `Planned Changes` into change scaffolds
 - Create the same five artifacts as `spec-driven-propose`
+- If testing commands are not knowable from repository context, add an open
+  question instead of guessing them
 - Before finishing, rerun `verify` until all repairable format issues are fixed

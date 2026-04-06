@@ -21,7 +21,7 @@ auto-spec-driven/
 │   └── <name>/SKILL.md
 ├── template/         # .spec-driven/ starter template
 ├── test/
-│   ├── run.sh        # Test runner (fully repeatable)
+│   ├── run.js        # Test runner (fully repeatable)
 │   └── todo-app/     # Fixture project used by tests
 ├── .spec-driven/     # This repo uses its own workflow (dogfooding)
 ├── install.sh
@@ -41,7 +41,7 @@ Always rebuild after editing any `scripts/*.ts` file. Tests run against `dist/`.
 ## Running Tests
 
 ```bash
-bash test/run.sh
+npm test
 ```
 
 Tests are fully repeatable — they reset state before and after each run. All tests must pass before committing changes to scripts.

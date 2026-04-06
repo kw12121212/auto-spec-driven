@@ -478,7 +478,7 @@ function propose() {
   );
   fs.writeFileSync(
     path.join(dir, "tasks.md"),
-    `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Testing\n\n- [ ] Lint passes\n- [ ] Unit tests pass\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`
+    `# Tasks: ${name}\n\n## Implementation\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3\n\n## Testing\n\n- [ ] Replace with the repo's lint or validation command\n- [ ] Replace with the repo's unit test command\n\n## Verification\n\n- [ ] Verify implementation matches proposal\n`
   );
   fs.writeFileSync(
     path.join(dir, "questions.md"),

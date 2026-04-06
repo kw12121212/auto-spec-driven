@@ -57,7 +57,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - Tasks should be independently completable
    - Group under three sections: `## Implementation`, `## Testing`, `## Verification`
    - `## Testing` MUST include at least one lint or validation task and one unit test task appropriate to the project's tech stack
-   - Each required testing task MUST name an explicit runnable command such as `npm run lint`, `npm run build`, or `bash test/run.sh`
+   - Each required testing task MUST name an explicit runnable command such as `npm run lint`, `npm run build`, or `npm test`
    - If the relevant command cannot be determined confidently from repository context, add an open question to `questions.md` instead of guessing
    - Do NOT add an "Update specs" task — the specs/ directory contains the spec artifacts
 

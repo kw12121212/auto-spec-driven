@@ -95,6 +95,12 @@ function extractMarkdownTitle(content, fallback) {
 function normalizePathForMarkdown(value) {
     return value.split(path.sep).join("/");
 }
+function formatLocalDate(date = new Date()) {
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 function readSpecSummary(specsDir, relativePath) {
     const filePath = path.join(specsDir, relativePath);
     const fallback = path.basename(relativePath, ".md");
@@ -239,6 +245,31 @@ function regenerateRoadmapIndex(roadmapDir, lines) {
     fs.writeFileSync(path.join(roadmapDir, "INDEX.md"), content);
     lines.push("Regenerated roadmap/INDEX.md");
 }
+function rewriteLevel2Section(content, heading, bodyLines) {
+    const normalized = content.replace(/\r\n?/g, "\n");
+    const lines = normalized.split("\n");
+    const rewritten = [];
+    let seen = false;
+    for (let index = 0; index < lines.length;) {
+        const match = lines[index].match(/^##\s+(.+?)\s*$/);
+        if (!match || match[1].trim() !== heading) {
+            rewritten.push(lines[index]);
+            index += 1;
+            continue;
+        }
+        let nextIndex = index + 1;
+        while (nextIndex < lines.length && !/^##\s+/.test(lines[nextIndex])) {
+            nextIndex += 1;
+        }
+        if (!seen) {
+            rewritten.push(`## ${heading}`, ...bodyLines);
+            seen = true;
+        }
+        index = nextIndex;
+    }
+    const nextContent = rewritten.join("\n");
+    return normalized.endsWith("\n") ? `${nextContent}\n` : nextContent;
+}
 function validateRoadmapIndex(roadmapDir, errors) {
     const indexPath = path.join(roadmapDir, "INDEX.md");
     if (!fs.existsSync(indexPath)) {
@@ -292,15 +323,15 @@ function validateRoadmapIndex(roadmapDir, errors) {
     }
 }
 function replaceMilestoneDeclaredStatus(content, declaredStatus) {
-    return content.replace(/(^## Status\s*\n)([\s\S]*?)(?=^##\s|$)/m, `$1- Declared: ${declaredStatus}\n\n`);
+    return rewriteLevel2Section(content, "Status", [`- Declared: ${declaredStatus}`, ""]);
 }
 function formatPlannedChangeEntry(entry) {
     return `- \`${entry.name}\` - Declared: ${entry.declaredStatus} - ${entry.summary}`;
 }
 function replacePlannedChangesSection(content, entries) {
-    const body = entries.map((entry) => formatPlannedChangeEntry(entry)).join("\n");
-    const sectionBody = body ? `${body}\n\n` : "\n";
-    return content.replace(/(^## Planned Changes\s*\n)([\s\S]*?)(?=^##\s|$)/m, `$1${sectionBody}`);
+    const bodyLines = entries.map((entry) => formatPlannedChangeEntry(entry));
+    bodyLines.push("");
+    return rewriteLevel2Section(content, "Planned Changes", bodyLines);
 }
 function reconcileRoadmapAfterArchive(targetDir, name) {
     const specDir = path.join(targetDir, ".spec-driven");
@@ -878,7 +909,7 @@ function verifyRoadmap() {
 function archive() {
     const name = requireName("archive");
     const src = requireChange(name);
-    const date = new Date().toISOString().slice(0, 10);
+    const date = formatLocalDate();
     const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
     if (fs.existsSync(archivePath)) {
         console.error(`Error: archive target already exists: ${archivePath}`);
@@ -1351,7 +1382,7 @@ function verifyChangeArtifacts(name) {
 }
 function archiveChange(name) {
     const src = requireChange(name);
-    const date = new Date().toISOString().slice(0, 10);
+    const date = formatLocalDate();
     const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
     if (fs.existsSync(archivePath)) {
         console.error(`Error: archive target already exists: ${archivePath}`);
@@ -1366,7 +1397,7 @@ function tryArchiveChange(name) {
     if (!fs.existsSync(src)) {
         return { ok: false, error: `Change directory not found: ${src}` };
     }
-    const date = new Date().toISOString().slice(0, 10);
+    const date = formatLocalDate();
     const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
     if (fs.existsSync(archivePath)) {
         return { ok: false, error: `archive target already exists: ${archivePath}` };

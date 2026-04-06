@@ -146,6 +146,13 @@ function normalizePathForMarkdown(value: string): string {
   return value.split(path.sep).join("/");
 }
 
+function formatLocalDate(date = new Date()): string {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function readSpecSummary(specsDir: string, relativePath: string): string {
   const filePath = path.join(specsDir, relativePath);
   const fallback = path.basename(relativePath, ".md");
@@ -308,6 +315,37 @@ function regenerateRoadmapIndex(roadmapDir: string, lines: string[]): void {
   lines.push("Regenerated roadmap/INDEX.md");
 }
 
+function rewriteLevel2Section(content: string, heading: string, bodyLines: string[]): string {
+  const normalized = content.replace(/\r\n?/g, "\n");
+  const lines = normalized.split("\n");
+  const rewritten: string[] = [];
+  let seen = false;
+
+  for (let index = 0; index < lines.length;) {
+    const match = lines[index].match(/^##\s+(.+?)\s*$/);
+    if (!match || match[1].trim() !== heading) {
+      rewritten.push(lines[index]);
+      index += 1;
+      continue;
+    }
+
+    let nextIndex = index + 1;
+    while (nextIndex < lines.length && !/^##\s+/.test(lines[nextIndex])) {
+      nextIndex += 1;
+    }
+
+    if (!seen) {
+      rewritten.push(`## ${heading}`, ...bodyLines);
+      seen = true;
+    }
+
+    index = nextIndex;
+  }
+
+  const nextContent = rewritten.join("\n");
+  return normalized.endsWith("\n") ? `${nextContent}\n` : nextContent;
+}
+
 function validateRoadmapIndex(roadmapDir: string, errors: string[]): void {
   const indexPath = path.join(roadmapDir, "INDEX.md");
   if (!fs.existsSync(indexPath)) {
@@ -371,10 +409,7 @@ function validateRoadmapIndex(roadmapDir: string, errors: string[]): void {
 }
 
 function replaceMilestoneDeclaredStatus(content: string, declaredStatus: Exclude<DeclaredRoadmapStatus, "blocked">): string {
-  return content.replace(
-    /(^## Status\s*\n)([\s\S]*?)(?=^##\s|$)/m,
-    `$1- Declared: ${declaredStatus}\n\n`,
-  );
+  return rewriteLevel2Section(content, "Status", [`- Declared: ${declaredStatus}`, ""]);
 }
 
 function formatPlannedChangeEntry(entry: PlannedChangeEntry): string {
@@ -382,12 +417,9 @@ function formatPlannedChangeEntry(entry: PlannedChangeEntry): string {
 }
 
 function replacePlannedChangesSection(content: string, entries: PlannedChangeEntry[]): string {
-  const body = entries.map((entry) => formatPlannedChangeEntry(entry)).join("\n");
-  const sectionBody = body ? `${body}\n\n` : "\n";
-  return content.replace(
-    /(^## Planned Changes\s*\n)([\s\S]*?)(?=^##\s|$)/m,
-    `$1${sectionBody}`,
-  );
+  const bodyLines = entries.map((entry) => formatPlannedChangeEntry(entry));
+  bodyLines.push("");
+  return rewriteLevel2Section(content, "Planned Changes", bodyLines);
 }
 
 function reconcileRoadmapAfterArchive(targetDir: string, name: string): void {
@@ -1023,7 +1055,7 @@ function archive() {
   const name = requireName("archive");
   const src = requireChange(name);
 
-  const date = new Date().toISOString().slice(0, 10);
+  const date = formatLocalDate();
   const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
 
   if (fs.existsSync(archivePath)) {
@@ -1542,7 +1574,7 @@ function verifyChangeArtifacts(name: string): { valid: boolean; warnings: string
 
 function archiveChange(name: string): string {
   const src = requireChange(name);
-  const date = new Date().toISOString().slice(0, 10);
+  const date = formatLocalDate();
   const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
 
   if (fs.existsSync(archivePath)) {
@@ -1561,7 +1593,7 @@ function tryArchiveChange(name: string): { ok: true; archivePath: string } | { o
     return { ok: false, error: `Change directory not found: ${src}` };
   }
 
-  const date = new Date().toISOString().slice(0, 10);
+  const date = formatLocalDate();
   const archivePath = path.join(changesDir, "archive", `${date}-${name}`);
   if (fs.existsSync(archivePath)) {
     return { ok: false, error: `archive target already exists: ${archivePath}` };

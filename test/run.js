@@ -451,7 +451,34 @@ function runVerifyRoadmapSection() {
     readFile(path.join(archiveRoadmapDir, ".spec-driven", "roadmap", "INDEX.md")),
   );
 
+  const archiveDuplicateDir = mktempDir("spec-driven-archive-duplicate-");
+  cli(["init", archiveDuplicateDir]);
+  writeFile(
+    path.join(archiveDuplicateDir, ".spec-driven", "roadmap", "milestones", "m2-duplicate-planned-changes.md"),
+    "# m2-duplicate-planned-changes\n\n## Goal\nExpose duplicate planned change reconciliation during archive\n\n## In Scope\n- verify archive reconciliation does not leave duplicate planned change entries behind\n\n## Out of Scope\n- broader roadmap normalization outside archive closeout\n\n## Done Criteria\n- the archived planned change appears exactly once after archive\n\n## Planned Changes\n- `duplicate-archive-change` - Declared: planned - the original planned change entry before dependencies\n\n## Dependencies\n- duplicate section headings should not duplicate planned changes after archive\n\n## Planned Changes\n- `duplicate-archive-change` - Declared: planned - the later planned change entry that currently wins parser state\n\n## Risks\n- archive can rewrite one section while leaving another stale copy behind\n\n## Status\n- Declared: active\n\n## Notes\n- This milestone intentionally uses duplicate headings to reproduce the archive bug.\n",
+  );
+  writeFile(
+    path.join(archiveDuplicateDir, ".spec-driven", "roadmap", "INDEX.md"),
+    "# Roadmap Index\n\n## Milestones\n- [m2-duplicate-planned-changes.md](milestones/m2-duplicate-planned-changes.md) - m2-duplicate-planned-changes - active\n",
+  );
+
+  cli(["propose", "duplicate-archive-change"], { cwd: archiveDuplicateDir });
+  cli(["archive", "duplicate-archive-change"], { cwd: archiveDuplicateDir });
+  const duplicateArchiveMilestone = readFile(
+    path.join(archiveDuplicateDir, ".spec-driven", "roadmap", "milestones", "m2-duplicate-planned-changes.md"),
+  );
+  const duplicateArchiveMatches = duplicateArchiveMilestone.match(/`duplicate-archive-change` - Declared:/g) ?? [];
+  if (duplicateArchiveMatches.length === 1) {
+    pass("archive leaves only one planned change entry after reconciliation");
+  } else {
+    fail(
+      "archive leaves only one planned change entry after reconciliation",
+      `expected 1 entry, got ${duplicateArchiveMatches.length}`,
+    );
+  }
+
   rmrf(archiveRoadmapDir);
+  rmrf(archiveDuplicateDir);
   rmrf(roadmapDir);
 }
 

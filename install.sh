@@ -20,6 +20,7 @@ SKILLS=(
   spec-driven-cancel
   spec-driven-review
   spec-driven-auto
+  spec-driven-simple-task
 )
 
 RETIRED_SKILLS=(

@@ -12,4 +12,5 @@
 - [maintenance.md](skills/maintenance.md) - Skills Maintenance
 - [planning.md](skills/planning.md) - Skills Planning
 - [roadmap.md](skills/roadmap.md) - Skills Roadmap
+- [simple-task.md](skills/simple-task.md) - Skills Simple Task
 - [workflow.md](skills/workflow.md) - Skills Workflow

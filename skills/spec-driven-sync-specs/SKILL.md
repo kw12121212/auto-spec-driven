@@ -1,10 +1,10 @@
 ---
 skill_id: spec_driven_sync_specs
 name: spec-driven-sync-specs
-description: Scan code and specs for drift, create a dedicated spec-only change to synchronize them, and report the gaps in chat.
+description: Scan code and specs for drift, directly synchronize spec files, and report the gaps in chat.
 author: auto-spec-driven
 type: agent_skill
-version: 1.0.0
+version: 2.0.0
 ---
 
 You are helping the user synchronize `.spec-driven/specs/` with behavior that
@@ -47,62 +47,43 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - ambiguous findings that need human confirmation before they become specs
    - areas with no meaningful drift in the scanned scope
 
-5. **Propose the sync change** — suggest a dedicated kebab-case change name for
-   the spec sync work. Prefer names that reflect the scan scope, for example:
-   - `sync-auth-specs`
-   - `sync-cli-specs`
-   - `sync-current-state-specs`
+5. **Report drift summary in chat** — present a concise summary covering:
+   - the scan scope that was analyzed
+   - confirmed gaps or outdated spec areas, with specific file references
+   - ambiguous findings that need human input
+   - areas in scope where no meaningful drift was found
 
-6. **Scaffold a dedicated spec-only change** — run:
-   ```
-   node {{SKILL_DIR}}/scripts/spec-driven.js propose <name>
-   ```
-   Then populate the normal five artifacts:
-   - `proposal.md` — describe the scan scope, why the specs need catch-up, and
-     unchanged behavior
-   - `design.md` — describe how findings were derived from repository evidence
-   - `tasks.md` — focus on reviewing and refining the generated spec sync change;
-     do not add product-code implementation tasks
-   - `questions.md` — record every ambiguity or doubtful inference here
-   - `specs/` — create delta spec files aligned with `.spec-driven/specs/`
+6. **Get user confirmation** — before editing any spec file, ask the user to
+   confirm the proposed changes. List each spec file that will be added,
+   modified, or removed. Do not proceed until the user explicitly approves.
 
-7. **Write delta specs from evidence** — for each confirmed gap:
-   - choose the correct mirrored delta path under `changes/<name>/specs/`
-   - use `## ADDED Requirements`, `## MODIFIED Requirements`, or
-     `## REMOVED Requirements` as appropriate
+7. **Edit spec files directly** — for each confirmed gap:
+   - edit the corresponding file under `.spec-driven/specs/`
+   - add, modify, or remove `### Requirement:` blocks as appropriate
    - describe observable behavior only
-   - if no existing category or file fits, create the new relative path that
-     should exist under `.spec-driven/specs/` after archive
+   - if no existing category or file fits, create the new file under
+     `.spec-driven/specs/` with the correct relative path
 
-8. **Record ambiguity instead of guessing** — if repository evidence is unclear,
-   conflicting, or too implementation-specific:
-   - add a question to `questions.md`
-   - keep the in-chat report explicit about which findings are tentative
-   - do not silently invent requirements
-
-9. **Validate the sync change** — run:
+8. **Refresh INDEX.md** — after all spec edits are complete, run:
    ```
-   node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
+   node {{SKILL_DIR}}/scripts/spec-driven.js init
    ```
-   - Fix safe artifact-format problems immediately and rerun `verify`
-   - If only open questions remain, surface them clearly as workflow blockers
-   - If any non-question error remains, stop and report it instead of presenting
-     the sync change as ready
+   This regenerates `.spec-driven/specs/INDEX.md` to reflect the current
+   file state.
 
-10. **Report the drift summary in chat** — provide a concise summary covering:
-    - the scan scope that was analyzed
-    - confirmed gaps or outdated spec areas
-    - which delta spec files were created or updated
-    - any unresolved questions
-    - any areas in scope where no meaningful drift was found
+9. **Report final changes** — summarize what was done:
+   - which spec files were added, modified, or removed
+   - a brief description of the drift that was fixed in each file
+   - any ambiguous findings that were left unresolved and why
 
 ## Rules
 
-- This is a planning/documentation skill only — do not change product code
+- This is a documentation skill only — do not change product code
 - Read spec context before judging drift
 - Respect the user-selected scope; do not imply full-repository coverage after a
   scoped scan
 - Use code, tests, and nearby docs as evidence, but write only observable
   behavior into the specs
-- Create a dedicated change instead of editing `.spec-driven/specs/` directly
+- Do not create a change — edit `.spec-driven/specs/` files directly
 - Do not write a standalone report file; the summary belongs in chat
+- Get explicit user confirmation before editing any spec file

@@ -172,6 +172,18 @@ If the relevant command cannot be determined confidently from repository
 context, `spec-driven-propose` MUST record that ambiguity in `questions.md`
 instead of guessing.
 
+### Requirement: propose-derives-name-and-hands-off-without-confirmation
+`spec-driven-propose` MUST use a user-provided valid kebab-case change name when
+one exists. If the user does not provide one, it MUST derive a short kebab-case
+change name from the request and the proposal scope rather than stopping to ask
+for a name.
+
+After generating the proposal artifacts, `spec-driven-propose` MUST present the
+result as ready without requiring a post-proposal confirmation checkpoint. It
+MUST summarize any open questions as inputs for `/spec-driven-apply` to surface
+and block on at implementation start, and it MAY mention `/spec-driven-modify`
+only as an optional path when the user wants to revise the proposal.
+
 ### Requirement: brainstorm-converges-before-proposing
 `spec-driven-brainstorm` MUST accept a rough idea without requiring a change name
 up front. It MUST read `.spec-driven/config.yaml`, `.spec-driven/specs/INDEX.md`,

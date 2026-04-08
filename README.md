@@ -42,7 +42,7 @@ Every change is a folder with five files, each serving a distinct purpose:
 | `specs/` | Delta (ADDED/MODIFIED/REMOVED) | Makes spec intent explicit, not implicit |
 | `design.md` | How — approach and decisions | Prevents the AI from reinventing the approach mid-task |
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
-| `questions.md` | Open/resolved Q&A | Centralizes ambiguities; open questions block apply and archive |
+| `questions.md` | Open/resolved Q&A | Centralizes ambiguities; propose may leave questions open, apply surfaces them as a structured blocker, and unresolved questions still block verify/archive |
 
 ### Layer 4: 16 skills — explicit constraints on AI behavior
 
@@ -76,7 +76,7 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | AI reads existing specs | Explicit: `brainstorm`, `propose`, `apply`, `modify`, and `sync-specs` must read INDEX.md then every relevant spec file before generating anything | Not explicitly required |
 | Delta spec structure | Mirrors `specs/` by path — `changes/<name>/specs/auth/login.md` maps to `specs/auth/login.md` | Not path-bound |
 | Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | Specs updated on archive, no formal merge gate |
-| Ambiguity tracking | `questions.md` centralizes open questions; unresolved questions block apply and archive | Not built in |
+| Ambiguity tracking | `questions.md` centralizes open questions; propose can hand off with them, apply blocks on them with structured guidance, and unresolved questions still block verify/archive | Not built in |
 | Runtime dependencies | Node.js stdlib only — one ~640-line TypeScript file | Global npm package (`npm install -g @fission-ai/openspec`, Node 20.19+) |
 | Project-level AI rules | `config.yaml` rules injected into every skill prompt | None |
 | Philosophy | Enforcement over flexibility — constraints are the point | Fluid, iterative, easy, scalable |
@@ -168,6 +168,11 @@ For typical tasks with clear requirements but non-trivial implementation:
 /spec-driven-review
 /spec-driven-archive
 ```
+
+`/spec-driven-propose` can hand off a ready proposal without waiting for extra
+confirmation, even if `questions.md` still contains open items. `/spec-driven-apply`
+then surfaces those questions with explicit explanation, impact, and
+recommendation, and waits for user resolution before working the task list.
 
 Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-edit` to directly create or modify main spec files, and `/spec-driven-sync-specs` when code has moved ahead of the specs and you need to catch them up.
 

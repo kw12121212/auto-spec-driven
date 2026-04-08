@@ -45,7 +45,15 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 
 4. **Apply** — implement all tasks:
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js apply <name>` to show task summary
-   - Check questions.md for open `- [ ] Q:` entries — if any, list each unresolved question, ask the user to answer or confirm the decision needed, and stop until the user explicitly resolves them
+   - Check questions.md for open `- [ ] Q:` entries — if any, present each unresolved question using:
+     - `Question`
+     - `Explanation`
+     - `Impact`
+     - `Recommendation`
+   - `Explanation` must clarify why the question is still unresolved after reading the current change artifacts, relevant main specs, and repository state
+   - `Impact` must describe what implementation choice, task, behavior, or unchanged-behavior guarantee depends on the answer
+   - `Recommendation` may suggest a preferred answer, but only as a suggestion
+   - After presenting those blocks, ask the user to answer or confirm the decision needed, and stop until the user explicitly resolves every open question
    - You MAY recommend a preferred answer, but only as a suggestion; you MUST NOT treat your own recommendation as a resolved answer or continue implementation until the user explicitly confirms it
    - Work through each `- [ ]` task in order: read code, implement, verify Unchanged Behavior, mark `- [x]`
    - For `## Testing` tasks: actually run the tests and confirm they pass

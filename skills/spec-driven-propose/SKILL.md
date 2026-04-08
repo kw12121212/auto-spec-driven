@@ -19,7 +19,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 
 ## Steps
 
-1. **Get the change name** — ask the user for a short kebab-case name describing the change (e.g. `add-auth`, `refactor-db-layer`). If they already provided one, use it.
+1. **Determine the change name** — use the user-provided kebab-case name when one is already available. Otherwise, derive a short kebab-case name from the request and the proposal scope yourself instead of stopping to ask for one.
 
 2. **Read project context and existing specs** — read the following before generating anything:
    - `.spec-driven/config.yaml` — use `context` to inform content; treat `rules` as binding constraints; note any `fileMatch` entries that apply to files this change will touch
@@ -79,11 +79,13 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - If `verify` still reports a format or structure problem you cannot confidently repair, stop and report the issue to the user
    - If the only remaining error is open questions in `questions.md`, treat that as expected at proposal time and surface those questions clearly to the user
 
-10. **Confirm** — show the user the five files and ask if they want to adjust anything. If `questions.md` has open questions, list each one explicitly and ask the user to resolve them before proceeding to `/spec-driven-apply`.
+10. **Hand off** — show the user the five files and summarize the scope, key decisions, and any open questions. Do not require a confirmation checkpoint after writing the proposal. If `questions.md` has open questions, make clear that `/spec-driven-apply` will surface them as an implementation blocker and require explicit user resolution before coding starts, and mention `/spec-driven-modify` only as an optional revision path.
 
 ## Rules
 - Do not implement anything — this is planning only
 - Keep tasks atomic and verifiable
 - proposal.md describes *what and why*; design.md describes *how*; tasks.md is the checklist; questions.md is for open questions
 - Document ambiguities in questions.md — never guess at unclear requirements, and never use `[NEEDS CLARIFICATION]` inline markers
+- Do not add a post-proposal confirmation gate once the artifacts are written
+- Open questions are allowed at proposal handoff time; leave them in `questions.md` for `/spec-driven-apply` to surface and block on
 - Before finishing, rerun `verify` until all repairable format issues are fixed; if any non-question error remains, report it to the user

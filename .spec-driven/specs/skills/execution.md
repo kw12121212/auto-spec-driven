@@ -6,25 +6,33 @@ repository state as authoritative. Before implementation, it MUST load all five
 artifacts for the change plus `.spec-driven/config.yaml`, `.spec-driven/specs/INDEX.md`,
 and each relevant main spec file.
 
-### Requirement: apply-blocks-on-open-questions
+### Requirement: apply-blocks-on-open-questions-before-implementation
 `spec-driven-apply` MUST check `questions.md` for open questions before
-implementing. If any open `- [ ] Q:` entries exist, it MUST:
+implementing. If any open `- [ ] Q:` entries exist, it MUST stop and wait for
+explicit user resolution before editing implementation files.
 
-- list each unresolved question to the user
-- ask the user to resolve those questions before implementation continues
-- stop and wait for explicit user answers before making implementation changes
+Before it asks the user to resolve those questions, `spec-driven-apply` MUST
+present each one in a structured user-facing block with the fields `Question`,
+`Explanation`, `Impact`, and `Recommendation`.
 
-`spec-driven-apply` MAY recommend an answer or preferred option for each open
-question, but it MUST present those recommendations as suggestions only. It
-MUST NOT treat its own recommendation as a resolved answer, and it MUST NOT
-mark the question resolved or continue implementation until the user has
-explicitly confirmed the answer.
+`Explanation` MUST clarify why the question remains unresolved after consulting
+the current change artifacts, relevant main specs, unchanged-behavior
+constraints, task wording, and repository state. `Impact` MUST describe what
+implementation choice, task, behavior, or unchanged-behavior guarantee depends
+on the answer. `Recommendation` MAY suggest a preferred answer, but it MUST be
+presented as a suggestion only.
 
-#### Scenario: apply-recommends-but-does-not-decide-open-question
+`spec-driven-apply` MUST NOT treat its own recommendation as the resolved
+answer, MUST NOT edit implementation files, and MUST NOT continue task
+execution until the user has explicitly resolved every open question in
+`questions.md`.
+
+#### Scenario: apply-stops-on-open-question-with-structured-guidance
 - GIVEN `questions.md` contains an open implementation question
 - WHEN `spec-driven-apply` inspects the change before coding
-- THEN it may suggest a recommended answer
-- AND it asks the user to confirm or replace that answer
+- THEN it presents `Question`, `Explanation`, `Impact`, and `Recommendation`
+  for that unresolved question
+- AND it asks the user to resolve the question
 - AND it does not edit implementation files or continue to the next task until
   the user explicitly resolves the question
 

@@ -43,12 +43,18 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    Show the user the task summary (total, complete, remaining).
 
-4. **Check for open questions** — read `questions.md` and scan for `- [ ] Q:` entries:
-   - If any open questions are found, list each one and **stop** — do not proceed to implementation
-   - Ask the user to resolve the questions (edit questions.md directly or use `/spec-driven-modify`)
-   - You MAY recommend a preferred answer, but only as a suggestion
-   - You MUST NOT treat your own recommendation as the resolved answer
-   - Only continue once all questions are resolved (moved to `## Resolved` with an `A:` answer)
+4. **Gate on open questions** — read `questions.md` and scan for `- [ ] Q:` entries:
+   - If any open questions are found, list each one and **stop** before implementation
+   - For each open question, present a structured user-facing block with:
+     - `Question`
+     - `Explanation`
+     - `Impact`
+     - `Recommendation`
+   - `Explanation` must clarify why the question is still unresolved after reading the change artifacts, relevant main specs, and current repository state
+   - `Impact` must describe what implementation choice, task, behavior, or unchanged-behavior guarantee depends on the answer
+   - `Recommendation` may suggest a preferred answer, but only as a suggestion
+   - Do not implement tasks, edit implementation files, or mark the question resolved until the user explicitly answers or confirms the decision
+   - Only continue once all questions are resolved in `questions.md` under `## Resolved` with an `A:` answer
 
 5. **Implement tasks** — work through each `- [ ]` task in order:
    - Read relevant code before making changes
@@ -72,4 +78,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Mark tasks complete immediately after implementing them, not in bulk at the end
 - If a task is ambiguous, read proposal.md and design.md before asking the user
 - Do not implement tasks that are already marked `- [x]`
-- Open questions require explicit user confirmation before implementation continues
+- Open questions require explicit user resolution before implementation starts
+- Recommendations do not count as resolved answers until the user confirms them

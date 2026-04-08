@@ -15,8 +15,10 @@ and repository state as the source of truth rather than stale chat context.
 
 ### Requirement: questions-control-workflow-transitions
 Ambiguities MUST be tracked in `questions.md`, not inline in other artifacts.
-Open questions block implementation and verification, and must be surfaced before any
-workflow step that depends on resolved requirements.
+Open questions MAY remain at proposal handoff time, but each execution skill
+MUST follow its own contract for handling them before the workflow advances.
+Any open questions that remain unresolved by the time verification or archive
+is attempted are blockers.
 
 ### Requirement: task-state-and-spec-state-stay-synchronized
 When work is implemented, completed tasks MUST be marked immediately and delta specs

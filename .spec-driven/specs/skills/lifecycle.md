@@ -95,14 +95,16 @@ starting using a two-tier model:
   execute the resulting proposal.
 
 ### Requirement: auto-reuses-stepwise-gates
-`spec-driven-auto` MUST preserve the same blockers as the stepwise workflow:
-proposal confirmation, open-question resolution before implementation, verification
-blockers before review, and empty-delta confirmation before archive.
+`spec-driven-auto` MUST preserve the same blockers as the end-to-end workflow:
+proposal confirmation, explicit user resolution of open questions before
+implementation, verification blockers before review, and empty-delta
+confirmation before archive.
 
 When the auto workflow encounters open `- [ ] Q:` entries before or during its
-apply stage, it MUST reuse the `spec-driven-apply` question gate exactly:
+apply stage, it MUST use an explicit user-confirmation gate:
 
-- list each unresolved question to the user
+- present each unresolved question with `Question`, `Explanation`, `Impact`,
+  and `Recommendation`
 - ask the user to answer or confirm the decision needed
 - stop and wait for explicit user confirmation before implementation continues
 
@@ -116,7 +118,8 @@ confirmed the resolution.
 - GIVEN `spec-driven-auto` reaches its apply stage with one or more open
   questions in `questions.md`
 - WHEN it identifies a likely recommended answer
-- THEN it surfaces the open questions and that recommendation to the user
+- THEN it surfaces the open questions using `Question`, `Explanation`,
+  `Impact`, and `Recommendation`
 - AND it waits for explicit user confirmation instead of continuing
 - AND it does not treat the recommendation itself as question resolution
 

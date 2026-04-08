@@ -195,16 +195,10 @@ and each relevant main spec file before locking scope. It MUST help the user
 converge on goal, scope, non-goals, unchanged behavior, and likely spec impact
 before generating proposal artifacts.
 
-During proposal creation, `spec-driven-brainstorm` MUST NOT ask follow-up
-questions or require a pre-scaffolding confirmation checkpoint. It MUST derive
-the best available proposal from the request and repository context, and record
-remaining ambiguity in `questions.md` for `/spec-driven-apply`.
-
-### Requirement: brainstorm-derives-name-and-scaffolds-without-confirmation
-Before creating any files, `spec-driven-brainstorm` MUST derive a kebab-case
-change name from the request and proposal scope when the user has not already
-provided one. It MUST NOT require an explicit pre-scaffolding user confirmation
-checkpoint before creating proposal artifacts.
+### Requirement: brainstorm-confirms-before-scaffolding
+Before creating any files, `spec-driven-brainstorm` MUST propose a kebab-case
+change name and summarize the intended change for explicit user confirmation. It
+MUST NOT scaffold proposal artifacts until that confirmation is received.
 
 ### Requirement: brainstorm-produces-the-same-proposal-artifacts
 `spec-driven-brainstorm` MUST generate the same five planning
@@ -219,9 +213,9 @@ knowable from project context.
 
 ### Requirement: brainstorm-offers-auto-handoff
 After presenting the proposal and listing open questions, `spec-driven-brainstorm`
-MUST mention `/spec-driven-auto` as the end-to-end execution path and
-`/spec-driven-modify` as the revision path. It MUST NOT auto-enter either path
-without the user's explicit choice.
+MUST ask the user whether to enter `/spec-driven-auto` to execute the proposal or
+continue modifying the proposal artifacts with `/spec-driven-modify`. It MUST NOT
+auto-enter auto without the user's explicit choice.
 
 ### Requirement: propose-reads-context-before-writing
 Before filling a proposal, `spec-driven-propose` MUST read `.spec-driven/config.yaml`,

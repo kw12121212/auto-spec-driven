@@ -13,6 +13,33 @@ implement product code changes.
 and `spec-driven-auto` MUST treat the current change artifacts, relevant main specs,
 and repository state as the source of truth rather than stale chat context.
 
+### Requirement: explicitly-opted-in-skills-retain-parent-workflow-ownership-when-delegating
+Spec-driven skills MUST NOT delegate work to a sub-agent unless that skill's
+own main spec requirements and concrete skill instructions explicitly allow the
+delegation pattern.
+
+When delegation is explicitly allowed, the delegated subtask MUST be concrete,
+materially useful, and MUST NOT require the sub-agent to own the workflow state
+for the overall skill run.
+
+When delegation is used, the parent agent MUST retain ownership of:
+- user-facing confirmation or question-resolution checkpoints
+- writes that create, resolve, archive, cancel, or otherwise advance
+  `.spec-driven/` workflow state
+- the final user-facing recommendation, review, or verification verdict
+- the decision to accept, reject, or integrate delegated output
+
+Delegated output MAY inform the skill, but it MUST NOT replace the parent
+agent's responsibility to interpret current change artifacts, main specs, and
+repository state before taking those workflow actions.
+
+#### Scenario: delegated-analysis-does-not-bypass-parent-workflow-gates
+- GIVEN a skill delegates bounded analysis work to a sub-agent
+- WHEN the overall workflow reaches a user confirmation or workflow-state
+  transition
+- THEN the parent agent remains responsible for that interaction or state write
+- AND the sub-agent does not complete the transition on its own
+
 ### Requirement: questions-control-workflow-transitions
 Ambiguities MUST be tracked in `questions.md`, not inline in other artifacts.
 Open questions MAY remain at proposal handoff time, but each execution skill

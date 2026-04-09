@@ -34,6 +34,11 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
    - active and archived changes under `.spec-driven/changes/` as evidence of
      what is already in progress or complete
 
+   You MAY delegate bounded analysis-only work such as roadmap summarization,
+   candidate milestone comparisons, or likely spec-path discovery to a
+   sub-agent. The parent agent MUST keep user confirmation, roadmap shape
+   selection, and final `.spec-driven/roadmap/` writes.
+
 2. **Understand the planning goal** — determine:
    - whether the user wants to create a brand-new roadmap or restructure an
      existing one
@@ -124,3 +129,4 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - Do not collapse multiple milestones into one oversized roadmap document
 - Do not mark a milestone complete manually if its planned changes are not all
   archived
+- Do not let a sub-agent own the confirmation step or final roadmap file edits

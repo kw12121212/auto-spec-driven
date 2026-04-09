@@ -41,6 +41,11 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     - treat planned change declared statuses as limited to `planned` or
       `complete`
 
+    You MAY delegate bounded analysis-only work such as candidate comparison,
+    roadmap-context summarization, or likely spec-path discovery to a
+    sub-agent. The parent agent MUST keep the final recommendation, the user
+    confirmation checkpoint, and all proposal artifact writes.
+
 2. **Understand what the user wants optimized** — determine whether the user
    wants the next change chosen for impact, urgency, dependency order, risk
    reduction, or some other planning goal.
@@ -139,3 +144,5 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
   confirmation
 - After confirmation, follow the same artifact-writing and validation standard as
   `/roadmap-propose`
+- Do not let a sub-agent scaffold the change or own the recommendation
+  checkpoint

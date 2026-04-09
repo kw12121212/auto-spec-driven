@@ -40,6 +40,11 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
      section, or missing `## In Scope`, `## Out of Scope`, or `## Notes`
      sections
 
+   You MAY delegate bounded analysis-only work such as milestone context
+   summarization, nearby-milestone comparisons, or likely overlap checks to a
+   sub-agent. The parent agent MUST keep milestone-shape decisions and final
+   `.spec-driven/roadmap/` edits.
+
 3. **Refine only one milestone at a time** — help the user settle:
     - the milestone `Goal`
     - `In Scope`
@@ -109,3 +114,4 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - Keep `Planned Changes` limited to concrete approved roadmap work
 - Keep milestone scope bounded; do not turn this into a whole-roadmap rewrite
 - Milestone completion is derived from archive state, not user preference
+- Do not let a sub-agent own the final milestone recommendation or file write

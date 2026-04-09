@@ -178,6 +178,11 @@ Use `/spec-driven-modify` to adjust artifacts mid-flight, `/spec-driven-spec-edi
 
 Use `/roadmap-plan`, `/roadmap-milestone`, `/roadmap-recommend`, `/roadmap-propose`, and `/roadmap-sync` when you need a persistent milestone-based roadmap above individual changes. `roadmap-recommend` now behaves like a roadmap-specific brainstorm: after confirmation it scaffolds the accepted change directly, while `roadmap-propose` remains available as a direct path when the planned change is already chosen.
 
+Analysis-heavy roadmap planning skills may use bounded sub-agent sidecars for
+context synthesis or candidate comparison. Confirmation checkpoints, proposal
+scaffolding, workflow-state writes, and the final recommendation stay with the
+parent agent.
+
 ### 4. Sync Specs Workflow (Code Ahead of Spec)
 
 For initialization and catch-up work when the repository already contains
@@ -294,6 +299,10 @@ Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-pr
 After brainstorm produces a proposal, you can enter `/spec-driven-auto` to execute it.
 
 The only mandatory checkpoint is after the proposal — everything else runs automatically unless blocked.
+
+When roadmap planning skills use sub-agents, they are intended as bounded
+sidecars for analysis only. The parent agent still owns any confirmation gate,
+workflow transition, or final recommendation presented to the user.
 
 ### Brainstorm Workflow
 

@@ -176,6 +176,11 @@ bash install.sh --project /path/to/project       # 项目本地，指定路径
 若需要在多个变更之上维护长期路线图，可用
 `/roadmap-plan`、`/roadmap-milestone`、`/roadmap-recommend`、`/roadmap-propose` 和 `/roadmap-sync` 来维护 milestone 化的 roadmap。现在 `roadmap-recommend` 更像 roadmap 专用的 brainstorm：确认后会直接把 change scaffold 出来；`roadmap-propose` 则保留为“已知 planned change 时可直达”的入口。
 
+对于分析负担较重的 roadmap planning 技能，可以使用有边界的
+sub-agent sidecar 来做上下文归纳或候选比较。
+但确认 checkpoint、proposal scaffolding、workflow 状态写入，以及最终的
+推荐结论，仍然由 parent agent 负责。
+
 ### 4. Sync Specs 流程（代码领先于 Spec）
 
 适合初始化阶段，或一段时间人工改动后需要把代码中的既有行为同步回
@@ -288,6 +293,10 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 brainstorm 产出提案后，可进入 `/spec-driven-auto` 执行。
 
 默认必须的确认点在 proposal 之后；如果遇到 open questions、空 delta archive 决策等阻塞条件，还需要额外的显式确认。
+
+当 roadmap planning 技能使用 sub-agent 时，它们的定位也是“只做分析
+sidecar”。任何需要用户确认、推进 workflow 状态，或向用户给出最终
+推荐的步骤，仍由 parent agent 持有。
 
 对于 open questions，`/spec-driven-apply` 和 `/spec-driven-auto` 都会先用 `Question`、`Explanation`、`Impact`、`Recommendation` 的结构化格式向用户说明阻塞点，再等待显式确认。
 

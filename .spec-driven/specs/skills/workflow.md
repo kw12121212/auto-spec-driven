@@ -104,6 +104,22 @@ MUST follow its own contract for handling them before the workflow advances.
 Any open questions that remain unresolved by the time verification or archive
 is attempted are blockers.
 
+### Requirement: specialized-review-checklists-stay-within-one-review-skill
+Change-type-specific review checklist routing MUST remain inside
+`spec-driven-review` rather than creating separate review skills for security,
+UI, DX, migration, API, or maintenance changes.
+
+The specialized checklist routing MUST preserve the existing workflow contract:
+review happens after implementation and verification readiness, uses current
+change artifacts and repository state as source of truth, reports MUST FIX,
+SHOULD FIX, and NITS, and treats MUST FIX findings as archive blockers.
+
+#### Scenario: specialized-review-does-not-split-entry-point
+- GIVEN a completed change needs security-sensitive or migration review
+- WHEN the user enters the review workflow
+- THEN the user still uses `spec-driven-review`
+- AND the skill routes internally to the relevant checklist guidance
+
 ### Requirement: task-state-and-spec-state-stay-synchronized
 When work is implemented, completed tasks MUST be marked immediately and delta specs
 MUST be updated to reflect what was actually built before verification, review, or archive.

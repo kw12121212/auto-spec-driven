@@ -266,6 +266,23 @@ function runValidateSkillsSection() {
       }
     }
   }
+
+  const reviewSkill = readFile(path.join(skillsDir, "spec-driven-review", "SKILL.md"));
+  assertContains(
+    "review skill identifies specialized checklist routing",
+    "Identify specialized review checklists",
+    reviewSkill,
+  );
+  assertContains(
+    "review skill covers security-sensitive checklist",
+    "Security-sensitive",
+    reviewSkill,
+  );
+  assertContains("review skill covers UI checklist", "**UI**", reviewSkill);
+  assertContains("review skill covers DX checklist", "**DX**", reviewSkill);
+  assertContains("review skill covers migration checklist", "**Migration**", reviewSkill);
+  assertContains("review skill covers API checklist", "**API**", reviewSkill);
+  assertContains("review skill covers maintenance checklist", "**Maintenance**", reviewSkill);
 }
 
 function runInitSection() {

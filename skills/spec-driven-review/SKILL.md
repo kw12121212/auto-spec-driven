@@ -40,20 +40,65 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    frontmatter, determine which files were created or modified. Read each file
    fully, including mapped implementation and test files for the relevant spec files.
 
-5. **Review code quality** — for each changed file, check:
+5. **Identify specialized review checklists** — before issuing findings,
+   classify the change using evidence from the proposal, delta specs, design,
+   tasks, questions, changed files, mapping frontmatter, and repository context.
+   Apply every checklist that fits; checklist routing is additive and never
+   replaces the baseline review checks.
+
+   Supported checklist types:
+   - **Security-sensitive**: changes involving authentication, authorization,
+     permissions, secrets, tokens, input boundaries, data exposure, dependency
+     trust, or safe failure behavior.
+   - **UI**: changes involving user-visible screens, layout, interaction state,
+     accessibility, keyboard behavior, responsive behavior, or visual
+     regressions.
+   - **DX**: changes involving commands, prompts, generated artifacts,
+     documentation, operator messages, error messages, setup, or local workflow
+     ergonomics.
+   - **Migration**: changes involving data transformation, filesystem or schema
+     transitions, backwards compatibility, idempotency, rollback, or partial
+     failure behavior.
+   - **API**: changes involving public or internal contracts, command
+     arguments, JSON shapes, error semantics, validation behavior, versioning,
+     or caller impact.
+   - **Maintenance**: changes involving scheduled or manual maintenance,
+     dependency upkeep, generated files, repository hygiene, repeatability, or
+     avoiding unrelated churn.
+
+6. **Review code quality** — for each changed file, run the baseline review
+   checks plus any specialized checklist checks identified in Step 5:
    - **Readability**: clear naming, reasonable function length, no unnecessary complexity
    - **Security**: no injection vulnerabilities, no hardcoded secrets, proper input validation at system boundaries
    - **Error handling**: appropriate error handling for external calls and user input; no swallowed errors
    - **Performance**: no obvious N+1 queries, unnecessary allocations, or blocking calls in async contexts
    - **Best practices**: follows the project's conventions (from config.yaml context), no dead code, no debug artifacts left behind
+   - **Security-sensitive checklist**: verify authorization boundaries, secret
+     handling, injection resistance, data exposure, validation, and safe failure
+     behavior.
+   - **UI checklist**: verify key interactions, accessibility, layout stability,
+     state transitions, responsive behavior, and user-visible regression
+     coverage.
+   - **DX checklist**: verify command ergonomics, documentation or prompt
+     clarity, actionable errors, setup compatibility, and consistency with the
+     existing workflow.
+   - **Migration checklist**: verify idempotency, backward compatibility,
+     rollback or recovery expectations, partial failure handling, and data
+     preservation.
+   - **API checklist**: verify contract compatibility, validation, error
+     semantics, versioning or migration expectations, and caller impact.
+   - **Maintenance checklist**: verify repeatability, dependency or generated
+     artifact safety, repository hygiene, and absence of unrelated churn.
 
-6. **Check test quality** — read the test files associated with this change:
+7. **Check test quality** — read the test files associated with this change:
      - Do tests cover the key scenarios from the delta specs?
      - Are tests independent and repeatable?
      - Do tests follow `rules.test` from config.yaml?
      - Are `mapping.tests` entries current and useful for future verification?
+     - Do tests cover the relevant specialized checklist risks when those risks
+       are observable and testable?
 
-7. **Audit mapping quality** — for each touched spec file relevant to this
+8. **Audit mapping quality** — for each touched spec file relevant to this
    change:
    - Compare `mapping.implementation` and `mapping.tests` against the change's primary implementation files and directly verifying test files
    - Use the smallest confident evidence set from changed files, delta specs, completed tasks, and mapped files already read
@@ -64,7 +109,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - If the unmapped audit shows that a primary implementation file or directly verifying test file for this reviewed change is missing from all main-spec mappings, treat that as MUST FIX
    - If the unmapped audit only finds files outside this review scope or weakly related candidates, report them separately as SHOULD FIX or repository debt
 
-8. **Output a review report**:
+9. **Output a review report**:
     ```
     MUST FIX (blocks archive):
       - [list or "none"]
@@ -76,7 +121,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      - [list or "none"]
    ```
 
-9. **Recommend next step**:
+10. **Recommend next step**:
     - If MUST FIX issues: address them before archiving
     - If only SHOULD FIX: ask user if they want to address them or proceed
     - If clean: suggest `/spec-driven-archive <name>`
@@ -91,3 +136,6 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Respect config.yaml rules — violations of project rules are SHOULD FIX at minimum
 - Report stale or misleading spec mappings when they would make future
   verification unreliable
+- Specialized checklist findings use the same severity model as the baseline
+  review: MUST FIX for archive blockers, SHOULD FIX for recommended fixes, and
+  NITS for optional cleanup

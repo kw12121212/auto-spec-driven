@@ -1,4 +1,4 @@
 # Roadmap Index
 
 ## Milestones
-- [automatic-milestone-delivery.md](milestones/automatic-milestone-delivery.md) - Automatic Milestone Delivery - proposed
+- [review-and-ship-extensions.md](milestones/review-and-ship-extensions.md) - Review And Ship Extensions - proposed

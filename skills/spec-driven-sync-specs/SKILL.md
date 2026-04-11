@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_sync_specs
 name: spec-driven-sync-specs
 description: Scan code and specs for drift, directly synchronize spec files, and report the gaps in chat.
-author: auto-spec-driven
-type: agent_skill
-version: 2.0.0
+metadata:
+  skill_id: spec_driven_sync_specs
+  author: auto-spec-driven
+  type: agent_skill
+  version: 2.0.0
 ---
 
 You are helping the user synchronize `.spec-driven/specs/` with behavior that

@@ -1,10 +1,11 @@
 ---
-skill_id: roadmap_milestone
 name: roadmap-milestone
 description: Refine one roadmap milestone's goal, planned changes, and derived status.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: roadmap_milestone
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user refine a single roadmap milestone.

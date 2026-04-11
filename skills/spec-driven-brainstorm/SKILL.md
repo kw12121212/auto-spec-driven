@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_brainstorm
 name: spec-driven-brainstorm
 description: Discuss and brainstorm a spec-driven change from a rough idea, then propose a change name and, after explicit confirmation, generate the same five proposal artifacts as spec-driven-propose.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_brainstorm
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user turn an early-stage idea into a spec-driven change

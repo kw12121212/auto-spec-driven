@@ -17,12 +17,8 @@ required: ["frontmatter", "ast_structure"]
 properties:
   frontmatter:
     type: "object"
-    required: ["skill_id", "name", "description", "version", "type", "author"]
+    required: ["name", "description", "metadata"]
     properties:
-      skill_id:
-        type: "string"
-        pattern: "^[a-z0-9_]{5,64}$"
-        description: "Global unique identifier, lowercase letters, numbers, and underscores only"
       name:
         type: "string"
         minLength: 2
@@ -31,23 +27,37 @@ properties:
         type: "string"
         minLength: 2
         maxLength: 1000
-      version:
-        type: "string"
-        pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
-        description: "Must follow Semantic Versioning (e.g., 1.0.0)"
-      author:
-        type: "string"
-      type: 
-        type: "string"
-        enum: 
-          - "api"
-          - "cli_script"
-          - "ai_prompt"
-          - "container_job"
-          - "interactive_view"
-          - "orchestration_script"
-          - "native_bin"
-          - "agent_skill"
+      metadata:
+        type: "object"
+        required: ["skill_id", "version", "type", "author"]
+        properties:
+          skill_id:
+            type: "string"
+            pattern: "^[a-z0-9_]{5,64}$"
+            description: "Global unique identifier, lowercase letters, numbers, and underscores only"
+          version:
+            type: "string"
+            pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+            description: "Must follow Semantic Versioning (e.g., 1.0.0)"
+          author:
+            type: "string"
+          license:
+            type: "string"
+            description: "Optional SPDX license identifier or project-specific license label"
+          compatibility:
+            type: "object"
+            description: "Optional compatibility metadata for supported runtimes, agents, or environments"
+          type:
+            type: "string"
+            enum:
+              - "api"
+              - "cli_script"
+              - "ai_prompt"
+              - "container_job"
+              - "interactive_view"
+              - "orchestration_script"
+              - "native_bin"
+              - "agent_skill"
 
   ast_structure:
     type: "array"
@@ -61,7 +71,7 @@ allOf:
   # [1] API Interface (api)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "api" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "api" } } } } } }
     then:
       properties:
         frontmatter:
@@ -77,7 +87,7 @@ allOf:
   # [2] CLI Script (cli_script)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "cli_script" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "cli_script" } } } } } }
     then:
       properties:
         frontmatter:
@@ -93,7 +103,7 @@ allOf:
   # [3] AI Prompt (ai_prompt)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "ai_prompt" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "ai_prompt" } } } } } }
     then:
       properties:
         frontmatter:
@@ -109,7 +119,7 @@ allOf:
   # [4] Containerized Job (container_job)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "container_job" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "container_job" } } } } } }
     then:
       properties:
         frontmatter:
@@ -125,7 +135,7 @@ allOf:
   # [5] Interactive View / TUI (interactive_view)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "interactive_view" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "interactive_view" } } } } } }
     then:
       properties:
         frontmatter:
@@ -141,7 +151,7 @@ allOf:
   # [6] Orchestration Script (orchestration_script)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "orchestration_script" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "orchestration_script" } } } } } }
     then:
       properties:
         frontmatter:
@@ -157,7 +167,7 @@ allOf:
   # [7] Native Binary (native_bin)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "native_bin" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "native_bin" } } } } } }
     then:
       properties:
         frontmatter:
@@ -176,7 +186,7 @@ allOf:
   # [8] Agent Skill Prompt (agent_skill)
   # ----------------------------------------
   - if:
-      properties: { frontmatter: { properties: { type: { const: "agent_skill" } } } }
+      properties: { frontmatter: { properties: { metadata: { properties: { type: { const: "agent_skill" } } } } } }
     then:
       properties:
         ast_structure:

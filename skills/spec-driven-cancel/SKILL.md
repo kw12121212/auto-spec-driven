@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_cancel
 name: spec-driven-cancel
 description: Cancel and permanently delete an in-progress spec-driven change. Warns before deleting. Use this to abandon a change that will not be implemented.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_cancel
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user cancel and remove an in-progress spec-driven change.

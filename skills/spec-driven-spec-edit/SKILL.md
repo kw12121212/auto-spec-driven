@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_spec_edit
 name: spec-driven-spec-edit
 description: Create or modify individual main spec files under .spec-driven/specs/ directly, without going through the change workflow. For quick corrections, typo fixes, and adding missing spec entries.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_spec_edit
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user create or modify main spec files under

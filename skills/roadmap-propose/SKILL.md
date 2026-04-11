@@ -1,10 +1,11 @@
 ---
-skill_id: roadmap_propose
 name: roadmap-propose
 description: Turn a roadmap milestone Planned Changes item into a normal spec-driven change scaffold.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: roadmap_propose
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user turn planned roadmap work into a normal spec-driven

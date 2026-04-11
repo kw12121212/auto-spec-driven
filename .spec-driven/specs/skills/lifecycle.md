@@ -137,6 +137,9 @@ If the worktree contains unrelated or ambiguous changes that cannot be safely
 attributed to the completed archived change, the ship workflow MUST stop and
 ask the user how to proceed instead of silently committing them.
 
+This git-state inspection MUST also surface the current branch's upstream and
+ahead/behind state before push decisions are made.
+
 #### Scenario: ship-stops-on-ambiguous-dirty-worktree
 - GIVEN a completed archived change is ready to ship
 - AND git status includes files that do not appear related to the completed
@@ -145,6 +148,22 @@ ask the user how to proceed instead of silently committing them.
 - THEN it stops before committing
 - AND it asks the user to resolve, exclude, or explicitly include those changes
 
+### Requirement: ship-does-not-implicitly-push-preexisting-local-commits
+`spec-driven-ship` MUST distinguish the commit it creates for the selected
+archived change from any local commits that were already ahead of the upstream
+branch before the ship workflow began.
+
+If pushing the current branch would also publish pre-existing local commits,
+the ship workflow MUST stop and ask the user whether those commits should be
+included instead of silently pushing them.
+
+#### Scenario: ship-blocks-when-push-would-include-earlier-local-commits
+- GIVEN the current branch is already ahead of its upstream before ship creates
+  a new commit
+- WHEN `spec-driven-ship` reaches the push step
+- THEN it stops before pushing
+- AND it asks the user whether the earlier local commits should also be pushed
+
 ### Requirement: auto-does-not-implicitly-ship
 `spec-driven-auto` MUST NOT commit or push automatically as part of its existing
 end-to-end apply, verify, review, archive, and roadmap closeout path.
@@ -152,6 +171,10 @@ end-to-end apply, verify, review, archive, and roadmap closeout path.
 After successful archive closeout, `spec-driven-auto` MAY offer
 `spec-driven-ship` as the next explicit handoff, but it MUST wait for the user's
 explicit choice before entering the ship workflow.
+
+This handoff MUST remain advisory only: `spec-driven-auto` MUST NOT stage files,
+create a commit, inspect push eligibility on the user's behalf, or push the
+branch as part of that offer.
 
 #### Scenario: auto-offers-ship-handoff-without-pushing
 - GIVEN `spec-driven-auto` successfully archives a change and reconciles roadmap

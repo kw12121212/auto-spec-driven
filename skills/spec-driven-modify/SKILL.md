@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_modify
 name: spec-driven-modify
 description: Modify an existing spec-driven change artifact (proposal.md, specs/ delta files, design.md, tasks.md, or questions.md). Preserves completed task state.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_modify
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user modify an existing spec-driven change artifact.

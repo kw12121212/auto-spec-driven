@@ -1,10 +1,11 @@
 ---
-skill_id: roadmap_plan
 name: roadmap-plan
 description: Create or restructure a persistent milestone-based roadmap under .spec-driven/roadmap/.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: roadmap_plan
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user create or restructure the repository roadmap.

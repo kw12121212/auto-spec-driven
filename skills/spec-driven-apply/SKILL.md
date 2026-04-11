@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_apply
 name: spec-driven-apply
 description: Implement the tasks in a spec-driven change. Works through incomplete tasks one by one, marking each complete as it goes.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_apply
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user implement a spec-driven change.

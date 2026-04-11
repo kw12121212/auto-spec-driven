@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_verify
 name: spec-driven-verify
 description: Verify a spec-driven change is complete and correctly implemented. Checks task completion, implementation evidence, and spec alignment.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_verify
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user verify a spec-driven change before archiving.

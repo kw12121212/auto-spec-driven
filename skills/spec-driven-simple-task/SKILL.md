@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_simple_task
 name: spec-driven-simple-task
 description: Execute a lightweight ad-hoc task (debugging, documentation, small adjustments) without the full change lifecycle. Assesses spec impact afterward.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_simple_task
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are executing a lightweight ad-hoc task using the spec-driven framework's simple-task mode.

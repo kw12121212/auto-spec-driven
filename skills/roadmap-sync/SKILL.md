@@ -1,10 +1,11 @@
 ---
-skill_id: roadmap_sync
 name: roadmap-sync
 description: Reconcile roadmap milestone state against active and archived changes.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: roadmap_sync
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user synchronize `.spec-driven/roadmap/` with the current

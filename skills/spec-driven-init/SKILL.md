@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_init
 name: spec-driven-init
 description: Initialize a .spec-driven/ directory in a project. Creates config.yaml, roadmap/, and specs/ scaffold, then guides the user to fill in project context.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_init
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user initialize the spec-driven workflow in a project.

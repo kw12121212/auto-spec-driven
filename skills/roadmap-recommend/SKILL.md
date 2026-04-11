@@ -1,10 +1,11 @@
 ---
-skill_id: roadmap_recommend
 name: roadmap-recommend
 description: Recommend the next roadmap-backed change, then after explicit confirmation scaffold it as a normal spec-driven change.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: roadmap_recommend
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user choose the next change from the roadmap and turn the

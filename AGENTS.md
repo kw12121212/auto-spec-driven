@@ -53,10 +53,24 @@ Skills follow the [Agent Skills standard](https://agentskills.io): a directory c
 ```
 skills/
 └── spec-driven-propose/
-    └── SKILL.md       ← frontmatter: name, description; body: prompt content
+    └── SKILL.md       ← frontmatter: name, description, metadata; body: prompt content
 ```
 
-Frontmatter fields used: `name`, `description`. CLIs (Claude Code, OpenCode, Trae, Codex, Gemini CLI) read their respective skills directories.
+Frontmatter fields used: top-level `name`, `description`, plus nested `metadata.skill_id`, `metadata.version`, `metadata.type`, and `metadata.author`. `metadata.license` and `metadata.compatibility` are optional. CLIs (Claude Code, OpenCode, Trae, Codex, Gemini CLI) read their respective skills directories.
+
+Example:
+
+```yaml
+---
+name: spec-driven-propose
+description: Propose a new spec-driven change.
+metadata:
+  skill_id: spec_driven_propose
+  version: 1.0.0
+  type: agent_skill
+  author: auto-spec-driven
+---
+```
 
 ## Scripts Contract
 

@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_maintenance
 name: spec-driven-maintenance
 description: Inspect or run the manual maintenance workflow. Uses explicitly configured repository checks, applies safe auto-fixes, and archives successful maintenance changes.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_maintenance
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user manage the manual maintenance workflow.

@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_resync_code_mapping
 name: spec-driven-resync-code-mapping
 description: Retrofit or repair spec frontmatter mappings between specs, implementation files, and test files.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_resync_code_mapping
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user retrofit or repair spec-code mapping frontmatter in

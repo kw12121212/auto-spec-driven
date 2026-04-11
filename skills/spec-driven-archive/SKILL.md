@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_archive
 name: spec-driven-archive
 description: Archive a completed spec-driven change. Requires completed tasks, merges delta specs into main specs, then moves the change to archive/ with a date prefix.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_archive
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user archive a completed spec-driven change.

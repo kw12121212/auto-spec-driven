@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_ship
 name: spec-driven-ship
 description: Ship an archived spec-driven change with a simple git commit and push after verification, review, archive, and roadmap reconciliation.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_ship
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are shipping a completed spec-driven change after the normal workflow gates have already succeeded.
@@ -29,11 +30,14 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    If roadmap status reports errors, or if the archived change's milestone or planned-change entry has declared-versus-derived mismatches, stop before committing or pushing and report the roadmap issue.
 
-4. **Inspect git state** — run `git status --short` and identify the files that would be included in the ship commit. Present the candidate file list to the user. If the worktree contains unrelated or ambiguous changes that cannot be safely attributed to the completed archived change or its archive closeout, stop and ask the user to resolve, exclude, or explicitly include them.
+4. **Inspect git state** — run `git status -sb` and identify both:
+   - the files that would be included in the ship commit
+   - the branch's upstream/ahead/behind state
+   Present the candidate file list to the user. If the worktree contains unrelated or ambiguous changes that cannot be safely attributed to the completed archived change or its archive closeout, stop and ask the user to resolve, exclude, or explicitly include them.
 
-5. **Create the ship commit** — stage the intended completed work, then run `git commit` with a concise message based on the change name, such as `feat: add basic ship step`. If there is nothing to commit, report that the branch has no local changes to ship and do not push solely for this change.
+5. **Create the ship commit** — stage the intended completed work, then run `git commit` with a concise message based on the change name, such as `feat: add basic ship step`. Record the new commit so you can distinguish it from any pre-existing local commits. If there is nothing to commit, report that the branch has no local changes to ship and do not push solely for this change.
 
-6. **Push the current branch** — identify the current branch with `git branch --show-current`, then push it with `git push`. If the branch has no upstream, ask the user before setting one. Report any git failure directly and do not hide it behind a successful ship summary.
+6. **Push the current branch** — identify the current branch with `git branch --show-current`, then verify the push would ship only the commit created in Step 5. If `git status -sb` or other git inspection shows the branch was already ahead of its upstream before Step 5, stop and ask the user whether those pre-existing local commits should also be pushed. If the branch has no upstream, ask the user before setting one. Only then run `git push`. Report any git failure directly and do not hide it behind a successful ship summary.
 
 7. **Report the result** — summarize the archived change shipped, the commit created, the branch pushed, and any follow-up needed. Make clear that this skill did not create a pull request, deployment, release, canary, or package publication.
 
@@ -44,6 +48,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Do not weaken or bypass apply, verify, review, archive, or roadmap reconciliation gates.
 - Stop on roadmap errors or stale declared-versus-derived roadmap status for the selected archived change.
 - Stop on unrelated or ambiguous dirty worktree state unless the user explicitly decides what to include.
+- Stop if pushing would also ship pre-existing local commits unless the user explicitly agrees to include them.
 - Limit ship automation to a simple git commit and push.
 - Do not create pull requests, deploy applications, publish releases, run canaries, publish packages, or coordinate multi-repository shipping workflows.
 - Do not add or rely on a TypeScript `ship` subcommand; git ship decisions stay in the skill workflow.

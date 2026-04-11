@@ -1,10 +1,11 @@
 ---
-skill_id: spec_driven_propose
 name: spec-driven-propose
 description: Propose a new spec-driven change. Scaffolds proposal.md, specs/ delta files, design.md, tasks.md, and questions.md for a named change, populated with project context.
-author: auto-spec-driven
-type: agent_skill
-version: 1.0.0
+metadata:
+  skill_id: spec_driven_propose
+  author: auto-spec-driven
+  type: agent_skill
+  version: 1.0.0
 ---
 
 You are helping the user create a new spec-driven change proposal.

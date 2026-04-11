@@ -24,6 +24,8 @@ type SchemaRules = {
   allowedTypes: string[];
   basePropertySchemas: Record<string, PropertySchema>;
   baseRequired: string[];
+  metadataPropertySchemas: Record<string, PropertySchema>;
+  metadataRequired: string[];
   typeRules: Record<string, TypeRule>;
 };
 
@@ -145,8 +147,7 @@ function main(): void {
     errors.push(toValidationError(error, "frontmatter.parse_error", "frontmatter", "Failed to parse frontmatter"));
   }
 
-  const detectedType =
-    frontmatter && typeof frontmatter.data.type === "string" ? frontmatter.data.type : null;
+  const detectedType = frontmatter ? getStringAtPath(frontmatter.data, ["metadata", "type"]) : null;
 
   if (frontmatter) {
     validateFrontmatter(frontmatter, schemaRules, errors);
@@ -168,9 +169,9 @@ function main(): void {
       actual: detectedType,
       code: "frontmatter.type.unsupported",
       expected: schemaRules.allowedTypes,
-      line: frontmatter?.keyLines.type,
+      line: frontmatter?.keyLines["metadata.type"],
       message: `Unsupported type "${detectedType}"`,
-      path: "frontmatter.type",
+      path: "frontmatter.metadata.type",
     });
   }
 
@@ -381,24 +382,39 @@ function loadSchemaRules(schemaText: string, schemaPath: string): SchemaRules {
     frontmatter.properties,
     "schema.properties.frontmatter.properties",
   );
-  const typeSchema = expectRecord(frontmatterProperties.type, "schema frontmatter type");
+  const metadata = expectRecord(frontmatterProperties.metadata, "schema frontmatter metadata");
+  const metadataProperties = expectRecord(
+    metadata.properties,
+    "schema.properties.frontmatter.properties.metadata.properties",
+  );
+  const typeSchema = expectRecord(metadataProperties.type, "schema frontmatter metadata type");
   const allowedTypes = expectArray(typeSchema.enum, "schema frontmatter type enum").map(expectString);
   const allOf = expectArray(schema.allOf, "schema.allOf");
 
   const typeRules: Record<string, TypeRule> = {};
   for (const rule of allOf) {
     const ruleRecord = expectRecord(rule, "schema.allOf[]");
+    const ifProperties = expectRecord(
+      expectRecord(ruleRecord.if, "schema.if").properties,
+      "schema.if.properties",
+    );
+    const ifFrontmatter = expectRecord(ifProperties.frontmatter, "schema.if.frontmatter");
+    const ifFrontmatterProperties = expectRecord(
+      ifFrontmatter.properties,
+      "schema.if.frontmatter.properties",
+    );
+    const ifMetadata = expectRecord(
+      ifFrontmatterProperties.metadata,
+      "schema.if.frontmatter.properties.metadata",
+    );
+    const ifMetadataProperties = expectRecord(
+      ifMetadata.properties,
+      "schema.if.frontmatter.properties.metadata.properties",
+    );
     const typeName = expectString(
       expectRecord(
-        expectRecord(
-          expectRecord(
-            expectRecord(expectRecord(ruleRecord.if, "schema.if").properties, "schema.if.properties")
-              .frontmatter,
-            "schema.if.frontmatter",
-          ).properties,
-          "schema.if.frontmatter.properties",
-        ).type,
-        "schema.if.frontmatter.properties.type",
+        ifMetadataProperties.type,
+        "schema.if.frontmatter.properties.metadata.type",
       ).const,
     );
 
@@ -426,6 +442,8 @@ function loadSchemaRules(schemaText: string, schemaPath: string): SchemaRules {
     allowedTypes,
     basePropertySchemas: recordOfPropertySchemas(frontmatterProperties),
     baseRequired: toStringArray(frontmatter.required),
+    metadataPropertySchemas: recordOfPropertySchemas(metadataProperties),
+    metadataRequired: toStringArray(metadata.required),
     typeRules,
   };
 }
@@ -454,19 +472,28 @@ function splitFrontmatter(markdown: string): FrontmatterSplit {
 function parseFrontmatter(split: FrontmatterSplit): ParsedFrontmatter {
   const data = parseYamlObject(split.raw, "frontmatter");
   const keyLines: Record<string, number> = {};
+  const keyStack: { indent: number; key: string }[] = [];
 
   for (const entry of split.lines) {
     const trimmed = entry.text.trim();
     if (!trimmed || trimmed.startsWith("#")) {
       continue;
     }
-    if (leadingIndent(entry.text) !== 0) {
+    if (trimmed.startsWith("- ")) {
       continue;
     }
 
+    const indent = leadingIndent(entry.text);
     const match = trimmed.match(/^([A-Za-z0-9_-]+)\s*:/);
     if (match) {
-      keyLines[match[1]] = entry.line;
+      while (keyStack.length > 0 && indent <= keyStack[keyStack.length - 1].indent) {
+        keyStack.pop();
+      }
+
+      const key = match[1];
+      const path = [...keyStack.map((entry) => entry.key), key].join(".");
+      keyLines[path] = entry.line;
+      keyStack.push({ indent, key });
     }
   }
 
@@ -568,7 +595,8 @@ function validateFrontmatter(
   schemaRules: SchemaRules,
   errors: ValidationError[],
 ): void {
-  const typeValue = typeof frontmatter.data.type === "string" ? frontmatter.data.type : null;
+  const metadata = optionalRecord(frontmatter.data.metadata);
+  const typeValue = metadata && typeof metadata.type === "string" ? metadata.type : null;
   const typeRule = typeValue ? schemaRules.typeRules[typeValue] : undefined;
 
   for (const field of schemaRules.baseRequired) {
@@ -578,6 +606,17 @@ function validateFrontmatter(
         expected: "present",
         message: `Missing required frontmatter field "${field}"`,
         path: `frontmatter.${field}`,
+      });
+    }
+  }
+
+  for (const field of schemaRules.metadataRequired) {
+    if (!metadata || !(field in metadata)) {
+      errors.push({
+        code: "frontmatter.required",
+        expected: "present",
+        message: `Missing required frontmatter field "metadata.${field}"`,
+        path: `frontmatter.metadata.${field}`,
       });
     }
   }
@@ -594,6 +633,20 @@ function validateFrontmatter(
     }
   }
 
+  if (metadata) {
+    for (const [field, schema] of Object.entries(schemaRules.metadataPropertySchemas)) {
+      if (field in metadata) {
+        validateValueAgainstSchema(
+          metadata[field] as JsonValue,
+          schema,
+          `frontmatter.metadata.${field}`,
+          frontmatter.keyLines[`metadata.${field}`],
+          errors,
+        );
+      }
+    }
+  }
+
   if (!typeRule) {
     return;
   }
@@ -603,7 +656,7 @@ function validateFrontmatter(
       errors.push({
         code: "frontmatter.required_for_type",
         expected: "present",
-        line: frontmatter.keyLines.type,
+        line: frontmatter.keyLines["metadata.type"],
         message: `Type "${typeValue}" requires frontmatter field "${field}"`,
         path: `frontmatter.${field}`,
       });
@@ -1015,6 +1068,19 @@ function expectRecord(value: unknown, label: string): Record<string, unknown> {
 
 function optionalRecord(value: unknown): Record<string, unknown> | undefined {
   return isRecord(value) ? value : undefined;
+}
+
+function getStringAtPath(value: Record<string, JsonValue>, path: string[]): string | null {
+  let current: unknown = value;
+
+  for (const segment of path) {
+    if (!isRecord(current) || !(segment in current)) {
+      return null;
+    }
+    current = current[segment];
+  }
+
+  return typeof current === "string" ? current : null;
 }
 
 function expectArray(value: unknown, label: string): unknown[] {

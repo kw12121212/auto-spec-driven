@@ -204,12 +204,30 @@ function validateAllSkills(): void {
   }
 
   const scriptPath = path.resolve(process.argv[1] ?? "dist/test/validate-skills.js");
-  const skillFiles = fs
+  const skillDirs = fs
     .readdirSync(skillsDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(skillsDir, entry.name, "SKILL.md"))
-    .filter((skillPath) => fs.existsSync(skillPath))
+    .map((entry) => path.join(skillsDir, entry.name))
+    .filter((skillDir) => fs.existsSync(path.join(skillDir, "SKILL.md")))
     .sort();
+
+  const skillFiles = skillDirs.map((skillDir) => path.join(skillDir, "SKILL.md"));
+
+  const symlinkErrors = validateSkillScriptSymlinks(skillDirs);
+  if (symlinkErrors.length > 0) {
+    printAndExit(
+      {
+        detected_type: null,
+        errors: symlinkErrors,
+        file: "",
+        schema: path.resolve("test/skill-schema.yaml"),
+        section_titles: [],
+        valid: false,
+      },
+      1,
+    );
+    return;
+  }
 
   let failed = 0;
   for (const skillPath of skillFiles) {
@@ -230,6 +248,64 @@ function validateAllSkills(): void {
   }
 
   console.log(`Validated ${skillFiles.length} skills.`);
+}
+
+function normalizeSkillPath(value: string): string {
+  return value.split(path.sep).join("/");
+}
+
+function validateSkillScriptSymlinks(skillDirs: string[]): ValidationError[] {
+  const expectedTarget = path.relative(path.dirname(skillDirs[0] ?? path.resolve("skills", "placeholder")), path.resolve("dist", "scripts"));
+  const normalizedExpected = normalizeSkillPath(expectedTarget);
+  const errors: ValidationError[] = [];
+
+  for (const skillDir of skillDirs) {
+    const skillName = path.basename(skillDir);
+    const scriptsPath = path.join(skillDir, "scripts");
+    let stats: fs.Stats;
+    try {
+      stats = fs.lstatSync(scriptsPath);
+    } catch {
+      errors.push({
+        code: "skill.scripts_symlink.missing",
+        message: `Skill '${skillName}' is missing the required scripts symlink`,
+        path: `skills/${skillName}/scripts`,
+      });
+      continue;
+    }
+
+    if (!stats.isSymbolicLink()) {
+      errors.push({
+        code: "skill.scripts_symlink.invalid_type",
+        message: `Skill '${skillName}' scripts entry must be a symlink`,
+        path: `skills/${skillName}/scripts`,
+      });
+      continue;
+    }
+
+    const target = fs.readlinkSync(scriptsPath);
+    if (normalizeSkillPath(target) !== normalizedExpected) {
+      errors.push({
+        code: "skill.scripts_symlink.invalid_target",
+        message: `Skill '${skillName}' scripts symlink must point to '${normalizedExpected}'`,
+        path: `skills/${skillName}/scripts`,
+        actual: normalizeSkillPath(target),
+        expected: normalizedExpected,
+      });
+      continue;
+    }
+
+    const resolvedPath = path.resolve(skillDir, target);
+    if (!fs.existsSync(resolvedPath) || !fs.statSync(resolvedPath).isDirectory()) {
+      errors.push({
+        code: "skill.scripts_symlink.broken",
+        message: `Skill '${skillName}' scripts symlink target does not resolve to a directory`,
+        path: `skills/${skillName}/scripts`,
+      });
+    }
+  }
+
+  return errors;
 }
 
 function baseResult(

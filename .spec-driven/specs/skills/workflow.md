@@ -35,6 +35,19 @@ implement product code changes.
 and `spec-driven-auto` MUST treat the current change artifacts, relevant main specs,
 and repository state as the source of truth rather than stale chat context.
 
+### Requirement: source-skill-directories-expose-shared-cli-via-symlink
+Each source skill directory under `skills/<name>/` that contains `SKILL.md`
+MUST also contain a `scripts` symlink in the source tree. That symlink MUST
+resolve to the shared compiled CLI scripts directory so source-tree skill runs
+can invoke `{{SKILL_DIR}}/scripts/spec-driven.js` without relying on an
+installed copy of the skill.
+
+#### Scenario: source-skill-directory-includes-scripts-symlink
+- GIVEN a source skill directory under `skills/<name>/` contains `SKILL.md`
+- WHEN repository validation checks the source tree
+- THEN that skill directory also contains a `scripts` symlink
+- AND the symlink target resolves to the shared compiled CLI scripts directory
+
 ### Requirement: explicitly-opted-in-skills-retain-parent-workflow-ownership-when-delegating
 Spec-driven skills MUST NOT delegate work to a sub-agent unless that skill's
 own main spec requirements and concrete skill instructions explicitly allow the

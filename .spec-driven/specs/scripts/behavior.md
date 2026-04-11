@@ -165,6 +165,38 @@ mapping.
 - THEN the command reports that path under `extra.implementation`
 - AND it does not claim that the file is semantically wrong on its own
 
+### Requirement: audit-unmapped-spec-evidence-reports-candidates-not-mapped-by-any-spec
+`spec-driven.js audit-unmapped-spec-evidence` MUST compare explicit candidate
+implementation and test evidence paths against the union of all main-spec
+mapping frontmatter under `.spec-driven/specs/`.
+
+It MUST accept repeated `--implementation <repo-path>` and `--tests <repo-path>`
+flags, treat those values as deterministic candidate evidence only, and output
+JSON describing:
+
+- all mapped implementation and test paths collected from main specs
+- the provided candidate implementation and test paths
+- candidate paths not mapped by any main spec under `unmapped`
+- any structural or path validation errors from the scanned main specs
+
+The command MUST NOT infer whether an unmapped file needs a new spec, a mapping
+repair, or no action. It MUST only report which explicit candidate paths are not
+currently mapped by any main spec.
+
+#### Scenario: audit-unmapped-spec-evidence-flags-unmapped-implementation
+- GIVEN main spec mappings do not reference `src/extra.ts`
+- AND the caller passes `src/extra.ts` with `--implementation`
+- WHEN `audit-unmapped-spec-evidence` runs
+- THEN stdout JSON reports `src/extra.ts` under `unmapped.implementation`
+- AND `valid` is `false`
+
+#### Scenario: audit-unmapped-spec-evidence-passes-fully-mapped-candidates
+- GIVEN every candidate implementation and test file passed to the command is
+  already referenced by at least one main spec mapping
+- WHEN `audit-unmapped-spec-evidence` runs
+- THEN stdout JSON reports `valid: true`
+- AND both `unmapped.implementation` and `unmapped.tests` are empty
+
 ### Requirement: archive-moves-change
 `spec-driven.js archive <name>` MUST move `.spec-driven/changes/<name>/` to
 `.spec-driven/changes/archive/YYYY-MM-DD-<name>/`, creating the archive directory

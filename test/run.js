@@ -627,6 +627,53 @@ function runAuditSpecMappingCoverageSection() {
   rmrf(mappingDir);
 }
 
+function runAuditUnmappedSpecEvidenceSection() {
+  console.log(`\n${BOLD}[1ac] audit-unmapped-spec-evidence${RESET}`);
+
+  const mappingDir = mktempDir("spec-driven-unmapped-evidence-");
+  cli(["init", mappingDir]);
+  writeFile(path.join(mappingDir, "src", "app.js"), "export function run() { return 'ok'; }\n");
+  writeFile(path.join(mappingDir, "src", "extra.js"), "export const extra = true;\n");
+  writeFile(path.join(mappingDir, "test", "app.test.js"), "import '../src/app.js';\n");
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "behavior.md"),
+    "---\n"
+      + "mapping:\n"
+      + "  implementation:\n"
+      + "    - src/app.js\n"
+      + "  tests:\n"
+      + "    - test/app.test.js\n"
+      + "---\n\n"
+      + "# Core Behavior\n\n"
+      + "### Requirement: app-runs\n"
+      + "The app MUST run.\n",
+  );
+
+  let out = cli([
+    "audit-unmapped-spec-evidence",
+    "--implementation", "src/app.js",
+    "--tests", "test/app.test.js",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-unmapped-spec-evidence accepts fully mapped candidates", "valid", "true", out);
+
+  out = cli([
+    "audit-unmapped-spec-evidence",
+    "--implementation", "src/app.js",
+    "--implementation", "src/extra.js",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-unmapped-spec-evidence flags unmapped implementation", "valid", "false", out);
+  assertContains("audit-unmapped-spec-evidence reports unmapped implementation", '"implementation": [\n      "src/extra.js"', out);
+
+  out = cli([
+    "audit-unmapped-spec-evidence",
+    "--tests",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-unmapped-spec-evidence reports missing flag value", "valid", "false", out);
+  assertContains("audit-unmapped-spec-evidence explains missing flag value", "missing value for --tests", out);
+
+  rmrf(mappingDir);
+}
+
 function runInstallSection() {
   console.log(`\n${BOLD}[1b] install${RESET}`);
 
@@ -1206,6 +1253,7 @@ function main() {
   runVerifyRoadmapSection();
   runVerifySpecMappingsSection();
   runAuditSpecMappingCoverageSection();
+  runAuditUnmappedSpecEvidenceSection();
   runInstallSection();
   runMigrateSection();
   runMaintenanceSection();

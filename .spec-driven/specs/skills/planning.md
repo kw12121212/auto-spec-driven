@@ -344,6 +344,10 @@ changes. It MUST separate implementation mappings from test mappings, present
 the proposed frontmatter changes to the user, and wait for explicit
 confirmation before editing spec files.
 
+After building a confident candidate mapping for a target spec, the skill MUST
+use the CLI audit command when available to compare the candidate evidence set
+against the spec's current mapping before presenting edits to the user.
+
 After confirmation, it MAY edit mapping frontmatter and mapping format only. It
 MUST NOT change implementation files or rewrite requirement behavior. If it
 detects behavior/spec drift that requires requirement changes, it MUST recommend
@@ -361,6 +365,14 @@ workflow instead of silently changing requirements.
 - WHEN `spec-driven-resync-code-mapping` confirms a replacement mapping with the user
 - THEN it updates the mapping frontmatter to current implementation and test paths
 - AND reruns the CLI mapping validator
+
+#### Scenario: resync-code-mapping-audits-candidate-mapping-before-edit
+- GIVEN the skill has inferred candidate implementation and test evidence for a
+  target spec
+- WHEN it prepares the proposed mapping edits
+- THEN it runs the CLI audit command with that explicit evidence set before
+  asking the user to confirm the edit
+- AND it uses the audit output to highlight missing or extra mapping entries
 
 #### Scenario: resync-code-mapping-defers-behavior-drift
 - GIVEN mapping repair reveals that the current requirement behavior is stale

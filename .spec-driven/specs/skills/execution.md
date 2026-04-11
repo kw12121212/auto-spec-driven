@@ -136,6 +136,18 @@ provide the completed behavior. It MUST then compare each touched delta spec's
 `mapping.implementation` and `mapping.tests` entries against that evidence set,
 using the CLI audit command when available.
 
+`spec-driven-verify` SHOULD also check whether the change-local evidence set
+contains implementation or directly verifying test files that are not mapped by
+any main spec, using the CLI unmapped-evidence audit command when available.
+When such files are clearly part of the completed behavior, it MUST report the
+gap as a change-local issue and recommend either mapping repair or spec updates.
+
+If an unmapped file is a primary implementation file or directly verifying test
+file for the current change, `spec-driven-verify` MUST treat that as CRITICAL
+when it leaves the change's spec coverage incomplete. If the unmapped file is
+outside the current change scope or is only weakly related, it SHOULD be
+reported separately as repository debt or lower-severity ambiguity.
+
 When evidence clearly shows that a touched spec's completed behavior depends on
 an implementation file or directly verifying test file that is missing from the
 mapping, `spec-driven-verify` MUST report that omission as CRITICAL. It SHOULD
@@ -183,6 +195,15 @@ spec files: compare the mapping frontmatter against the change's primary
 implementation and directly verifying test files, using the smallest confident
 evidence set available from changed files, delta specs, and completed tasks,
 using the CLI audit command when available.
+
+`spec-driven-review` SHOULD also call out primary implementation or directly
+verifying test files from the reviewed change that are not mapped by any main
+spec when that omission would mislead future maintenance.
+
+If the unmapped file is central to the reviewed change's behavior or direct test
+evidence, `spec-driven-review` SHOULD report it as MUST FIX. If the unmapped
+file is outside the reviewed change scope or only weakly related, it SHOULD be
+reported separately as SHOULD FIX or repository debt.
 
 If review finds that a mapping would mislead a future maintainer about where the
 behavior is implemented or verified, it SHOULD report that as at least a SHOULD

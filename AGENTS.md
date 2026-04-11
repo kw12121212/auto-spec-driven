@@ -71,6 +71,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `verify <name>` | change name | stdout: JSON `{valid, warnings[], errors[]}` |
 | `verify-spec-mappings [path]` | optional path | stdout: JSON `{valid, warnings[], errors[]}` for spec frontmatter mapping validation |
 | `audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]` | one spec path plus explicit evidence paths | stdout: JSON coverage comparison between mapping and provided evidence |
+| `audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` | explicit candidate evidence paths | stdout: JSON unmapped candidate comparison against all main-spec mappings |
 | `verify-roadmap [path]` | optional path | stdout: JSON `{valid, warnings[], errors[], milestones[]}` for roadmap milestone validation |
 | `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
 | `cancel <name>` | change name | deletes `.spec-driven/changes/<name>/` |
@@ -79,7 +80,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `migrate [path]` | optional path | migrates `openspec/` artifacts to auto-spec-driven where supported |
 | `list` | none | stdout: all changes (active with status, archived) |
 
-All subcommands exit `0` on success, `1` on error (except `verify`, `verify-spec-mappings`, `audit-spec-mapping-coverage`, and `verify-roadmap`, which always exit `0` and report errors in JSON).
+All subcommands exit `0` on success, `1` on error (except `verify`, `verify-spec-mappings`, `audit-spec-mapping-coverage`, `audit-unmapped-spec-evidence`, and `verify-roadmap`, which always exit `0` and report errors in JSON).
 
 ## The .spec-driven/ Workflow
 

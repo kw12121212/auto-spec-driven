@@ -70,6 +70,13 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    Use the evidence set you built as the explicit `--implementation` and `--tests` inputs.
 
+   Also run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]
+   ```
+   Use the same evidence set to identify implementation or test files that are
+   not mapped by any main spec.
+
 7. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
      - Does the implementation match what was proposed?
      - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
@@ -85,6 +92,13 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
        the ambiguity instead of inventing semantic coverage.
      - Report repo-wide structural mapping errors from `verify-spec-mappings`
        separately from change-local mapping omissions.
+     - If the unmapped-evidence audit shows that a primary implementation file
+       or directly verifying test file from this change is not mapped by any
+       main spec, report that as CRITICAL when the gap leaves this change's spec
+       coverage incomplete.
+     - If the unmapped-evidence audit only finds files outside this change scope
+       or weakly related candidates, report them separately as REPO DEBT or
+       lower-confidence WARNINGs.
      - If config.yaml has a `rules` field (including any `fileMatch` entries), check whether the implementation and artifacts comply — violations are WARNINGs
      - If proposal.md has an **Unchanged Behavior** section with content, verify the implementation has not violated any listed behaviors — violations are CRITICALs
      - Flag misalignments as WARNINGs or CRITICALs

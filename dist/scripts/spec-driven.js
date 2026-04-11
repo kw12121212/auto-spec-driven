@@ -391,6 +391,9 @@ switch (command) {
     case "audit-spec-mapping-coverage":
         auditSpecMappingCoverage();
         break;
+    case "audit-unmapped-spec-evidence":
+        auditUnmappedSpecEvidence();
+        break;
     case "verify-roadmap":
         verifyRoadmap();
         break;
@@ -417,7 +420,7 @@ switch (command) {
         break;
     default:
         console.error("Usage: node spec-driven.js <command> [args]");
-        console.error("Commands: propose, modify, apply, verify, verify-spec-mappings, audit-spec-mapping-coverage, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
+        console.error("Commands: propose, modify, apply, verify, verify-spec-mappings, audit-spec-mapping-coverage, audit-unmapped-spec-evidence, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
         process.exit(1);
 }
 function propose() {
@@ -800,6 +803,70 @@ function auditSpecMappingCoverage() {
         evidence,
         missing,
         extra,
+        warnings,
+        errors,
+    }, null, 2));
+}
+function auditUnmappedSpecEvidence() {
+    const targetDir = process.cwd();
+    const warnings = [];
+    const errors = [];
+    const parsed = parseAuditCoverageArgs(args, errors);
+    const specsDir = path.join(targetDir, ".spec-driven", "specs");
+    if (!fs.existsSync(specsDir) || !fs.statSync(specsDir).isDirectory()) {
+        errors.push(`Missing specs directory: ${path.join(".spec-driven", "specs")}/`);
+    }
+    const mapped = {
+        implementation: [],
+        tests: [],
+    };
+    if (errors.length === 0) {
+        const excluded = new Set(["INDEX.md", "README.md"]);
+        const specFiles = findMdFiles(specsDir)
+            .filter((file) => !excluded.has(file) && !excluded.has(path.basename(file)))
+            .sort();
+        for (const file of specFiles) {
+            const displayFile = normalizePathForMarkdown(path.join(".spec-driven", "specs", file));
+            const specPath = path.join(specsDir, file);
+            const content = fs.readFileSync(specPath, "utf-8").replace(/\r\n?/g, "\n");
+            const lines = content.split("\n");
+            if (lines[0] !== "---") {
+                errors.push(`${displayFile}: missing mapping frontmatter`);
+                continue;
+            }
+            const closingIndex = lines.findIndex((line, index) => index > 0 && line === "---");
+            if (closingIndex === -1) {
+                errors.push(`${displayFile}: unterminated mapping frontmatter`);
+                continue;
+            }
+            const parsedMapping = parseSpecMappingFrontmatter(displayFile, lines.slice(1, closingIndex), errors);
+            if (!parsedMapping)
+                continue;
+            for (const field of ["implementation", "tests"]) {
+                parsedMapping[field].forEach((mappedPath, index) => {
+                    validateMappedSpecPath(targetDir, displayFile, field, mappedPath, index, errors);
+                });
+                mapped[field].push(...parsedMapping[field]);
+            }
+        }
+    }
+    const candidates = {
+        implementation: dedupePaths(parsed.implementation),
+        tests: dedupePaths(parsed.tests),
+    };
+    const dedupedMapped = {
+        implementation: dedupePaths(mapped.implementation),
+        tests: dedupePaths(mapped.tests),
+    };
+    const unmapped = {
+        implementation: candidates.implementation.filter((item) => !dedupedMapped.implementation.includes(item)),
+        tests: candidates.tests.filter((item) => !dedupedMapped.tests.includes(item)),
+    };
+    console.log(JSON.stringify({
+        valid: errors.length === 0 && unmapped.implementation.length === 0 && unmapped.tests.length === 0,
+        mapped: dedupedMapped,
+        candidates,
+        unmapped,
         warnings,
         errors,
     }, null, 2));

@@ -58,8 +58,11 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - Compare `mapping.implementation` and `mapping.tests` against the change's primary implementation files and directly verifying test files
    - Use the smallest confident evidence set from changed files, delta specs, completed tasks, and mapped files already read
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]` when it helps make the comparison explicit
+   - Run `node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` when it helps confirm whether reviewed implementation or test files are missing from all main-spec mappings
    - Report stale or misleading mappings as at least SHOULD FIX
    - Escalate to MUST FIX when the mismatch would materially mislead future verification or archive readiness
+   - If the unmapped audit shows that a primary implementation file or directly verifying test file for this reviewed change is missing from all main-spec mappings, treat that as MUST FIX
+   - If the unmapped audit only finds files outside this review scope or weakly related candidates, report them separately as SHOULD FIX or repository debt
 
 8. **Output a review report**:
     ```

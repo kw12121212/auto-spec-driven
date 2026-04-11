@@ -89,6 +89,23 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      `/spec-driven-spec-edit`, or a normal change workflow
    - ambiguous mappings that require human input
 
+   For each target spec with a confident candidate mapping, run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]
+   ```
+   Use the candidate implementation and test sets as the explicit evidence
+   inputs. Use the audit output to identify missing and extra mapping entries
+   before presenting the edit.
+
+   Also run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]
+   ```
+   Use the same candidate evidence set to check whether some files are not
+   mapped by any main spec at all. If that happens, decide whether the likely
+   next step is mapping repair for another spec, spec synchronization, direct
+   spec editing, or a normal change workflow.
+
 6. **Present proposed mapping edits** — before editing any file, show the user:
    - each spec file whose frontmatter will change
    - the proposed `mapping.implementation` paths

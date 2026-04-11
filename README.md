@@ -149,7 +149,7 @@ For small, well-scoped changes — single feature, few files, no cross-cutting c
 /spec-driven-auto add user avatar upload
 ```
 
-Runs propose → apply → verify → review → archive with one mandatory proposal checkpoint plus any additional confirmations required by blockers such as open questions or empty-delta archive decisions. For vague scope, suggests brainstorm first, then auto.
+Runs propose → apply → verify → review → archive with one mandatory proposal checkpoint plus any additional confirmations required by blockers such as open questions or empty-delta archive decisions. During verify, it conditionally runs mapping and unmapped-evidence audits when implementation or direct test evidence exists; during review, it reuses that audit result unless the reviewed evidence set changes. For vague scope, suggests brainstorm first, then auto.
 
 ### 2. Simple Task Workflow (Quick Fixes)
 
@@ -390,6 +390,7 @@ node dist/scripts/spec-driven.js apply <name>    # Parse tasks.md → JSON statu
 node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → JSON
 node dist/scripts/spec-driven.js verify-spec-mappings [path]  # Validate spec mapping frontmatter → JSON
 node dist/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]  # Compare one spec's mapping against explicit evidence → JSON
+node dist/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]  # Report candidate files not mapped by any main spec → JSON
 node dist/scripts/spec-driven.js verify-roadmap [path]  # Validate roadmap milestone size/shape → JSON
 node dist/scripts/spec-driven.js roadmap-status [path]  # Compare roadmap milestones against active/archive change state → JSON
 node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/

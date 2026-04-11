@@ -161,6 +161,33 @@ confirmed the resolution.
 - AND it waits for explicit user confirmation instead of continuing
 - AND it does not treat the recommendation itself as question resolution
 
+### Requirement: auto-reuses-verify-and-review-mapping-audits
+When `spec-driven-auto` performs its verify and review phases, it MUST reuse the
+same mapping-audit expectations as `spec-driven-verify` and
+`spec-driven-review` rather than applying a weaker shortcut.
+
+If the current change has no implementation files or test files in its
+change-local evidence set, auto MAY skip the unmapped-evidence audit. If the
+evidence set includes implementation or directly verifying test files, auto
+SHOULD run the unmapped-evidence audit during verify.
+
+During review, auto SHOULD reuse the verify-phase unmapped-audit result unless
+review fixes changed the relevant file set. It SHOULD rerun the unmapped audit
+only when those fixes materially change the implementation or direct test
+evidence under review.
+
+#### Scenario: auto-runs-unmapped-audit-when-implementation-evidence-exists
+- GIVEN `spec-driven-auto` is verifying a change with implementation or direct
+  test evidence
+- WHEN it reaches the verify phase
+- THEN it runs the unmapped-evidence audit before concluding mapping coverage
+
+#### Scenario: auto-reuses-unmapped-audit-during-review
+- GIVEN `spec-driven-auto` already ran the unmapped-evidence audit during verify
+- AND review does not change the relevant implementation or direct test files
+- WHEN it reaches the review phase
+- THEN it reuses the verify-phase audit result instead of rerunning the audit
+
 ### Requirement: auto-stops-on-unfixable-blockers
 If `spec-driven-auto` encounters verification blockers, review MUST FIX issues, or
 archive preconditions it cannot safely resolve automatically, it MUST stop and ask the

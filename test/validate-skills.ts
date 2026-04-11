@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import type { Heading, PhrasingContent, Root, RootContent } from "mdast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -90,23 +91,7 @@ function main(): void {
   const [targetArg] = process.argv.slice(2);
 
   if (!targetArg) {
-    printAndExit(
-      {
-        detected_type: null,
-        errors: [
-          {
-            code: "cli.usage",
-            message: "Usage: node dist/test/validate-skills.js <path-to-markdown>",
-            path: "$",
-          },
-        ],
-        file: "",
-        schema: schemaPath,
-        section_titles: [],
-        valid: false,
-      },
-      1,
-    );
+    validateAllSkills();
     return;
   }
 
@@ -193,6 +178,58 @@ function main(): void {
     baseResult(targetPath, schemaPath, errors, detectedType, sectionTitles),
     errors.length === 0 ? 0 : 1,
   );
+}
+
+function validateAllSkills(): void {
+  const skillsDir = path.resolve("skills");
+  if (!fs.existsSync(skillsDir) || !fs.statSync(skillsDir).isDirectory()) {
+    printAndExit(
+      {
+        detected_type: null,
+        errors: [
+          {
+            code: "skills_dir.missing",
+            message: `Skills directory not found: ${skillsDir}`,
+            path: "$",
+          },
+        ],
+        file: "",
+        schema: path.resolve("test/skill-schema.yaml"),
+        section_titles: [],
+        valid: false,
+      },
+      1,
+    );
+    return;
+  }
+
+  const scriptPath = path.resolve(process.argv[1] ?? "dist/test/validate-skills.js");
+  const skillFiles = fs
+    .readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(skillsDir, entry.name, "SKILL.md"))
+    .filter((skillPath) => fs.existsSync(skillPath))
+    .sort();
+
+  let failed = 0;
+  for (const skillPath of skillFiles) {
+    const result = spawnSync(process.execPath, [scriptPath, skillPath], {
+      encoding: "utf8",
+    });
+    if (result.status !== 0) {
+      failed += 1;
+      process.stdout.write(result.stdout ?? "");
+      process.stderr.write(result.stderr ?? "");
+    }
+  }
+
+  if (failed > 0) {
+    console.error(`Failed ${failed}/${skillFiles.length} skill validation checks.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`Validated ${skillFiles.length} skills.`);
 }
 
 function baseResult(

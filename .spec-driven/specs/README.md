@@ -5,6 +5,14 @@ Specs describe the current state of the system — what it does, not how it was 
 ## Format
 
 ```markdown
+---
+mapping:
+  implementation:
+    - src/example.ts
+  tests:
+    - test/example.test.ts
+---
+
 ### Requirement: <name>
 The system MUST/SHOULD/MAY <observable behavior>.
 
@@ -25,3 +33,7 @@ Group specs by domain area. Use kebab-case directory names (e.g. `core/`, `api/`
 - Write in present tense ("the system does X")
 - Describe observable behavior, not implementation details
 - Keep each spec focused on one area
+- Put related implementation and test file paths in frontmatter mappings, not
+  in requirement prose
+- Use repo-relative paths under `mapping.implementation` and `mapping.tests`
+- Keep mappings at file granularity; do not use line numbers or symbol ranges

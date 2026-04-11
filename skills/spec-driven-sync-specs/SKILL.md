@@ -60,6 +60,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 7. **Edit spec files directly** — for each confirmed gap:
    - edit the corresponding file under `.spec-driven/specs/`
    - add, modify, or remove `### Requirement:` blocks as appropriate
+   - preserve or update `mapping.implementation` and `mapping.tests`
+     frontmatter to match the repository evidence used for the sync
    - describe observable behavior only
    - if no existing category or file fits, create the new file under
      `.spec-driven/specs/` with the correct relative path
@@ -70,6 +72,11 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    This regenerates `.spec-driven/specs/INDEX.md` to reflect the current
    file state.
+
+   If mapping frontmatter changed, also run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings
+   ```
 
 9. **Report final changes** — summarize what was done:
    - which spec files were added, modified, or removed
@@ -87,3 +94,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Do not create a change — edit `.spec-driven/specs/` files directly
 - Do not write a standalone report file; the summary belongs in chat
 - Get explicit user confirmation before editing any spec file
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

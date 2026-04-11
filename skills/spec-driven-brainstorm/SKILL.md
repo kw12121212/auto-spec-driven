@@ -71,6 +71,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      **Alternatives Considered**
    - populate `changes/<name>/specs/` with delta spec files aligned by path with
      the main `.spec-driven/specs/` structure
+   - include `mapping.implementation` and `mapping.tests` frontmatter in delta
+     spec files when related files are knowable from repository context
    - write `tasks.md` with atomic checklist items under `## Implementation`,
      `## Testing`, and `## Verification`
    - make `## Testing` include at least one explicit lint or validation command
@@ -111,3 +113,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
   `questions.md` instead of inventing them
 - After confirmation, follow the same artifact-writing and validation standard as
   `/spec-driven-propose`
+- Keep implementation and test mappings in spec frontmatter, not in requirement
+  prose

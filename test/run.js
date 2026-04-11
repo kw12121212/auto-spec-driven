@@ -482,6 +482,92 @@ function runVerifyRoadmapSection() {
   rmrf(roadmapDir);
 }
 
+function runVerifySpecMappingsSection() {
+  console.log(`\n${BOLD}[1aa] verify-spec-mappings${RESET}`);
+
+  const mappingDir = mktempDir("spec-driven-mappings-");
+  cli(["init", mappingDir]);
+  writeFile(path.join(mappingDir, "src", "app.js"), "export function run() { return 'ok'; }\n");
+  writeFile(path.join(mappingDir, "test", "app.test.js"), "import '../src/app.js';\n");
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "behavior.md"),
+    "---\n" +
+      "mapping:\n" +
+      "  implementation:\n" +
+      "    - src/app.js\n" +
+      "  tests:\n" +
+      "    - test/app.test.js\n" +
+      "---\n\n" +
+      "# Core Behavior\n\n" +
+      "### Requirement: app-runs\n" +
+      "The app MUST run.\n",
+  );
+
+  let out = cli(["verify-spec-mappings", mappingDir]).combined;
+  assertJsonField("verify-spec-mappings accepts valid mappings", "valid", "true", out);
+
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "missing-frontmatter.md"),
+    "# Missing Frontmatter\n\n### Requirement: missing-mapping\nThe system MUST report missing mapping frontmatter.\n",
+  );
+  out = cli(["verify-spec-mappings", mappingDir]).combined;
+  assertJsonField("verify-spec-mappings rejects missing frontmatter", "valid", "false", out);
+  assertContains("verify-spec-mappings reports missing frontmatter file", "missing-frontmatter.md", out);
+  rmrf(path.join(mappingDir, ".spec-driven", "specs", "core", "missing-frontmatter.md"));
+
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "invalid-field.md"),
+    "---\n" +
+      "mapping:\n" +
+      "  implementation: src/app.js\n" +
+      "  tests: []\n" +
+      "---\n\n" +
+      "# Invalid Field\n\n" +
+      "### Requirement: invalid-mapping-field\n" +
+      "The system MUST report invalid mapping fields.\n",
+  );
+  out = cli(["verify-spec-mappings", mappingDir]).combined;
+  assertJsonField("verify-spec-mappings rejects invalid mapping field", "valid", "false", out);
+  assertContains("verify-spec-mappings reports implementation array error", "mapping.implementation must be an array", out);
+  rmrf(path.join(mappingDir, ".spec-driven", "specs", "core", "invalid-field.md"));
+
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "non-string-entry.md"),
+    "---\n" +
+      "mapping:\n" +
+      "  implementation:\n" +
+      "    - 123\n" +
+      "  tests: []\n" +
+      "---\n\n" +
+      "# Non-string Entry\n\n" +
+      "### Requirement: non-string-mapping-entry\n" +
+      "The system MUST report non-string mapping entries.\n",
+  );
+  out = cli(["verify-spec-mappings", mappingDir]).combined;
+  assertJsonField("verify-spec-mappings rejects non-string mapping entry", "valid", "false", out);
+  assertContains("verify-spec-mappings reports string path error", "entries must be string file paths", out);
+  rmrf(path.join(mappingDir, ".spec-driven", "specs", "core", "non-string-entry.md"));
+
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "missing-path.md"),
+    "---\n" +
+      "mapping:\n" +
+      "  implementation:\n" +
+      "    - src/missing.js\n" +
+      "  tests:\n" +
+      "    - test/app.test.js\n" +
+      "---\n\n" +
+      "# Missing Path\n\n" +
+      "### Requirement: missing-mapped-path\n" +
+      "The system MUST report missing mapped files.\n",
+  );
+  out = cli(["verify-spec-mappings", mappingDir]).combined;
+  assertJsonField("verify-spec-mappings rejects missing mapped file", "valid", "false", out);
+  assertContains("verify-spec-mappings identifies missing path", "src/missing.js", out);
+
+  rmrf(mappingDir);
+}
+
 function runInstallSection() {
   console.log(`\n${BOLD}[1b] install${RESET}`);
 
@@ -529,6 +615,17 @@ function runInstallSection() {
     pass("install links sync-specs skill for codex");
   } else {
     fail("install missing sync-specs symlink for codex");
+  }
+
+  assertContains("install reports remap-specs skill copy", "copied: spec-driven-remap-specs/", out);
+  assertFileExists(
+    "install copies remap-specs skill into agent store",
+    path.join(installHome, ".auto-spec-driven", "skills", "spec-driven-remap-specs", "SKILL.md"),
+  );
+  if (isSymlink(path.join(installHome, ".agents", "skills", "spec-driven-remap-specs"))) {
+    pass("install links remap-specs skill for codex");
+  } else {
+    fail("install missing remap-specs symlink for codex");
   }
 
   assertContains("install reports roadmap-plan skill copy", "copied: roadmap-plan/", out);
@@ -640,6 +737,7 @@ function runMigrateSection() {
   assertFileExists("migrate adds config.yaml", path.join(migrateDir, ".spec-driven", "config.yaml"));
   assertDirExists("migrate adds claude brainstorm skill", path.join(migrateDir, ".claude", "skills", "spec-driven-brainstorm"));
   assertDirExists("migrate adds claude spec-driven skill", path.join(migrateDir, ".claude", "skills", "spec-driven-propose"));
+  assertDirExists("migrate adds claude remap-specs skill", path.join(migrateDir, ".claude", "skills", "spec-driven-remap-specs"));
   assertNotExists("migrate removes claude openspec skill", path.join(migrateDir, ".claude", "skills", "openspec-propose"));
   assertNotExists("migrate removes claude commands", path.join(migrateDir, ".claude", "commands", "opsx"));
   assertDirExists("migrate adds opencode brainstorm skill", path.join(migrateDir, ".opencode", "skills", "spec-driven-brainstorm"));
@@ -1047,6 +1145,7 @@ function main() {
   runValidateSkillsSection();
   runInitSection();
   runVerifyRoadmapSection();
+  runVerifySpecMappingsSection();
   runInstallSection();
   runMigrateSection();
   runMaintenanceSection();

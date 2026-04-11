@@ -31,6 +31,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 4. **Assess spec impact** — after completing the task, evaluate whether the work affected any specs:
    - **No spec impact** — the task is complete, log it
    - **Spec drift detected** — suggest `/spec-driven-sync-specs` or `/spec-driven-spec-edit`
+   - **Mapping drift detected** — suggest `/spec-driven-remap-specs`
    - **New change need discovered** — suggest `/spec-driven-propose` or `/spec-driven-brainstorm`
    - You MUST NOT automatically invoke other skills. Suggestions are advisory only.
 

@@ -51,11 +51,15 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 6. **Populate specs/ delta files** — look at the project's `.spec-driven/specs/` directory structure. For each spec file that this change touches, create a corresponding file under `.spec-driven/changes/<name>/specs/` mirroring the same relative path (e.g. `specs/auth/login.md` → `changes/<name>/specs/auth/login.md`). If the change introduces a new spec area, create the new relative path that should exist under `.spec-driven/specs/` after archive.
 
    Each delta file uses ADDED/MODIFIED/REMOVED sections with the standard format:
+   - YAML frontmatter with `mapping.implementation` and `mapping.tests` when
+     related files are knowable from repository context
    - `### Requirement: <name>` headings and RFC 2119 keywords (MUST/SHOULD/MAY)
    - `#### Scenario:` blocks (GIVEN/WHEN/THEN) where helpful
    - **ADDED**: new requirements; **MODIFIED**: changed requirements (include `Previously:` note); **REMOVED**: removed requirements (include reason)
    - Omit sections that don't apply — do not leave empty sections
    - If this change has no observable spec impact, leave `changes/<name>/specs/` empty — do not create a prose-only file that breaks the delta spec format
+   - Do not invent mapping paths when the related implementation or test files
+     are not clear; leave mapping completion to `/spec-driven-apply`
 
 7. **Fill tasks.md** — write a concrete implementation checklist:
    - Use `- [ ]` checkboxes for every task
@@ -95,3 +99,4 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Do not add a post-proposal confirmation gate once the artifacts are written
 - Open questions are allowed at proposal handoff time; leave them in `questions.md` for `/spec-driven-apply` to surface and block on
 - Before finishing, rerun `verify` until all repairable format issues are fixed; if any non-question error remains, report it to the user
+- Keep spec-code mappings in frontmatter, not in requirement prose

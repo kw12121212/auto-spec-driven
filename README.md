@@ -1,6 +1,6 @@
 # spec-driven
 
-A lightweight spec-driven development framework: 16 agent skills + thin TypeScript scaffolding.
+A lightweight spec-driven development framework: 20 agent skills + thin TypeScript scaffolding.
 
 **[中文说明](README.zh.md)**
 
@@ -14,7 +14,10 @@ Instead of reading the entire codebase to understand what the system does, the A
 
 - `INDEX.md` navigates the full spec collection at a glance
 - Each spec file describes observable behavior using RFC 2119 format (`### Requirement:`, GIVEN/WHEN/THEN scenarios)
-- `brainstorm`, `propose`, `apply`, `modify`, and `sync-specs` are required to read INDEX.md and the relevant spec files before generating anything
+- `brainstorm`, `propose`, `apply`, `modify`, `sync-specs`, and `remap-specs` are required to read INDEX.md and the relevant spec files before generating anything
+- Spec files can declare related implementation and test files in frontmatter
+  mappings, so agents can load the right code context without embedding
+  implementation details in requirement prose
 
 This prevents the AI from introducing conflicting or duplicate behavior — it knows what already exists.
 
@@ -44,7 +47,7 @@ Every change is a folder with five files, each serving a distinct purpose:
 | `tasks.md` | `- [ ]` checklist | Controls pace — one task at a time, marked complete immediately |
 | `questions.md` | Open/resolved Q&A | Centralizes ambiguities; propose may leave questions open, apply surfaces them as a structured blocker, and unresolved questions still block verify/archive |
 
-### Layer 4: 16 skills — explicit constraints on AI behavior
+### Layer 4: 20 skills — explicit constraints on AI behavior
 
 Each skill is a precise prompt that specifies:
 - Exactly which files to read (no vague "read the codebase")
@@ -61,6 +64,7 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | AI expands scope | `proposal.md` defines explicit scope; `tasks.md` controls steps |
 | AI does too much at once | `apply` enforces one task at a time, marked immediately |
 | Specs drift from code over time | Delta specs travel with each change; archive force-merges them back |
+| Spec-code relationships are unclear | Spec frontmatter maps each spec file to implementation and test files |
 | Past decisions are lost | `design.md` records rationale; `archive/` preserves the full change history |
 | Spec quality is inconsistent | RFC 2119 + Requirement/Scenario format enforced; violations are errors, not warnings |
 
@@ -77,7 +81,7 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 | Delta spec structure | Mirrors `specs/` by path — `changes/<name>/specs/auth/login.md` maps to `specs/auth/login.md` | Not path-bound |
 | Archive spec merge | Hard gate: merge each delta file by path into main `specs/` using ADDED/MODIFIED/REMOVED markers before moving | Specs updated on archive, no formal merge gate |
 | Ambiguity tracking | `questions.md` centralizes open questions; propose can hand off with them, apply blocks on them with structured guidance, and unresolved questions still block verify/archive | Not built in |
-| Runtime dependencies | Node.js stdlib only — one ~640-line TypeScript file | Global npm package (`npm install -g @fission-ai/openspec`, Node 20.19+) |
+| Runtime dependencies | Node.js stdlib only — one TypeScript CLI file | Global npm package (`npm install -g @fission-ai/openspec`, Node 20.19+) |
 | Project-level AI rules | `config.yaml` rules injected into every skill prompt | None |
 | Philosophy | Enforcement over flexibility — constraints are the point | Fluid, iterative, easy, scalable |
 | Tool support | Any Agent Skills-compatible CLI (Claude Code, OpenCode, Trae, Codex, Gemini CLI) | 20+ AI assistants |
@@ -251,7 +255,7 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 6. **review** — review the completed change for code quality before archive
 7. **archive** — AI merges delta specs into `specs/` by file path and updates INDEX.md; the archive script then moves the change into `archive/`
 
-Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-edit** to directly create or modify main spec files outside the change workflow. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **cancel** to abandon a change.
+Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-edit** to directly create or modify main spec files outside the change workflow. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **remap-specs** when old specs need mapping frontmatter added or corrected. Use **cancel** to abandon a change.
 
 ## Skills
 
@@ -264,6 +268,7 @@ Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-pr
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-spec-edit` | Directly create or modify individual main spec files under `.spec-driven/specs/` (confirm before writing) |
 | `/spec-driven-sync-specs` | Scan code and existing specs for drift, create a dedicated spec-only change, and report the gaps in chat |
+| `/spec-driven-remap-specs` | Retrofit or repair spec frontmatter mappings between specs, implementation files, and test files |
 | `/roadmap-plan` | Create or restructure `.spec-driven/roadmap/` into milestone files with explicit stage goals |
 | `/roadmap-milestone` | Refine one milestone's goal, planned changes, risks, and derived status |
 | `/roadmap-recommend` | Recommend the next roadmap-backed change, then after confirmation scaffold it directly and offer an explicit `apply` vs `auto` execution handoff |
@@ -347,6 +352,14 @@ continue refining.
 ## Spec Format
 
 ```markdown
+---
+mapping:
+  implementation:
+    - src/example.ts
+  tests:
+    - test/example.test.ts
+---
+
 ### Requirement: <name>
 The system MUST/SHOULD/MAY <observable behavior>.
 
@@ -360,6 +373,10 @@ The system MUST/SHOULD/MAY <observable behavior>.
 
 Delta specs use `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`. At archive time each delta file is merged into its corresponding main spec file by matching `### Requirement: <name>`.
 
+Mapping frontmatter uses repo-relative file paths. Keep implementation files
+under `mapping.implementation` and test files under `mapping.tests`; do not put
+those paths inside requirement prose.
+
 ## Scripts
 
 Scripts handle filesystem mechanics only — skills handle intelligent content.
@@ -369,6 +386,7 @@ node dist/scripts/spec-driven.js propose <name>  # Create change scaffold
 node dist/scripts/spec-driven.js modify [name]   # List changes or show artifact paths
 node dist/scripts/spec-driven.js apply <name>    # Parse tasks.md → JSON status
 node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → JSON
+node dist/scripts/spec-driven.js verify-spec-mappings [path]  # Validate spec mapping frontmatter → JSON
 node dist/scripts/spec-driven.js verify-roadmap [path]  # Validate roadmap milestone size/shape → JSON
 node dist/scripts/spec-driven.js roadmap-status [path]  # Compare roadmap milestones against active/archive change state → JSON
 node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/

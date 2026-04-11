@@ -55,6 +55,10 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 
 6. **Apply the changes** — after confirmation:
    - Edit the target spec file(s) under `.spec-driven/specs/`
+   - Preserve existing `mapping.implementation` and `mapping.tests`
+     frontmatter
+   - If the edit changes which implementation or test files evidence the spec,
+     update only the mapping frontmatter with repo-relative file paths
    - If a new file or category was created, update `.spec-driven/specs/INDEX.md`
    - For removals, delete the exact `### Requirement:` heading(s) cleanly — do
      not leave orphaned headings or vague remnants
@@ -62,8 +66,11 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 7. **Validate the result** — after editing, verify:
    - Each edited file still follows the standard `### Requirement:` heading
      format
+   - Edited files still have valid mapping frontmatter
    - `INDEX.md` correctly reflects all spec files under `.spec-driven/specs/`
    - If format issues are found, fix them immediately
+   Run `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings` when
+   mapping frontmatter changed.
 
 8. **Summarize** — tell the user:
    - which file(s) were changed
@@ -79,3 +86,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Describe observable behavior only, not implementation details
 - Do not implement product code — this skill edits planning artifacts only
 - Do not create or interact with `.spec-driven/changes/`
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

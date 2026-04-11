@@ -34,8 +34,12 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - `.spec-driven/changes/<name>/tasks.md` — what was implemented
    - `.spec-driven/changes/<name>/questions.md` — resolved answers that may explain decisions or tradeoffs
    - `.spec-driven/config.yaml` — project context and rules (including `test` rules and any `fileMatch` entries)
+   - mapping frontmatter from relevant main and delta spec files
 
-4. **Identify changed files** — from the completed tasks, determine which files were created or modified. Read each file fully.
+4. **Identify changed files** — from the completed tasks and mapping
+   frontmatter, determine which files were created or modified. Read each file
+   fully, including mapped implementation and test files for the relevant spec
+   files.
 
 5. **Review code quality** — for each changed file, check:
    - **Readability**: clear naming, reasonable function length, no unnecessary complexity
@@ -48,6 +52,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - Do tests cover the key scenarios from the delta specs?
    - Are tests independent and repeatable?
    - Do tests follow `rules.test` from config.yaml?
+   - Are `mapping.tests` entries current and useful for future verification?
 
 7. **Output a review report**:
    ```
@@ -74,3 +79,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - NITS = naming suggestions, minor simplifications, documentation gaps
 - Do not re-review code that was not changed by this change
 - Respect config.yaml rules — violations of project rules are SHOULD FIX at minimum
+- Report stale or misleading spec mappings when they would make future
+  verification unreliable

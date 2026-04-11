@@ -43,7 +43,7 @@ const INIT_CONFIG_YAML = [
   "",
 ].join("\n");
 const INIT_INDEX_MD = "# Specs Index\n";
-const INIT_README_MD = `# Specs\n\nSpecs describe the current state of the system — what it does, not how it was built.\n\n## Format\n\n\`\`\`markdown\n### Requirement: <name>\nThe system MUST/SHOULD/MAY <observable behavior>.\n\n#### Scenario: <name>\n- GIVEN <precondition>\n- WHEN <action>\n- THEN <expected outcome>\n\`\`\`\n\n**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).\n\n## Organization\n\nGroup specs by domain area. Use kebab-case directory names (e.g. \`core/\`, \`api/\`, \`auth/\`).\n\n## Conventions\n\n- Write in present tense ("the system does X")\n- Describe observable behavior, not implementation details\n- Keep each spec focused on one area\n`;
+const INIT_README_MD = `# Specs\n\nSpecs describe the current state of the system — what it does, not how it was built.\n\n## Format\n\n\`\`\`markdown\n---\nmapping:\n  implementation:\n    - src/example.ts\n  tests:\n    - test/example.test.ts\n---\n\n### Requirement: <name>\nThe system MUST/SHOULD/MAY <observable behavior>.\n\n#### Scenario: <name>\n- GIVEN <precondition>\n- WHEN <action>\n- THEN <expected outcome>\n\`\`\`\n\n**Keywords**: MUST = required, SHOULD = recommended, MAY = optional (RFC 2119).\n\n## Organization\n\nGroup specs by domain area. Use kebab-case directory names (e.g. \`core/\`, \`api/\`, \`auth/\`).\n\n## Conventions\n\n- Write in present tense ("the system does X")\n- Describe observable behavior, not implementation details\n- Keep each spec focused on one area\n- Put related implementation and test file paths in frontmatter mappings, not in requirement prose\n- Use repo-relative paths under \`mapping.implementation\` and \`mapping.tests\`\n- Keep mappings at file granularity; do not use line numbers or symbol ranges\n`;
 const INIT_ROADMAP_INDEX_MD = "# Roadmap Index\n\n## Milestones\n";
 
 type DeclaredRoadmapStatus = (typeof DECLARED_ROADMAP_STATUSES)[number];
@@ -81,6 +81,8 @@ type PlannedChangeEntry = {
   declaredStatus: DeclaredPlannedChangeStatus;
   summary: string;
 };
+
+type SpecMappingField = "implementation" | "tests";
 
 type RawPlannedChangeEntry = {
   name: string;
@@ -471,6 +473,7 @@ switch (command) {
   case "modify":  modify();  break;
   case "apply":   apply();   break;
   case "verify":  verify();  break;
+  case "verify-spec-mappings": verifySpecMappings(); break;
   case "verify-roadmap": verifyRoadmap(); break;
   case "roadmap-status": roadmapStatus(); break;
   case "archive": archive(); break;
@@ -481,7 +484,7 @@ switch (command) {
   case "list":    list();    break;
   default:
     console.error("Usage: node spec-driven.js <command> [args]");
-    console.error("Commands: propose, modify, apply, verify, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
+    console.error("Commands: propose, modify, apply, verify, verify-spec-mappings, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
     process.exit(1);
 }
 
@@ -798,6 +801,231 @@ function readTopLevelBulletItems(lines: string[] | undefined): string[] {
   return lines
     .map((line) => line.match(/^\s{0,3}-\s+(.+)$/)?.[1].trim() ?? "")
     .filter((line) => line.length > 0);
+}
+
+function verifySpecMappings() {
+  const targetDir = args[0] ? path.resolve(args[0]) : process.cwd();
+  const specsDir = path.join(targetDir, ".spec-driven", "specs");
+  const warnings: string[] = [];
+  const errors: string[] = [];
+
+  if (!fs.existsSync(specsDir) || !fs.statSync(specsDir).isDirectory()) {
+    errors.push(`Missing specs directory: ${path.join(".spec-driven", "specs")}/`);
+    console.log(JSON.stringify({ valid: false, warnings, errors }, null, 2));
+    process.exit(0);
+  }
+
+  const excluded = new Set(["INDEX.md", "README.md"]);
+  const specFiles = findMdFiles(specsDir)
+    .filter((file) => !excluded.has(file) && !excluded.has(path.basename(file)))
+    .sort();
+
+  for (const file of specFiles) {
+    validateSpecMappingFile(targetDir, specsDir, file, errors);
+  }
+
+  console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors }, null, 2));
+}
+
+function validateSpecMappingFile(targetDir: string, specsDir: string, file: string, errors: string[]): void {
+  const specPath = path.join(specsDir, file);
+  const content = fs.readFileSync(specPath, "utf-8").replace(/\r\n?/g, "\n");
+  const lines = content.split("\n");
+  const displayFile = normalizePathForMarkdown(path.join(".spec-driven", "specs", file));
+
+  if (lines[0] !== "---") {
+    errors.push(`${displayFile}: missing mapping frontmatter`);
+    return;
+  }
+
+  const closingIndex = lines.findIndex((line, index) => index > 0 && line === "---");
+  if (closingIndex === -1) {
+    errors.push(`${displayFile}: unterminated mapping frontmatter`);
+    return;
+  }
+
+  const frontmatterLines = lines.slice(1, closingIndex);
+  const mapping = parseSpecMappingFrontmatter(displayFile, frontmatterLines, errors);
+  if (!mapping) return;
+
+  for (const field of ["implementation", "tests"] as const) {
+    mapping[field].forEach((mappedPath, index) => {
+      validateMappedSpecPath(targetDir, displayFile, field, mappedPath, index, errors);
+    });
+  }
+}
+
+function parseSpecMappingFrontmatter(
+  displayFile: string,
+  lines: string[],
+  errors: string[],
+): Record<SpecMappingField, string[]> | null {
+  const mapping: Partial<Record<SpecMappingField, string[]>> = {};
+  let sawMapping = false;
+  let currentField: SpecMappingField | null = null;
+  let invalid = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    if (/^mapping:\s*$/.test(line)) {
+      sawMapping = true;
+      currentField = null;
+      continue;
+    }
+
+    if (/^mapping:\s+/.test(line)) {
+      errors.push(`${displayFile}: mapping must be an object with implementation and tests arrays`);
+      invalid = true;
+      continue;
+    }
+
+    if (/^[^\s].*:/.test(line)) {
+      currentField = null;
+      continue;
+    }
+
+    if (!sawMapping) continue;
+
+    const emptyArrayMatch = line.match(/^  (implementation|tests):\s*\[\s*\]\s*$/);
+    if (emptyArrayMatch) {
+      const field = emptyArrayMatch[1] as SpecMappingField;
+      if (mapping[field]) {
+        errors.push(`${displayFile}: mapping.${field} is declared more than once`);
+        invalid = true;
+      }
+      mapping[field] = [];
+      currentField = field;
+      continue;
+    }
+
+    const fieldMatch = line.match(/^  (implementation|tests):\s*$/);
+    if (fieldMatch) {
+      const field = fieldMatch[1] as SpecMappingField;
+      if (mapping[field]) {
+        errors.push(`${displayFile}: mapping.${field} is declared more than once`);
+        invalid = true;
+      }
+      mapping[field] = [];
+      currentField = field;
+      continue;
+    }
+
+    const invalidFieldValueMatch = line.match(/^  (implementation|tests):\s+(.+)$/);
+    if (invalidFieldValueMatch) {
+      errors.push(`${displayFile}: mapping.${invalidFieldValueMatch[1]} must be an array`);
+      invalid = true;
+      currentField = null;
+      continue;
+    }
+
+    const unknownFieldMatch = line.match(/^  ([A-Za-z0-9_-]+):/);
+    if (unknownFieldMatch) {
+      errors.push(`${displayFile}: unsupported mapping field '${unknownFieldMatch[1]}'`);
+      invalid = true;
+      currentField = null;
+      continue;
+    }
+
+    const itemMatch = line.match(/^    -\s*(.*)$/);
+    if (itemMatch) {
+      if (!currentField) {
+        errors.push(`${displayFile}: mapping item appears before implementation or tests field`);
+        invalid = true;
+        continue;
+      }
+
+      const rawValue = itemMatch[1].trim();
+      if (looksLikeNonStringYamlScalar(rawValue)) {
+        errors.push(`${displayFile}: mapping.${currentField} entries must be string file paths`);
+        invalid = true;
+        continue;
+      }
+
+      const value = unquoteYamlScalar(rawValue);
+      if (!value) {
+        errors.push(`${displayFile}: mapping.${currentField} contains an empty path`);
+        invalid = true;
+        continue;
+      }
+
+      mapping[currentField]!.push(value);
+      continue;
+    }
+
+    errors.push(`${displayFile}: invalid mapping frontmatter line '${trimmed}'`);
+    invalid = true;
+  }
+
+  if (!sawMapping) {
+    errors.push(`${displayFile}: missing mapping frontmatter`);
+    return null;
+  }
+
+  for (const field of ["implementation", "tests"] as const) {
+    if (!mapping[field]) {
+      errors.push(`${displayFile}: missing mapping.${field} array`);
+      invalid = true;
+    }
+  }
+
+  return invalid ? null : {
+    implementation: mapping.implementation!,
+    tests: mapping.tests!,
+  };
+}
+
+function unquoteYamlScalar(value: string): string {
+  const singleQuoted = value.match(/^'(.*)'$/);
+  if (singleQuoted) return singleQuoted[1];
+  const doubleQuoted = value.match(/^"(.*)"$/);
+  if (doubleQuoted) return doubleQuoted[1];
+  return value;
+}
+
+function looksLikeNonStringYamlScalar(value: string): boolean {
+  return /^(?:true|false|null|~)$/i.test(value)
+    || /^[-+]?(?:\d+|\d+\.\d+)$/.test(value)
+    || /^[\[{]/.test(value);
+}
+
+function validateMappedSpecPath(
+  targetDir: string,
+  displayFile: string,
+  field: SpecMappingField,
+  mappedPath: string,
+  index: number,
+  errors: string[],
+): void {
+  const fieldPath = `mapping.${field}[${index}]`;
+  const normalized = mappedPath.split("\\").join("/");
+  if (path.isAbsolute(normalized)) {
+    errors.push(`${displayFile}: ${fieldPath} must be repo-relative, got '${mappedPath}'`);
+    return;
+  }
+
+  const parts = normalized.split("/");
+  if (!normalized || parts.some((part) => part === "" || part === "." || part === "..")) {
+    errors.push(`${displayFile}: ${fieldPath} must be a normalized repo-relative file path, got '${mappedPath}'`);
+    return;
+  }
+
+  const resolved = path.resolve(targetDir, normalized);
+  const relativeToTarget = path.relative(targetDir, resolved);
+  if (relativeToTarget.startsWith("..") || path.isAbsolute(relativeToTarget)) {
+    errors.push(`${displayFile}: ${fieldPath} must not escape the repository, got '${mappedPath}'`);
+    return;
+  }
+
+  if (!fs.existsSync(resolved)) {
+    errors.push(`${displayFile}: ${fieldPath} references missing file '${mappedPath}'`);
+    return;
+  }
+
+  if (!fs.statSync(resolved).isFile()) {
+    errors.push(`${displayFile}: ${fieldPath} must reference a file, got '${mappedPath}'`);
+  }
 }
 
 function parseRawPlannedChangeEntry(line: string): RawPlannedChangeEntry | null {

@@ -24,6 +24,7 @@ Explicitly distinguish script work from AI work when you run this skill.
 - Inspect `.spec-driven/changes/<name>/specs/`, merge delta specs into `.spec-driven/specs/`, and remove emptied main spec files when required by `REMOVED`
 - Ask for explicit confirmation if the change has no delta specs
 - Update `.spec-driven/specs/INDEX.md` to reflect created or deleted main spec files
+- Preserve or apply spec mapping frontmatter during spec merges
 - Summarize the merged spec impact, any roadmap status changes caused by archive, and the final archive location
 
 ## Prerequisites
@@ -50,12 +51,16 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      - **ADDED**: append the `### Requirement:` blocks to the target file (create it if it doesn't exist)
      - **MODIFIED**: locate the existing `### Requirement: <name>` block by name and replace it in place
      - **REMOVED**: locate the `### Requirement: <name>` block by name and delete it; remove the file if it becomes empty
+     - If the delta file contains mapping frontmatter, apply that frontmatter
+       to the target main spec file before moving the change to archive
    - Briefly summarize what changed in `specs/` after merging.
 
 4. **Update specs/INDEX.md** — after merging, update `.spec-driven/specs/INDEX.md`:
    - Add entries for any newly created spec files (with a one-line description)
    - Remove entries for any deleted spec files
    - Leave existing entries unchanged unless the file's scope changed
+   - Run `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings` and
+     fix mapping frontmatter errors before archive closeout
 
 5. **Archive the change** — run:
    ```
@@ -79,3 +84,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - If `changes/<name>/specs/` is empty, require explicit human confirmation that the change has no observable spec impact
 - Deleting requirements or empty spec files in `.spec-driven/specs/` is allowed when applying `REMOVED` delta entries
 - Do not delete the change directory manually — archive the change by running the archive command
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

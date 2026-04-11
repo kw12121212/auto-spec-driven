@@ -36,6 +36,9 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - `.spec-driven/config.yaml` — project context; treat `rules` as binding constraints; if `fileMatch` entries are present, apply matching rules when editing files whose paths match the glob pattern
    - `.spec-driven/specs/INDEX.md` — identifies all existing spec files
    - Every spec file in INDEX.md that is relevant to this change — read full content to understand current requirements before writing code
+   - Mapping frontmatter in relevant main and delta spec files; use
+     `mapping.implementation` and `mapping.tests` as starting context for files
+     to inspect
 
 3. **Check task status** — run:
    ```
@@ -67,6 +70,9 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 6. **Update delta specs** — after all tasks are done, re-read each file in `changes/<name>/specs/` and verify it accurately reflects what was actually implemented:
    - If the implementation diverged from the original plan, update the affected files
    - If additional spec files need to be created or modified, do so now
+   - Update delta spec mapping frontmatter so `mapping.implementation` and
+     `mapping.tests` list the actual implementation and test files changed or
+     relied on
 
 7. **On completion** — when all tasks are done and delta spec is accurate:
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js apply <name>` again to confirm 0 remaining
@@ -80,3 +86,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Do not implement tasks that are already marked `- [x]`
 - Open questions require explicit user resolution before implementation starts
 - Recommendations do not count as resolved answers until the user confirms them
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

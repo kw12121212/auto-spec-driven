@@ -99,6 +99,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       **Alternatives Considered**
     - populate `changes/<name>/specs/` with delta spec files aligned by path with
       the main `.spec-driven/specs/` structure
+    - include mapping frontmatter in delta spec files when implementation and
+      test paths are knowable from repository context
     - write `tasks.md` with atomic checklist items under `## Implementation`,
       `## Testing`, and `## Verification`
     - make `## Testing` include at least one explicit lint or validation command
@@ -146,3 +148,5 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
   `/roadmap-propose`
 - Do not let a sub-agent scaffold the change or own the recommendation
   checkpoint
+- Keep implementation and test mappings in spec frontmatter, not in requirement
+  prose

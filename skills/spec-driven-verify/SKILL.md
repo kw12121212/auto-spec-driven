@@ -31,6 +31,13 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      test coverage, or required testing tasks that do not name explicit runnable
      commands
 
+   Also run:
+   ```
+   node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings
+   ```
+   Treat malformed spec mapping frontmatter, missing mapping fields, or missing
+   mapped files as CRITICAL findings for affected main specs.
+
 3. **Task completion check** — run:
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js apply <name>
@@ -51,6 +58,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
    - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.
    - Do the delta files use the standard format (`### Requirement: <name>`, RFC 2119 keywords, `#### Scenario:` blocks)? Non-conforming format is a CRITICAL — the spec format is mandatory.
+   - Do touched spec files map to the implementation and test files that
+     provide evidence for the completed behavior?
    - If config.yaml has a `rules` field (including any `fileMatch` entries), check whether the implementation and artifacts comply — violations are WARNINGs
    - If proposal.md has an **Unchanged Behavior** section with content, verify the implementation has not violated any listed behaviors — violations are CRITICALs
    - Flag misalignments as WARNINGs or CRITICALs
@@ -77,3 +86,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - CRITICALs are things that would make the change incorrect or incomplete
 - WARNINGs are things that reduce confidence but don't necessarily block
 - SUGGESTIONs are optional quality improvements
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

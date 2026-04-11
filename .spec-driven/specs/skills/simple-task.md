@@ -1,3 +1,11 @@
+---
+mapping:
+  implementation:
+    - skills/spec-driven-simple-task/SKILL.md
+  tests:
+    - test/validate-skills.ts
+---
+
 # Skills Simple Task
 
 ### Requirement: simple-task-assesses-scope-before-executing

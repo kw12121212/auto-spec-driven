@@ -1,3 +1,13 @@
+---
+mapping:
+  implementation:
+    - skills/spec-driven-maintenance/SKILL.md
+    - scripts/spec-driven.ts
+  tests:
+    - test/run.js
+    - test/validate-skills.ts
+---
+
 # Skills Maintenance
 
 ### Requirement: manual-maintenance-uses-configured-checks

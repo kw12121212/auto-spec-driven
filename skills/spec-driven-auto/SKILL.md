@@ -66,6 +66,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - If there are blockers you can safely fix, fix them automatically, then rerun both the script check and the verification pass
    - If any blocker cannot be auto-fixed: stop and ask the user
    - Re-read delta spec files and update them to match what was actually implemented
+   - Ensure delta spec mapping frontmatter reflects the implementation and test
+     files actually changed or relied on
 
 6. **Review** — check code quality:
    - Read every file changed by this change
@@ -79,6 +81,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
     - List all delta files in `specs/` and merge each into the corresponding main spec file
     - If `changes/<name>/specs/` is empty, ask the user to confirm this change has no observable spec impact before continuing
     - Update `.spec-driven/specs/INDEX.md` if new spec files were created
+    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings`
+      after merging mapping frontmatter into main specs
     - Run `node {{SKILL_DIR}}/scripts/spec-driven.js archive <name>`
     - If `.spec-driven/roadmap/` exists, treat any milestone declared status or roadmap index updates performed by the archive command as part of archive closeout
     - Report the final result: what was built, files changed, tests passing, archive location, and any roadmap status changes caused by archive
@@ -93,3 +97,5 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - If anything goes wrong mid-flow, stop and explain — do not silently continue
 - Mark tasks complete one at a time, not in bulk
 - Recommended answers do not count as question resolution without explicit user confirmation
+- Keep implementation and test mappings in frontmatter, not in requirement
+  prose

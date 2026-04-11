@@ -1,3 +1,17 @@
+---
+mapping:
+  implementation:
+    - skills/roadmap-plan/SKILL.md
+    - skills/roadmap-milestone/SKILL.md
+    - skills/roadmap-recommend/SKILL.md
+    - skills/roadmap-propose/SKILL.md
+    - skills/roadmap-sync/SKILL.md
+    - scripts/spec-driven.ts
+  tests:
+    - test/run.js
+    - test/validate-skills.ts
+---
+
 # Skills Roadmap
 
 ### Requirement: roadmap-assets-live-under-spec-driven-roadmap

@@ -66,6 +66,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
       those commands are knowable from repository context
     - `questions.md`
     - delta specs under `changes/<name>/specs/`
+    - mapping frontmatter in delta spec files when implementation and test
+      paths are knowable from repository context
     Use the roadmap milestone as planning input, but treat the selected planned
     change as a single-line item and derive any extra context from the milestone
     sections rather than multiline planned change detail.
@@ -88,6 +90,8 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 - This skill creates planning artifacts only — do not implement product code
 - Only turn `Planned Changes` into change scaffolds
 - Create the same five artifacts as `spec-driven-propose`
+- Keep implementation and test mappings in spec frontmatter, not in requirement
+  prose
 - If testing commands are not knowable from repository context, add an open
   question instead of guessing them
 - Before finishing, rerun `verify` until all repairable format issues are fixed

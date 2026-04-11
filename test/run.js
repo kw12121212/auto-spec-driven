@@ -568,6 +568,65 @@ function runVerifySpecMappingsSection() {
   rmrf(mappingDir);
 }
 
+function runAuditSpecMappingCoverageSection() {
+  console.log(`\n${BOLD}[1ab] audit-spec-mapping-coverage${RESET}`);
+
+  const mappingDir = mktempDir("spec-driven-audit-mappings-");
+  cli(["init", mappingDir]);
+  writeFile(path.join(mappingDir, "src", "app.js"), "export function run() { return 'ok'; }\n");
+  writeFile(path.join(mappingDir, "src", "extra.js"), "export const extra = true;\n");
+  writeFile(path.join(mappingDir, "test", "app.test.js"), "import '../src/app.js';\n");
+  writeFile(
+    path.join(mappingDir, ".spec-driven", "specs", "core", "behavior.md"),
+    "---\n"
+      + "mapping:\n"
+      + "  implementation:\n"
+      + "    - src/app.js\n"
+      + "    - src/extra.js\n"
+      + "  tests: []\n"
+      + "---\n\n"
+      + "# Core Behavior\n\n"
+      + "### Requirement: app-runs\n"
+      + "The app MUST run.\n",
+  );
+
+  let out = cli([
+    "audit-spec-mapping-coverage",
+    ".spec-driven/specs/core/behavior.md",
+    "--implementation", "src/app.js",
+    "--tests", "test/app.test.js",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-spec-mapping-coverage flags missing evidence", "valid", "false", out);
+  assertContains("audit-spec-mapping-coverage reports missing test", '"tests": [\n      "test/app.test.js"', out);
+  assertContains("audit-spec-mapping-coverage reports extra implementation", '"implementation": [\n      "src/extra.js"', out);
+
+  out = cli([
+    "audit-spec-mapping-coverage",
+    ".spec-driven/specs/core/behavior.md",
+    "--implementation", "src/app.js",
+    "--implementation", "src/app.js",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-spec-mapping-coverage dedupes evidence", "valid", "true", out);
+
+  out = cli([
+    "audit-spec-mapping-coverage",
+    ".spec-driven/specs/core/behavior.md",
+    "--implementation",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-spec-mapping-coverage reports missing flag value", "valid", "false", out);
+  assertContains("audit-spec-mapping-coverage explains missing flag value", "missing value for --implementation", out);
+
+  out = cli([
+    "audit-spec-mapping-coverage",
+    ".spec-driven/specs/core/behavior.md",
+    "--implementation", "../escape.js",
+  ], { cwd: mappingDir }).combined;
+  assertJsonField("audit-spec-mapping-coverage rejects escaped evidence path", "valid", "false", out);
+  assertContains("audit-spec-mapping-coverage reports normalized path requirement", "must be a normalized repo-relative file path", out);
+
+  rmrf(mappingDir);
+}
+
 function runInstallSection() {
   console.log(`\n${BOLD}[1b] install${RESET}`);
 
@@ -617,15 +676,15 @@ function runInstallSection() {
     fail("install missing sync-specs symlink for codex");
   }
 
-  assertContains("install reports remap-specs skill copy", "copied: spec-driven-remap-specs/", out);
+  assertContains("install reports resync-code-mapping skill copy", "copied: spec-driven-resync-code-mapping/", out);
   assertFileExists(
-    "install copies remap-specs skill into agent store",
-    path.join(installHome, ".auto-spec-driven", "skills", "spec-driven-remap-specs", "SKILL.md"),
+    "install copies resync-code-mapping skill into agent store",
+    path.join(installHome, ".auto-spec-driven", "skills", "spec-driven-resync-code-mapping", "SKILL.md"),
   );
-  if (isSymlink(path.join(installHome, ".agents", "skills", "spec-driven-remap-specs"))) {
-    pass("install links remap-specs skill for codex");
+  if (isSymlink(path.join(installHome, ".agents", "skills", "spec-driven-resync-code-mapping"))) {
+    pass("install links resync-code-mapping skill for codex");
   } else {
-    fail("install missing remap-specs symlink for codex");
+    fail("install missing resync-code-mapping symlink for codex");
   }
 
   assertContains("install reports roadmap-plan skill copy", "copied: roadmap-plan/", out);
@@ -737,7 +796,7 @@ function runMigrateSection() {
   assertFileExists("migrate adds config.yaml", path.join(migrateDir, ".spec-driven", "config.yaml"));
   assertDirExists("migrate adds claude brainstorm skill", path.join(migrateDir, ".claude", "skills", "spec-driven-brainstorm"));
   assertDirExists("migrate adds claude spec-driven skill", path.join(migrateDir, ".claude", "skills", "spec-driven-propose"));
-  assertDirExists("migrate adds claude remap-specs skill", path.join(migrateDir, ".claude", "skills", "spec-driven-remap-specs"));
+  assertDirExists("migrate adds claude resync-code-mapping skill", path.join(migrateDir, ".claude", "skills", "spec-driven-resync-code-mapping"));
   assertNotExists("migrate removes claude openspec skill", path.join(migrateDir, ".claude", "skills", "openspec-propose"));
   assertNotExists("migrate removes claude commands", path.join(migrateDir, ".claude", "commands", "opsx"));
   assertDirExists("migrate adds opencode brainstorm skill", path.join(migrateDir, ".opencode", "skills", "spec-driven-brainstorm"));
@@ -1146,6 +1205,7 @@ function main() {
   runInitSection();
   runVerifyRoadmapSection();
   runVerifySpecMappingsSection();
+  runAuditSpecMappingCoverageSection();
   runInstallSection();
   runMigrateSection();
   runMaintenanceSection();

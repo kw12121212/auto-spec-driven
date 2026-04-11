@@ -7,7 +7,7 @@ Instructions for AI agents working in this repository.
 `auto-spec-driven` is a lightweight spec-driven development framework. It ships:
 
 - **20 Claude skills** (`skills/*/SKILL.md`) — AI prompts that drive the workflow
-- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 13 subcommands
+- **1 TypeScript CLI** (`scripts/spec-driven.ts`) — filesystem mechanics only (create, move, parse, validate); 14 subcommands
 - **`install.sh`** — installs skills to `~/.auto-spec-driven/skills/` then symlinks into `~/.claude/skills/` / `~/.config/opencode/skills/` / `~/.trae/skills/` / `~/.agents/skills/`
 - **`template/`** — starter `.spec-driven/` directory for target projects, including roadmap/specs/changes scaffold
 - **`test/`** — automated test suite + todo-app fixture for dogfooding
@@ -70,6 +70,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `apply <name>` | change name | stdout: JSON `{total, complete, remaining, tasks}` |
 | `verify <name>` | change name | stdout: JSON `{valid, warnings[], errors[]}` |
 | `verify-spec-mappings [path]` | optional path | stdout: JSON `{valid, warnings[], errors[]}` for spec frontmatter mapping validation |
+| `audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]` | one spec path plus explicit evidence paths | stdout: JSON coverage comparison between mapping and provided evidence |
 | `verify-roadmap [path]` | optional path | stdout: JSON `{valid, warnings[], errors[], milestones[]}` for roadmap milestone validation |
 | `archive <name>` | change name | moves change to `.spec-driven/changes/archive/YYYY-MM-DD-<name>/` |
 | `cancel <name>` | change name | deletes `.spec-driven/changes/<name>/` |
@@ -78,7 +79,7 @@ All subcommands run as `node dist/scripts/spec-driven.js <cmd>` from the project
 | `migrate [path]` | optional path | migrates `openspec/` artifacts to auto-spec-driven where supported |
 | `list` | none | stdout: all changes (active with status, archived) |
 
-All subcommands exit `0` on success, `1` on error (except `verify`, `verify-spec-mappings`, and `verify-roadmap`, which always exit `0` and report errors in JSON).
+All subcommands exit `0` on success, `1` on error (except `verify`, `verify-spec-mappings`, `audit-spec-mapping-coverage`, and `verify-roadmap`, which always exit `0` and report errors in JSON).
 
 ## The .spec-driven/ Workflow
 
@@ -87,7 +88,7 @@ This repo uses its own workflow. To propose a change to this project:
 ```
 /spec-driven-propose   → fills .spec-driven/changes/<name>/
 /spec-driven-spec-edit  → directly create or modify main spec files under .spec-driven/specs/
-/spec-driven-remap-specs → retrofit or repair spec frontmatter mappings to implementation/test files
+/spec-driven-resync-code-mapping → retrofit or repair spec frontmatter mappings to implementation/test files
 /roadmap-plan → creates or restructures .spec-driven/roadmap/ by milestone
 /roadmap-milestone → refines one milestone file
 /roadmap-recommend → recommends the next roadmap-backed change before scaffolding

@@ -13,7 +13,7 @@ mapping:
     - skills/spec-driven-archive/SKILL.md
     - skills/spec-driven-auto/SKILL.md
     - skills/spec-driven-simple-task/SKILL.md
-    - skills/spec-driven-remap-specs/SKILL.md
+    - skills/spec-driven-resync-code-mapping/SKILL.md
     - scripts/spec-driven.ts
   tests:
     - test/run.js

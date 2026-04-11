@@ -14,7 +14,7 @@ AI 不靠通读代码来理解"系统做什么"，而是读 `specs/`：
 
 - `INDEX.md` 一眼导航全部规格文件
 - 每个规格文件用 RFC 2119 格式描述可观测行为（`### Requirement:`、GIVEN/WHEN/THEN 场景）
-- `brainstorm`、`propose`、`apply`、`modify`、`sync-specs` 和 `remap-specs` 都必须先读 INDEX.md 和相关规格文件，才能生成内容或写代码
+- `brainstorm`、`propose`、`apply`、`modify`、`sync-specs` 和 `resync-code-mapping` 都必须先读 INDEX.md 和相关规格文件，才能生成内容或写代码
 - 规格文件可在 frontmatter 中声明相关实现文件和测试文件，帮助 AI
   读取正确代码上下文，同时避免把实现细节写进 requirement 正文
 
@@ -249,7 +249,9 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 7. **archive** — 由 AI 按文件路径将 delta specs 合并进 `specs/` 并更新 INDEX.md；随后由 archive 脚本将 change 移入 `archive/`
 
 需要长期规划时，可用 **roadmap-plan**、**roadmap-milestone**、
-**roadmap-recommend**、**roadmap-propose** 和 **roadmap-sync** 维护 milestone 化 roadmap。用 **roadmap-recommend** 时，会先像 roadmap 专用 brainstorm 一样收敛并推荐下一个 change，确认后直接 scaffold；如果 planned change 已经明确，也可直接用 **roadmap-propose**。中途可用 **modify** 调整任意 artifact，用 **spec-edit** 直接创建或修改主 spec 文件，用 **sync-specs** 把现有代码行为补回规格，用 **remap-specs** 为旧 spec 补齐或修复 frontmatter 映射，用 **cancel** 放弃变更。
+**roadmap-recommend**、**roadmap-propose** 和 **roadmap-sync** 维护 milestone 化 roadmap。用 **roadmap-recommend** 时，会先像 roadmap 专用 brainstorm 一样收敛并推荐下一个 change，确认后直接 scaffold；如果 planned change 已经明确，也可直接用 **roadmap-propose**。中途可用 **modify** 调整任意 artifact，用 **spec-edit** 直接创建或修改主 spec 文件，用 **sync-specs** 把现有代码行为补回规格，用 **resync-code-mapping** 为旧 spec 补齐或修复 frontmatter 映射，用 **cancel** 放弃变更。
+
+职责区分：**resync-code-mapping** 用来修复主 spec 中历史遗留、过期或格式错误的 mapping；**verify** 用来检查当前 change 的 mapping 是否覆盖了本次实现或依赖的实现/测试证据；**review** 用来补抓那些即使 verify 通过、但仍会误导后续维护者的 mapping 问题。
 
 ## 技能列表
 
@@ -262,7 +264,7 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 | `/spec-driven-modify` | 编辑现有变更的某个 artifact |
 | `/spec-driven-spec-edit` | 直接创建或修改 `.spec-driven/specs/` 下的主 spec 文件（修改前需确认） |
 | `/spec-driven-sync-specs` | 扫描代码与现有 specs 的差距，创建一个专用的 spec-only change，并在对话中输出差距摘要 |
-| `/spec-driven-remap-specs` | 为 specs 补齐或修复关联实现文件和测试文件的 frontmatter 映射 |
+| `/spec-driven-resync-code-mapping` | 为 specs 补齐或修复关联实现文件和测试文件的 frontmatter 映射 |
 | `/roadmap-plan` | 创建或重构 `.spec-driven/roadmap/`，按 milestone 组织阶段目标 |
 | `/roadmap-milestone` | 细化单个 milestone 的目标、planned changes、风险与状态 |
 | `/roadmap-recommend` | 基于 roadmap 推荐下一个 change，确认后直接 scaffold，并显式交接到 `apply` 或 `auto` |
@@ -380,6 +382,7 @@ node dist/scripts/spec-driven.js modify [name]   # 列出变更或显示 artifac
 node dist/scripts/spec-driven.js apply <name>    # 解析 tasks.md → JSON 状态
 node dist/scripts/spec-driven.js verify <name>   # 验证 artifact 格式 → JSON
 node dist/scripts/spec-driven.js verify-spec-mappings [path]  # 验证 spec mapping frontmatter → JSON
+node dist/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]  # 用显式证据对比单个 spec 的 mapping → JSON
 node dist/scripts/spec-driven.js verify-roadmap [path]  # 验证 roadmap milestone 结构与大小 → JSON
 node dist/scripts/spec-driven.js roadmap-status [path]  # 对比 roadmap milestone 与 active/archive change 状态 → JSON
 node dist/scripts/spec-driven.js archive <name>  # 移至 archive/YYYY-MM-DD-<name>/

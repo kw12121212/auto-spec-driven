@@ -27,7 +27,7 @@ frontmatter, and outputs JSON. The command should validate structure and path
 existence only. It should not attempt to decide whether a file semantically
 implements or tests a requirement.
 
-Add a `spec-driven-remap-specs` skill for migration and repair. The skill should
+Add a `spec-driven-resync-code-mapping` skill for migration and repair. The skill should
 operate outside the normal change lifecycle, similar to direct spec maintenance:
 it reads `.spec-driven/config.yaml`, `.spec-driven/specs/INDEX.md`, all target
 spec files, runs `verify-spec-mappings`, inspects likely related code and test

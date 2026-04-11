@@ -14,7 +14,7 @@ Instead of reading the entire codebase to understand what the system does, the A
 
 - `INDEX.md` navigates the full spec collection at a glance
 - Each spec file describes observable behavior using RFC 2119 format (`### Requirement:`, GIVEN/WHEN/THEN scenarios)
-- `brainstorm`, `propose`, `apply`, `modify`, `sync-specs`, and `remap-specs` are required to read INDEX.md and the relevant spec files before generating anything
+- `brainstorm`, `propose`, `apply`, `modify`, `sync-specs`, and `resync-code-mapping` are required to read INDEX.md and the relevant spec files before generating anything
 - Spec files can declare related implementation and test files in frontmatter
   mappings, so agents can load the right code context without embedding
   implementation details in requirement prose
@@ -255,7 +255,9 @@ init → [roadmap-plan / roadmap-milestone / roadmap-recommend / roadmap-propose
 6. **review** — review the completed change for code quality before archive
 7. **archive** — AI merges delta specs into `specs/` by file path and updates INDEX.md; the archive script then moves the change into `archive/`
 
-Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-edit** to directly create or modify main spec files outside the change workflow. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **remap-specs** when old specs need mapping frontmatter added or corrected. Use **cancel** to abandon a change.
+Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-propose**, and **roadmap-sync** for persistent milestone planning above the change layer. Use **roadmap-recommend** when you want a roadmap-specific brainstorm that recommends the next change and, after confirmation, scaffolds it directly. Use **roadmap-propose** when the planned change is already chosen and you want to scaffold it immediately. Use **modify** to refine any artifact mid-flight. Use **spec-edit** to directly create or modify main spec files outside the change workflow. Use **sync-specs** when the repository already contains behavior that needs to be reflected back into the specs. Use **resync-code-mapping** when old specs need mapping frontmatter added or corrected. Use **cancel** to abandon a change.
+
+Role split: use **resync-code-mapping** to repair legacy, stale, or malformed main-spec mappings; use **verify** to check whether the current change's mappings cover the implementation and test evidence it introduced or relied on; use **review** to flag mappings that would mislead future maintenance even if verification already passed.
 
 ## Skills
 
@@ -268,7 +270,7 @@ Use **roadmap-plan**, **roadmap-milestone**, **roadmap-recommend**, **roadmap-pr
 | `/spec-driven-modify` | Edit an existing change artifact |
 | `/spec-driven-spec-edit` | Directly create or modify individual main spec files under `.spec-driven/specs/` (confirm before writing) |
 | `/spec-driven-sync-specs` | Scan code and existing specs for drift, create a dedicated spec-only change, and report the gaps in chat |
-| `/spec-driven-remap-specs` | Retrofit or repair spec frontmatter mappings between specs, implementation files, and test files |
+| `/spec-driven-resync-code-mapping` | Retrofit or repair spec frontmatter mappings between specs, implementation files, and test files |
 | `/roadmap-plan` | Create or restructure `.spec-driven/roadmap/` into milestone files with explicit stage goals |
 | `/roadmap-milestone` | Refine one milestone's goal, planned changes, risks, and derived status |
 | `/roadmap-recommend` | Recommend the next roadmap-backed change, then after confirmation scaffold it directly and offer an explicit `apply` vs `auto` execution handoff |
@@ -387,6 +389,7 @@ node dist/scripts/spec-driven.js modify [name]   # List changes or show artifact
 node dist/scripts/spec-driven.js apply <name>    # Parse tasks.md → JSON status
 node dist/scripts/spec-driven.js verify <name>   # Validate artifact format → JSON
 node dist/scripts/spec-driven.js verify-spec-mappings [path]  # Validate spec mapping frontmatter → JSON
+node dist/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]  # Compare one spec's mapping against explicit evidence → JSON
 node dist/scripts/spec-driven.js verify-roadmap [path]  # Validate roadmap milestone size/shape → JSON
 node dist/scripts/spec-driven.js roadmap-status [path]  # Compare roadmap milestones against active/archive change state → JSON
 node dist/scripts/spec-driven.js archive <name>  # Move to archive/YYYY-MM-DD-<name>/

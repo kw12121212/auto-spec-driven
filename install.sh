@@ -8,7 +8,7 @@ SKILLS=(
   spec-driven-modify
   spec-driven-spec-edit
   spec-driven-sync-specs
-  spec-driven-remap-specs
+  spec-driven-resync-code-mapping
   roadmap-plan
   roadmap-milestone
   roadmap-recommend

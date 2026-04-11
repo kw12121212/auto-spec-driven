@@ -388,6 +388,9 @@ switch (command) {
     case "verify-spec-mappings":
         verifySpecMappings();
         break;
+    case "audit-spec-mapping-coverage":
+        auditSpecMappingCoverage();
+        break;
     case "verify-roadmap":
         verifyRoadmap();
         break;
@@ -414,7 +417,7 @@ switch (command) {
         break;
     default:
         console.error("Usage: node spec-driven.js <command> [args]");
-        console.error("Commands: propose, modify, apply, verify, verify-spec-mappings, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
+        console.error("Commands: propose, modify, apply, verify, verify-spec-mappings, audit-spec-mapping-coverage, verify-roadmap, roadmap-status, archive, cancel, init, run-maintenance, migrate, list");
         process.exit(1);
 }
 function propose() {
@@ -728,6 +731,79 @@ function verifySpecMappings() {
     }
     console.log(JSON.stringify({ valid: errors.length === 0, warnings, errors }, null, 2));
 }
+function auditSpecMappingCoverage() {
+    const targetDir = process.cwd();
+    const warnings = [];
+    const errors = [];
+    const specArg = args[0];
+    if (!specArg) {
+        console.error("Usage: node spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]");
+        process.exit(1);
+    }
+    const parsed = parseAuditCoverageArgs(args.slice(1), errors);
+    const specInput = normalizePath(specArg);
+    const specAbsolute = path.resolve(targetDir, specArg);
+    const specRelative = normalizePath(path.relative(targetDir, specAbsolute));
+    if (path.isAbsolute(specArg)) {
+        errors.push(`spec path must be repo-relative, got '${specArg}'`);
+    }
+    else if (!specRelative || specRelative.startsWith("../") || specRelative === "..") {
+        errors.push(`spec path must not escape the repository, got '${specArg}'`);
+    }
+    else if (!fs.existsSync(specAbsolute)) {
+        errors.push(`spec file not found: '${specInput}'`);
+    }
+    else if (!fs.statSync(specAbsolute).isFile()) {
+        errors.push(`spec path must reference a file, got '${specInput}'`);
+    }
+    let mapping = { implementation: [], tests: [] };
+    if (errors.length === 0) {
+        const content = fs.readFileSync(specAbsolute, "utf-8").replace(/\r\n?/g, "\n");
+        const lines = content.split("\n");
+        if (lines[0] !== "---") {
+            errors.push(`${specRelative}: missing mapping frontmatter`);
+        }
+        else {
+            const closingIndex = lines.findIndex((line, index) => index > 0 && line === "---");
+            if (closingIndex === -1) {
+                errors.push(`${specRelative}: unterminated mapping frontmatter`);
+            }
+            else {
+                const parsedMapping = parseSpecMappingFrontmatter(specRelative, lines.slice(1, closingIndex), errors);
+                if (parsedMapping) {
+                    mapping = parsedMapping;
+                    for (const field of ["implementation", "tests"]) {
+                        mapping[field].forEach((mappedPath, index) => {
+                            validateMappedSpecPath(targetDir, specRelative, field, mappedPath, index, errors);
+                        });
+                    }
+                }
+            }
+        }
+    }
+    const evidence = {
+        implementation: dedupePaths(parsed.implementation),
+        tests: dedupePaths(parsed.tests),
+    };
+    const missing = {
+        implementation: evidence.implementation.filter((item) => !mapping.implementation.includes(item)),
+        tests: evidence.tests.filter((item) => !mapping.tests.includes(item)),
+    };
+    const extra = {
+        implementation: mapping.implementation.filter((item) => !evidence.implementation.includes(item)),
+        tests: mapping.tests.filter((item) => !evidence.tests.includes(item)),
+    };
+    console.log(JSON.stringify({
+        valid: errors.length === 0 && missing.implementation.length === 0 && missing.tests.length === 0,
+        spec: specRelative,
+        mapping,
+        evidence,
+        missing,
+        extra,
+        warnings,
+        errors,
+    }, null, 2));
+}
 function validateSpecMappingFile(targetDir, specsDir, file, errors) {
     const specPath = path.join(specsDir, file);
     const content = fs.readFileSync(specPath, "utf-8").replace(/\r\n?/g, "\n");
@@ -852,6 +928,47 @@ function parseSpecMappingFrontmatter(displayFile, lines, errors) {
         implementation: mapping.implementation,
         tests: mapping.tests,
     };
+}
+function parseAuditCoverageArgs(argv, errors) {
+    const result = {
+        implementation: [],
+        tests: [],
+    };
+    for (let index = 0; index < argv.length; index += 1) {
+        const token = argv[index];
+        if (token !== "--implementation" && token !== "--tests") {
+            errors.push(`unsupported argument '${token}'`);
+            continue;
+        }
+        const field = token === "--implementation" ? "implementation" : "tests";
+        const value = argv[index + 1];
+        if (!value || value.startsWith("--")) {
+            errors.push(`missing value for ${token}`);
+            continue;
+        }
+        const normalized = normalizeRepoRelativeArg(value, `${token} '${value}'`, errors);
+        if (normalized) {
+            result[field].push(normalized);
+        }
+        index += 1;
+    }
+    return result;
+}
+function normalizeRepoRelativeArg(value, label, errors) {
+    const normalized = value.split("\\").join("/");
+    if (path.isAbsolute(normalized)) {
+        errors.push(`${label} must be repo-relative`);
+        return null;
+    }
+    const parts = normalized.split("/");
+    if (!normalized || parts.some((part) => part === "" || part === "." || part === "..")) {
+        errors.push(`${label} must be a normalized repo-relative file path`);
+        return null;
+    }
+    return normalized;
+}
+function dedupePaths(values) {
+    return [...new Set(values)];
 }
 function unquoteYamlScalar(value) {
     const singleQuoted = value.match(/^'(.*)'$/);

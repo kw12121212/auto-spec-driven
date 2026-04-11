@@ -7,7 +7,7 @@ mapping:
     - skills/spec-driven-modify/SKILL.md
     - skills/spec-driven-spec-edit/SKILL.md
     - skills/spec-driven-sync-specs/SKILL.md
-    - skills/spec-driven-remap-specs/SKILL.md
+    - skills/spec-driven-resync-code-mapping/SKILL.md
     - skills/roadmap-plan/SKILL.md
     - skills/roadmap-milestone/SKILL.md
     - skills/roadmap-recommend/SKILL.md
@@ -332,8 +332,8 @@ with the spec change.
 - WHEN `spec-driven-sync-specs` updates the affected spec artifact
 - THEN the spec mapping points to the current implementation file
 
-### Requirement: remap-specs-repairs-existing-spec-mappings
-`spec-driven-remap-specs` MUST retrofit and repair mapping frontmatter for
+### Requirement: resync-code-mapping-repairs-existing-spec-mappings
+`spec-driven-resync-code-mapping` MUST retrofit and repair mapping frontmatter for
 existing main spec files without entering the normal change lifecycle. It MUST
 read `.spec-driven/config.yaml`, `.spec-driven/specs/INDEX.md`, and the target
 main spec files, then run the CLI mapping validator before deciding what mapping
@@ -350,22 +350,22 @@ detects behavior/spec drift that requires requirement changes, it MUST recommend
 `spec-driven-sync-specs`, `spec-driven-spec-edit`, or the normal change
 workflow instead of silently changing requirements.
 
-#### Scenario: remap-specs-fixes-legacy-spec-without-frontmatter
+#### Scenario: resync-code-mapping-fixes-legacy-spec-without-frontmatter
 - GIVEN an existing main spec file has no mapping frontmatter
-- WHEN `spec-driven-remap-specs` runs and the user confirms the proposed mapping
+- WHEN `spec-driven-resync-code-mapping` runs and the user confirms the proposed mapping
 - THEN the skill adds `mapping.implementation` and `mapping.tests` frontmatter
 - AND it does not change requirement bodies or implementation files
 
-#### Scenario: remap-specs-corrects-stale-mapping
+#### Scenario: resync-code-mapping-corrects-stale-mapping
 - GIVEN a spec file maps a path that no longer exists or is no longer relevant
-- WHEN `spec-driven-remap-specs` confirms a replacement mapping with the user
+- WHEN `spec-driven-resync-code-mapping` confirms a replacement mapping with the user
 - THEN it updates the mapping frontmatter to current implementation and test paths
 - AND reruns the CLI mapping validator
 
-#### Scenario: remap-specs-defers-behavior-drift
+#### Scenario: resync-code-mapping-defers-behavior-drift
 - GIVEN mapping repair reveals that the current requirement behavior is stale
   relative to code
-- WHEN `spec-driven-remap-specs` reports its findings
+- WHEN `spec-driven-resync-code-mapping` reports its findings
 - THEN it recommends the appropriate spec synchronization or change workflow
 - AND it does not rewrite requirement behavior as part of mapping repair
 

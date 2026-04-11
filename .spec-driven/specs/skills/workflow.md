@@ -7,7 +7,7 @@ mapping:
     - skills/spec-driven-modify/SKILL.md
     - skills/spec-driven-spec-edit/SKILL.md
     - skills/spec-driven-sync-specs/SKILL.md
-    - skills/spec-driven-remap-specs/SKILL.md
+    - skills/spec-driven-resync-code-mapping/SKILL.md
     - skills/spec-driven-apply/SKILL.md
     - skills/spec-driven-verify/SKILL.md
     - skills/spec-driven-review/SKILL.md

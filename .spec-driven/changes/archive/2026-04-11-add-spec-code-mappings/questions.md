@@ -21,6 +21,6 @@
   A: File-level paths only; symbol, range, and line-level mappings are out of
   scope for the first version.
 - [x] Q: Is a dedicated skill needed for old spec remapping and mapping repair?
-  A: Yes. Add `spec-driven-remap-specs` to retrofit legacy specs, correct stale
+  A: Yes. Add `spec-driven-resync-code-mapping` to retrofit legacy specs, correct stale
   mappings, and fix frontmatter format errors without changing implementation
   behavior.

@@ -3,7 +3,7 @@ mapping:
   implementation:
     - install.sh
     - scripts/spec-driven.ts
-    - skills/spec-driven-remap-specs/SKILL.md
+    - skills/spec-driven-resync-code-mapping/SKILL.md
   tests:
     - test/run.js
 ---
@@ -51,13 +51,13 @@ When invoked with `--migrate` (or `--migrate-openspec`), it MUST run the CLI mig
 against the target project directory selected by `--project [path]` or the current working directory.
 It MUST NOT run OpenSpec migration unless the flag is explicitly provided.
 
-### Requirement: install-includes-remap-specs-skill
-The installer MUST copy the shipped `spec-driven-remap-specs` skill into the
+### Requirement: install-includes-resync-code-mapping-skill
+The installer MUST copy the shipped `spec-driven-resync-code-mapping` skill into the
 agent store and create the same CLI symlinks for it as for the other bundled
 `spec-driven-*` skills.
 
-#### Scenario: remap-specs-skill-installed-for-codex
+#### Scenario: resync-code-mapping-skill-installed-for-codex
 - GIVEN the installer runs for the Codex CLI target
 - WHEN installation completes successfully
-- THEN the `spec-driven-remap-specs` skill exists in the agent store
+- THEN the `spec-driven-resync-code-mapping` skill exists in the agent store
 - AND the Codex skills directory links to that installed skill

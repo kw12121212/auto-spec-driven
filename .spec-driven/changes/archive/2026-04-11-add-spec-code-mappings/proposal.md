@@ -7,7 +7,7 @@ will declare YAML frontmatter with separate `mapping.implementation` and
 `mapping.tests` file lists. The CLI will validate the mapping format and report
 machine-readable JSON errors so AI workflows can identify malformed mappings,
 missing fields, and missing target files. Add a dedicated
-`spec-driven-remap-specs` skill to retrofit mappings onto older spec files and
+`spec-driven-resync-code-mapping` skill to retrofit mappings onto older spec files and
 repair stale or malformed mappings.
 
 ## Why
@@ -29,7 +29,7 @@ In scope:
 - Add a CLI validation command that reports JSON `{ valid, warnings[], errors[] }`.
 - Validate that mapping fields are present, arrays contain strings, and each
   referenced file path exists.
-- Add `spec-driven-remap-specs`, a planning-layer skill that reads existing
+- Add `spec-driven-resync-code-mapping`, a planning-layer skill that reads existing
   specs, runs mapping validation, inspects related repository files, proposes
   mapping repairs, and after confirmation updates spec frontmatter directly.
 - Update skill workflow requirements so apply, verify, review, archive, and

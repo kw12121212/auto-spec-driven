@@ -129,11 +129,36 @@ tasks, changed files, proposal scope, and delta specs. If a touched spec file
 lacks mappings for the implementation or test files that provide the behavior,
 that mismatch is a CRITICAL issue.
 
+To do this consistently, `spec-driven-verify` MUST first build a change-local
+mapping evidence set from the completed tasks, implementation files changed for
+the change, test files changed for the change, and files explicitly relied on to
+provide the completed behavior. It MUST then compare each touched delta spec's
+`mapping.implementation` and `mapping.tests` entries against that evidence set,
+using the CLI audit command when available.
+
+When evidence clearly shows that a touched spec's completed behavior depends on
+an implementation file or directly verifying test file that is missing from the
+mapping, `spec-driven-verify` MUST report that omission as CRITICAL. It SHOULD
+prefer the smallest confident evidence set and report ambiguity instead of
+inventing semantic coverage.
+
+Repo-wide structural mapping errors found outside the change scope MUST still be
+reported, but `spec-driven-verify` SHOULD distinguish between change-local
+mapping blockers and unrelated pre-existing repository mapping debt.
+
 #### Scenario: verify-blocks-missing-mapped-test
 - GIVEN a change adds behavior and tests for a spec file
 - AND the relevant mapping omits the test file
 - WHEN `spec-driven-verify` checks the change
 - THEN it reports the missing mapped test evidence as a CRITICAL issue
+
+#### Scenario: verify-distinguishes-unrelated-repo-mapping-debt
+- GIVEN `verify-spec-mappings` finds a malformed mapping in a main spec file not
+  touched by the change
+- WHEN `spec-driven-verify` reports its findings
+- THEN it identifies that problem separately from change-local mapping omissions
+- AND it does not describe the unrelated problem as evidence that the current
+  change's own mapping is complete or incomplete
 
 ### Requirement: review-loads-code-and-spec-context
 `spec-driven-review` MUST read the change proposal, delta specs, design, tasks,
@@ -153,8 +178,25 @@ relevant spec files before issuing review findings. Review findings SHOULD call
 out stale or misleading mappings when they would make future verification or
 maintenance unreliable.
 
+`spec-driven-review` SHOULD also perform a lightweight mapping audit for touched
+spec files: compare the mapping frontmatter against the change's primary
+implementation and directly verifying test files, using the smallest confident
+evidence set available from changed files, delta specs, and completed tasks,
+using the CLI audit command when available.
+
+If review finds that a mapping would mislead a future maintainer about where the
+behavior is implemented or verified, it SHOULD report that as at least a SHOULD
+FIX finding, and as MUST FIX when the mismatch would materially undermine later
+verification or archive readiness.
+
 #### Scenario: review-flags-stale-mapping
 - GIVEN a spec maps a file that no longer contains relevant implementation
   evidence
 - WHEN `spec-driven-review` evaluates the change
 - THEN it reports the stale mapping as a review finding
+
+#### Scenario: review-flags-misleading-mapped-test-selection
+- GIVEN a touched spec maps only an indirect helper test while the change added a
+  direct behavior-verifying test file
+- WHEN `spec-driven-review` evaluates the change
+- THEN it reports the misleading mapped test selection as a review finding

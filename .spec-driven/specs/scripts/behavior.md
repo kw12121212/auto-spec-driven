@@ -133,6 +133,38 @@ MUST remain the responsibility of AI skills.
 - THEN the command does not report semantic coverage claims
 - AND it only validates the mapping structure and path existence
 
+### Requirement: audit-spec-mapping-coverage-compares-evidence-to-one-spec
+`spec-driven.js audit-spec-mapping-coverage <spec-path>` MUST compare one spec
+file's mapping frontmatter against explicit evidence paths passed on the command
+line. It MUST accept repeated `--implementation <repo-path>` and `--tests
+<repo-path>` flags, treat those values as deterministic evidence only, and
+output JSON describing:
+
+- the spec path
+- the spec's current `mapping.implementation` and `mapping.tests`
+- the provided implementation and test evidence sets
+- evidence paths missing from the mapping
+- mapping paths not present in the evidence set
+- any structural or path validation errors
+
+The command MUST NOT infer semantic evidence on its own. It MUST only compare
+the explicit evidence set supplied by the caller against the spec's declared
+mapping.
+
+#### Scenario: audit-spec-mapping-coverage-flags-missing-test-evidence
+- GIVEN a spec maps its implementation file but omits a directly verifying test
+- AND the caller passes that test file with `--tests`
+- WHEN `audit-spec-mapping-coverage` is run
+- THEN the command reports the test file under `missing.tests`
+- AND `valid` is `false`
+
+#### Scenario: audit-spec-mapping-coverage-reports-extra-mapped-file
+- GIVEN a spec mapping includes an implementation file not present in the
+  caller's evidence set
+- WHEN `audit-spec-mapping-coverage` is run
+- THEN the command reports that path under `extra.implementation`
+- AND it does not claim that the file is semantically wrong on its own
+
 ### Requirement: archive-moves-change
 `spec-driven.js archive <name>` MUST move `.spec-driven/changes/<name>/` to
 `.spec-driven/changes/archive/YYYY-MM-DD-<name>/`, creating the archive directory

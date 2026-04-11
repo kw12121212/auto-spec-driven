@@ -1,6 +1,6 @@
 ---
-skill_id: spec_driven_remap_specs
-name: spec-driven-remap-specs
+skill_id: spec_driven_resync_code_mapping
+name: spec-driven-resync-code-mapping
 description: Retrofit or repair spec frontmatter mappings between specs, implementation files, and test files.
 author: auto-spec-driven
 type: agent_skill
@@ -41,9 +41,44 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    Use the JSON result to identify missing frontmatter, malformed mapping
    fields, non-string entries, and missing mapped files.
 
-4. **Inspect repository evidence** — read relevant implementation, tests, skill
-   prompts, scripts, and documentation needed to determine current file-level
-   mappings. Keep implementation files separate from test files.
+4. **Inspect repository evidence** — infer mappings by converging on the current
+   repository evidence, not by trying to list every related file. Keep
+   implementation files separate from test files.
+
+   - Derive search terms from the spec path, filename, requirement titles,
+     scenario titles, and distinctive command names, skill names, config keys,
+     or domain terms in the spec body.
+   - Search likely implementation and test locations for exact terms first, then
+     obvious variants such as `kebab-case`, `snake_case`, `camelCase`, and
+     singular/plural forms.
+   - Keep files that directly implement, expose, validate, or verify the
+     behavior. Exclude generic helpers unless the behavior is primarily
+     implemented there or the entrypoint would otherwise be misleading without
+     it.
+   - Follow at most one level of structural evidence when needed: imports,
+     exports, command registries, dispatch tables, and tests that directly
+     execute or assert the behavior.
+   - `mapping.implementation` should contain primary implementation files,
+     feature entrypoints, and thin orchestrators that materially wire the
+     behavior together.
+   - `mapping.tests` should contain tests that directly verify the behavior.
+   - If behavior spans multiple primary files, include all of them. If evidence
+     is weak or conflicting, keep the smaller confident set and report the
+     ambiguity.
+   - Stop once the mapping covers the main files a maintainer would inspect
+     first. Do not chase every transitive helper.
+   - For framework or meta-specs, start with files named directly in the spec,
+     then add workflow artifacts that define or enforce the behavior, such as
+     relevant `skills/*/SKILL.md`, `scripts/spec-driven.ts`, `install.sh`, test
+     files, and top-level docs.
+   - Use repo structure as evidence: installation specs map to installer code,
+     installation tests, and shipped skills; mapping-validation specs map to
+     validator code, spec-format docs, and validator tests.
+   - Treat the mapping as complete when each requirement is covered by at least
+     one primary implementation file and one test or verification path where
+     such evidence exists.
+   - If a requirement still has no confident mapping, mark it ambiguous and ask
+     the user instead of inventing coverage.
 
 5. **Classify findings** — sort findings into:
    - missing mapping frontmatter that can be confidently added

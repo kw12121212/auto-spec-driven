@@ -32,14 +32,13 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - `.spec-driven/changes/<name>/specs/` — delta specs describing the intended behavior changes
    - `.spec-driven/changes/<name>/design.md` — approach and decisions
    - `.spec-driven/changes/<name>/tasks.md` — what was implemented
-   - `.spec-driven/changes/<name>/questions.md` — resolved answers that may explain decisions or tradeoffs
-   - `.spec-driven/config.yaml` — project context and rules (including `test` rules and any `fileMatch` entries)
-   - mapping frontmatter from relevant main and delta spec files
+    - `.spec-driven/changes/<name>/questions.md` — resolved answers that may explain decisions or tradeoffs
+    - `.spec-driven/config.yaml` — project context and rules, including `test` rules and any `fileMatch` entries
+    - mapping frontmatter from relevant main and delta spec files
 
 4. **Identify changed files** — from the completed tasks and mapping
    frontmatter, determine which files were created or modified. Read each file
-   fully, including mapped implementation and test files for the relevant spec
-   files.
+   fully, including mapped implementation and test files for the relevant spec files.
 
 5. **Review code quality** — for each changed file, check:
    - **Readability**: clear naming, reasonable function length, no unnecessary complexity
@@ -49,15 +48,23 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - **Best practices**: follows the project's conventions (from config.yaml context), no dead code, no debug artifacts left behind
 
 6. **Check test quality** — read the test files associated with this change:
-   - Do tests cover the key scenarios from the delta specs?
-   - Are tests independent and repeatable?
-   - Do tests follow `rules.test` from config.yaml?
-   - Are `mapping.tests` entries current and useful for future verification?
+     - Do tests cover the key scenarios from the delta specs?
+     - Are tests independent and repeatable?
+     - Do tests follow `rules.test` from config.yaml?
+     - Are `mapping.tests` entries current and useful for future verification?
 
-7. **Output a review report**:
-   ```
-   MUST FIX (blocks archive):
-     - [list or "none"]
+7. **Audit mapping quality** — for each touched spec file relevant to this
+   change:
+   - Compare `mapping.implementation` and `mapping.tests` against the change's primary implementation files and directly verifying test files
+   - Use the smallest confident evidence set from changed files, delta specs, completed tasks, and mapped files already read
+   - Run `node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]` when it helps make the comparison explicit
+   - Report stale or misleading mappings as at least SHOULD FIX
+   - Escalate to MUST FIX when the mismatch would materially mislead future verification or archive readiness
+
+8. **Output a review report**:
+    ```
+    MUST FIX (blocks archive):
+      - [list or "none"]
 
    SHOULD FIX (recommended):
      - [list or "none"]
@@ -66,10 +73,10 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      - [list or "none"]
    ```
 
-8. **Recommend next step**:
-   - If MUST FIX issues: address them before archiving
-   - If only SHOULD FIX: ask user if they want to address them or proceed
-   - If clean: suggest `/spec-driven-archive <name>`
+9. **Recommend next step**:
+    - If MUST FIX issues: address them before archiving
+    - If only SHOULD FIX: ask user if they want to address them or proceed
+    - If clean: suggest `/spec-driven-archive <name>`
 
 ## Rules
 - Read every changed file before commenting on it — never review code you haven't read

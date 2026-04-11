@@ -25,11 +25,10 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>
    ```
-   Report any errors (blocking) or warnings (non-blocking).
-   - Treat any testing-readiness error from the script as a CRITICAL, including:
-     missing `## Testing`, missing lint or validation coverage, missing unit
-     test coverage, or required testing tasks that do not name explicit runnable
-     commands
+    Report any errors (blocking) or warnings (non-blocking).
+    - Treat any testing-readiness error from the script as CRITICAL, including
+      missing `## Testing`, missing lint/validation coverage, missing unit test
+      coverage, or required testing tasks with no explicit runnable command.
 
    Also run:
    ```
@@ -45,45 +44,76 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    If `remaining > 0`, list the incomplete tasks. These are CRITICAL issues.
 
 4. **Open questions check** — read `.spec-driven/changes/<name>/questions.md` and scan for `- [ ] Q:` entries:
-   - Any open (unanswered) question is a CRITICAL — implementation cannot be verified with unresolved ambiguity
-   - The script also reports these as errors; treat them as CRITICALs here
+     - Any open question is CRITICAL
+     - The script also reports these as errors; treat them as CRITICAL here
 
 5. **Implementation evidence check** — for each completed task in tasks.md:
-   - Identify what code or files the task should have changed
-   - Verify the change actually exists (read relevant files)
-   - Note any tasks with no visible evidence as WARNINGs
+     - Identify what code or files the task should have changed
+     - Verify the change actually exists (read relevant files)
+     - If a completed task claims implementation, test, or spec work and there is
+       no visible evidence, treat that as CRITICAL unless the ambiguity is
+       clearly documented in `questions.md`
 
-6. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
-   - Does the implementation match what was proposed?
-   - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
-   - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.
-   - Do the delta files use the standard format (`### Requirement: <name>`, RFC 2119 keywords, `#### Scenario:` blocks)? Non-conforming format is a CRITICAL — the spec format is mandatory.
-   - Do touched spec files map to the implementation and test files that
-     provide evidence for the completed behavior?
-   - If config.yaml has a `rules` field (including any `fileMatch` entries), check whether the implementation and artifacts comply — violations are WARNINGs
-   - If proposal.md has an **Unchanged Behavior** section with content, verify the implementation has not violated any listed behaviors — violations are CRITICALs
-   - Flag misalignments as WARNINGs or CRITICALs
+6. **Build a mapping evidence set** — before judging mapping quality, build a
+   change-local evidence set from:
+   - each touched delta spec file under `.spec-driven/changes/<name>/specs/`
+   - implementation files actually changed for the completed behavior
+   - test files actually changed for the completed behavior
+   - files explicitly relied on to provide or directly verify the completed behavior
 
-7. **Output a tiered report**:
+   Prefer the smallest confident evidence set. Do not infer semantic coverage
+   from distant helpers when the main implementation or direct test files are clear.
+
+   For each touched delta spec file, run:
    ```
-   CRITICAL (blocks archive):
-     - [list or "none"]
-
-   WARNING (should address):
-     - [list or "none"]
-
-   SUGGESTION (optional improvements):
-     - [list or "none"]
+   node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]
    ```
+   Use the evidence set you built as the explicit `--implementation` and `--tests` inputs.
 
-8. **Recommend next step**:
-   - If CRITICAL issues: address them before archiving
-   - If only WARNINGs: ask user if they want to address them or proceed
-   - If clean: suggest `/spec-driven-review <name>`
+7. **Spec alignment check** — read `.spec-driven/specs/`, `.spec-driven/config.yaml`, `.spec-driven/changes/<name>/proposal.md`, and all files in `.spec-driven/changes/<name>/specs/`:
+     - Does the implementation match what was proposed?
+     - Do the delta files in `changes/<name>/specs/` accurately describe what was implemented? Empty `specs/` with real behavior changes is a CRITICAL.
+     - Does each delta file mirror its corresponding main spec file path? Mismatched paths mean the merge will fail.
+     - Do the delta files use the standard format (`### Requirement: <name>`, RFC 2119 keywords, `#### Scenario:` blocks)? Non-conforming format is a CRITICAL — the spec format is mandatory.
+     - For each touched delta spec file, compare `mapping.implementation` and
+       `mapping.tests` against the change-local evidence set using the audit
+       command output.
+     - If the evidence clearly shows that a touched spec depends on an
+       implementation file or directly verifying test file missing from the
+       mapping, report that omission as CRITICAL.
+     - If the evidence is ambiguous, prefer the smaller confident set and report
+       the ambiguity instead of inventing semantic coverage.
+     - Report repo-wide structural mapping errors from `verify-spec-mappings`
+       separately from change-local mapping omissions.
+     - If config.yaml has a `rules` field (including any `fileMatch` entries), check whether the implementation and artifacts comply — violations are WARNINGs
+     - If proposal.md has an **Unchanged Behavior** section with content, verify the implementation has not violated any listed behaviors — violations are CRITICALs
+     - Flag misalignments as WARNINGs or CRITICALs
+
+8. **Output a tiered report**:
+    ```
+    CRITICAL (blocks archive):
+      - [list or "none"]
+
+    REPO DEBT (outside this change):
+      - [list or "none"]
+
+    WARNING (should address):
+      - [list or "none"]
+
+    SUGGESTION (optional improvements):
+      - [list or "none"]
+    ```
+
+9. **Recommend next step**:
+    - If CRITICAL issues: address them before archiving
+    - If only WARNINGs: ask user if they want to address them or proceed
+    - If clean: suggest `/spec-driven-review <name>`
 
 ## Rules
 - Be honest — don't pass a change just because tasks are checked off
 - CRITICALs are things that would make the change incorrect or incomplete
+- REPO DEBT is pre-existing repository state outside the change scope; report it
+  clearly and separately from change-local findings
 - WARNINGs are things that reduce confidence but don't necessarily block
 - SUGGESTIONs are optional quality improvements
 - Keep implementation and test mappings in frontmatter, not in requirement

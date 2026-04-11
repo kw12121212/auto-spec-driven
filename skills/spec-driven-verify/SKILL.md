@@ -84,14 +84,15 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
      - Do the delta files use the standard format (`### Requirement: <name>`, RFC 2119 keywords, `#### Scenario:` blocks)? Non-conforming format is a CRITICAL — the spec format is mandatory.
      - For each touched delta spec file, compare `mapping.implementation` and
        `mapping.tests` against the change-local evidence set using the audit
-       command output.
+       output from `node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]`.
      - If the evidence clearly shows that a touched spec depends on an
        implementation file or directly verifying test file missing from the
        mapping, report that omission as CRITICAL.
      - If the evidence is ambiguous, prefer the smaller confident set and report
        the ambiguity instead of inventing semantic coverage.
      - Report repo-wide structural mapping errors from `verify-spec-mappings`
-       separately from change-local mapping omissions.
+       separately from change-local mapping omissions using the result from
+       `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings`.
      - If the unmapped-evidence audit shows that a primary implementation file
        or directly verifying test file from this change is not mapped by any
        main spec, report that as CRITICAL when the gap leaves this change's spec

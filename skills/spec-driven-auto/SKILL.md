@@ -62,9 +62,9 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 5. **Verify** — check completeness:
    - Run `node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>`
    - Then perform the rest of the `/spec-driven-verify` checks: task completion, open questions, implementation evidence, and spec alignment
-   - If the change-local evidence set includes implementation files or directly verifying test files, run `audit-unmapped-spec-evidence` as part of this verify pass and treat its current-change blocking findings the same way `/spec-driven-verify` would
+   - If the change-local evidence set includes implementation files or directly verifying test files, run `node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` as part of this verify pass and treat its current-change blocking findings the same way `/spec-driven-verify` would
    - Treat script `errors` plus any CRITICAL findings from those checks as blockers
-   - If there are blockers you can safely fix, fix them automatically, then rerun both the script check and the verification pass
+   - If there are blockers you can safely fix, fix them automatically, then rerun both `node {{SKILL_DIR}}/scripts/spec-driven.js verify <name>` and the verification pass
    - If any blocker cannot be auto-fixed: stop and ask the user
    - Re-read delta spec files and update them to match what was actually implemented
    - Ensure delta spec mapping frontmatter reflects the implementation and test
@@ -73,7 +73,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 6. **Review** — check code quality:
    - Read every file changed by this change
    - Check: readability, security, error handling, performance, best practices, test quality
-   - Reuse the verify-phase unmapped-audit result unless review fixes changed the relevant implementation or direct test files; only rerun the unmapped audit when the reviewed evidence set materially changed
+   - Reuse the verify-phase `node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` result unless review fixes changed the relevant implementation or direct test files; only rerun that same command when the reviewed evidence set materially changed
    - MUST FIX issues: fix them automatically, then re-review
    - If MUST FIX issues cannot be auto-fixed: stop and ask the user
    - SHOULD FIX and NITS: fix if straightforward, otherwise note in the final report

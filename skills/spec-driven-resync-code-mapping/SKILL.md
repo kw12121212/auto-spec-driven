@@ -94,8 +94,9 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage <spec-path> [--implementation <repo-path> ...] [--tests <repo-path> ...]
    ```
    Use the candidate implementation and test sets as the explicit evidence
-   inputs. Use the audit output to identify missing and extra mapping entries
-   before presenting the edit.
+   inputs. Use the `node {{SKILL_DIR}}/scripts/spec-driven.js audit-spec-mapping-coverage ...`
+   output to identify missing and extra mapping entries before presenting the
+   edit.
 
    Also run:
    ```
@@ -125,7 +126,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    ```
    node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings
    ```
-   Fix safe frontmatter format issues immediately and rerun validation. If any
+   Fix safe frontmatter format issues immediately and rerun
+   `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings`. If any
    remaining error needs human judgment, report it clearly.
 
 9. **Report final result** — summarize:
@@ -143,7 +145,8 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Keep `mapping.implementation` and `mapping.tests` separate
 - Use repo-relative file paths only
 - Keep mappings at file granularity; do not use line numbers, ranges, or symbols
-- Always run `verify-spec-mappings` before and after confirmed edits
+- Always run `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings`
+  before and after confirmed edits
 - Get explicit user confirmation before editing any spec file
 - If mapping repair reveals behavior/spec drift, recommend the appropriate
   spec synchronization or change workflow instead of silently changing

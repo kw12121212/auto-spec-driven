@@ -229,6 +229,22 @@ function validateAllSkills(): void {
     return;
   }
 
+  const commandReferenceErrors = validateExplicitCommandReferences(skillFiles);
+  if (commandReferenceErrors.length > 0) {
+    printAndExit(
+      {
+        detected_type: null,
+        errors: commandReferenceErrors,
+        file: "",
+        schema: path.resolve("test/skill-schema.yaml"),
+        section_titles: [],
+        valid: false,
+      },
+      1,
+    );
+    return;
+  }
+
   let failed = 0;
   for (const skillPath of skillFiles) {
     const result = spawnSync(process.execPath, [scriptPath, skillPath], {
@@ -255,8 +271,6 @@ function normalizeSkillPath(value: string): string {
 }
 
 function validateSkillScriptSymlinks(skillDirs: string[]): ValidationError[] {
-  const expectedTarget = path.relative(path.dirname(skillDirs[0] ?? path.resolve("skills", "placeholder")), path.resolve("dist", "scripts"));
-  const normalizedExpected = normalizeSkillPath(expectedTarget);
   const errors: ValidationError[] = [];
 
   for (const skillDir of skillDirs) {
@@ -284,6 +298,8 @@ function validateSkillScriptSymlinks(skillDirs: string[]): ValidationError[] {
     }
 
     const target = fs.readlinkSync(scriptsPath);
+    const expectedTarget = path.relative(skillDir, path.resolve("dist", "scripts"));
+    const normalizedExpected = normalizeSkillPath(expectedTarget);
     if (normalizeSkillPath(target) !== normalizedExpected) {
       errors.push({
         code: "skill.scripts_symlink.invalid_target",
@@ -301,6 +317,33 @@ function validateSkillScriptSymlinks(skillDirs: string[]): ValidationError[] {
         code: "skill.scripts_symlink.broken",
         message: `Skill '${skillName}' scripts symlink target does not resolve to a directory`,
         path: `skills/${skillName}/scripts`,
+      });
+    }
+  }
+
+  return errors;
+}
+
+function validateExplicitCommandReferences(skillFiles: string[]): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const disallowedPhrases = [
+    "run `audit-unmapped-spec-evidence`",
+    "rerun both the script check",
+    "Reuse the verify-phase unmapped-audit result",
+    "Use the audit output",
+    "rerun validation",
+    "Always run `verify-spec-mappings`",
+    "using the audit command output",
+  ];
+
+  for (const skillFile of skillFiles) {
+    const content = fs.readFileSync(skillFile, "utf8");
+    for (const phrase of disallowedPhrases) {
+      if (!content.includes(phrase)) continue;
+      errors.push({
+        code: "skill.command_reference.implicit",
+        message: `Skill command reference must name the concrete script command instead of '${phrase}'`,
+        path: normalizeSkillPath(path.relative(path.resolve(), skillFile)),
       });
     }
   }

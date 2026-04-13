@@ -94,6 +94,8 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 
 ## Quick Start
 
+> **Full quick start guide:** [QUICKSTART.md](QUICKSTART.md) — installation, initialization, first change, and common commands.
+
 **Install via [skills.sh](https://skills.sh) (recommended — no extra files in your project):**
 ```bash
 npx skills add kw12121212/auto-spec-driven

@@ -181,6 +181,12 @@ questions, config, and every changed file before issuing review findings.
 performance, best practices, and whether tests cover the key scenarios
 described by the delta specs.
 
+`spec-driven-review` MUST be author-agnostic. It MUST review the current
+change's code and tests with the same rigor regardless of whether the code was
+written by the user, another contributor, or the reviewing AI itself. It MUST
+NOT reduce scrutiny, downgrade findings, or skip issues because the reviewed
+code may have been generated or previously edited by the same AI.
+
 Before issuing findings, `spec-driven-review` MUST identify any applicable
 change-type-specific review checklists from the proposal, delta specs, tasks,
 changed files, mapping frontmatter, and repository context. The supported
@@ -227,6 +233,13 @@ repository hygiene, and avoidance of unrelated churn.
 - WHEN `spec-driven-review` reports the concern
 - THEN the concern is classified as MUST FIX, SHOULD FIX, or NITS according to
   the existing severity model.
+
+#### Scenario: review-does-not-soften-findings-for-ai-authored-code
+- GIVEN part or all of the reviewed change was generated or edited by the same
+  AI now performing `spec-driven-review`
+- WHEN `spec-driven-review` evaluates the change
+- THEN it applies the same baseline and specialized checks as any other review
+- AND it does not suppress or downgrade valid findings because of authorship
 
 ### Requirement: review-uses-mustfix-shouldfix-nits
 `spec-driven-review` MUST report findings using MUST FIX, SHOULD FIX, and NITS, and it

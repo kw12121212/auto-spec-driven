@@ -240,6 +240,12 @@ When `spec-driven-auto` performs its verify and review phases, it MUST reuse the
 same mapping-audit expectations as `spec-driven-verify` and
 `spec-driven-review` rather than applying a weaker shortcut.
 
+During the review phase, `spec-driven-auto` MUST preserve the same
+author-agnostic strictness as `spec-driven-review`. It MUST treat code written
+or edited earlier in the same auto run as normal review input, not as trusted
+output, and MUST surface any resulting MUST FIX, SHOULD FIX, or NITS findings
+without leniency.
+
 If the current change has no implementation files or test files in its
 change-local evidence set, auto MAY skip the unmapped-evidence audit. If the
 evidence set includes implementation or directly verifying test files, auto
@@ -261,6 +267,14 @@ evidence under review.
 - AND review does not change the relevant implementation or direct test files
 - WHEN it reaches the review phase
 - THEN it reuses the verify-phase audit result instead of rerunning the audit
+
+#### Scenario: auto-reviews-its-own-output-without-leniency
+- GIVEN `spec-driven-auto` implemented code earlier in the same workflow run
+- WHEN it reaches the review phase
+- THEN it reviews that code with the same strictness it would apply to any
+  human-authored change
+- AND it fixes or reports resulting MUST FIX issues instead of assuming the code
+  is acceptable because it produced it
 
 ### Requirement: auto-stops-on-unfixable-blockers
 If `spec-driven-auto` encounters verification blockers, review MUST FIX issues, or

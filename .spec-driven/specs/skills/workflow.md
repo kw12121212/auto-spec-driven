@@ -144,6 +144,10 @@ review happens after implementation and verification readiness, uses current
 change artifacts and repository state as source of truth, reports MUST FIX,
 SHOULD FIX, and NITS, and treats MUST FIX findings as archive blockers.
 
+The review workflow MUST remain author-agnostic. Review rigor and finding
+severity MUST be based on the observed code and repository evidence, not on who
+authored the change or whether the reviewing AI previously generated it.
+
 #### Scenario: specialized-review-does-not-split-entry-point
 - GIVEN a completed change needs security-sensitive or migration review
 - WHEN the user enters the review workflow

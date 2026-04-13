@@ -86,12 +86,14 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
       files actually changed or relied on
 
 6. **Review** — check code quality:
-   - Read every file changed by this change
-   - Check: readability, security, error handling, performance, best practices, test quality
-   - Reuse the verify-phase `node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` result unless review fixes changed the relevant implementation or direct test files; only rerun that same command when the reviewed evidence set materially changed
-   - MUST FIX issues: fix them automatically, then re-review
-   - If MUST FIX issues cannot be auto-fixed: stop and ask the user
-   - SHOULD FIX and NITS: fix if straightforward, otherwise note in the final report
+    - Read every file changed by this change
+    - Review findings must be author-agnostic: do not trust or excuse code just
+      because it was generated or edited earlier in this same auto run
+    - Check: readability, security, error handling, performance, best practices, test quality
+    - Reuse the verify-phase `node {{SKILL_DIR}}/scripts/spec-driven.js audit-unmapped-spec-evidence [--implementation <repo-path> ...] [--tests <repo-path> ...]` result unless review fixes changed the relevant implementation or direct test files; only rerun that same command when the reviewed evidence set materially changed
+    - MUST FIX issues: fix them automatically, then re-review
+    - If MUST FIX issues cannot be auto-fixed: stop and ask the user
+    - SHOULD FIX and NITS: fix if straightforward, otherwise note in the final report
 
 7. **Archive** — close out the change:
     - Confirm there are no incomplete tasks before archiving

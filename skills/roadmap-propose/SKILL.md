@@ -73,9 +73,38 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
 6. **Fill the standard proposal artifacts** — populate:
      - `proposal.md`
      - `design.md`
-     - `tasks.md` with `## Testing` containing at least one explicit lint or
-       validation command task and one explicit unit test command task when
-       those commands are knowable from repository context
+     - `tasks.md` using this canonical structure:
+
+       ```markdown
+       # Tasks: <change-name>
+
+       ## Implementation
+       - [ ] Describe the first atomic implementation task
+       - [ ] Describe the second atomic implementation task
+
+       ## Testing
+
+       - [ ] Run `npm run lint` — lint or validation task
+       - [ ] Run `npm test` — unit test task
+
+       ## Verification
+       - [ ] Verify implementation matches proposal scope
+       ```
+
+       Each task uses `- [ ]` checkboxes and should be independently completable.
+
+       The `## Testing` section MUST satisfy these verification keyword requirements:
+       - At least one task MUST contain a lint/validation keyword: `lint`, `validate`,
+         `validation`, `typecheck`, `type-check`, or `build`
+       - At least one task MUST contain a unit test keyword: `unit test` or `unit tests`
+       - Both tasks MUST name an explicit runnable command in backticks or use a known
+         runner (npm, pnpm, yarn, bun, node, bash, sh, pytest, jest, vitest, go, cargo,
+         make, uv, poetry)
+       - Paraphrasing these keywords (e.g. "run tests" instead of "run unit tests") will
+         cause `verify` to fail
+
+       If the relevant command cannot be determined confidently from repository context,
+       add an open question instead of guessing.
      - `questions.md`
      - delta specs under `changes/<name>/specs/`
        - mirror the main spec path exactly, for example

@@ -124,11 +124,38 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
         repository evidence is unclear
     - include `mapping.implementation` and `mapping.tests` frontmatter in delta
       spec files when related files are knowable from repository context
-    - write `tasks.md` with atomic checklist items under `## Implementation`,
-      `## Testing`, and `## Verification`
-   - make `## Testing` include at least one explicit lint or validation command
-     task and one explicit unit test command task when those commands are
-     knowable from repository context
+    - write `tasks.md` using this canonical structure:
+
+      ```markdown
+      # Tasks: <change-name>
+
+      ## Implementation
+      - [ ] Describe the first atomic implementation task
+      - [ ] Describe the second atomic implementation task
+
+      ## Testing
+
+      - [ ] Run `npm run lint` — lint or validation task
+      - [ ] Run `npm test` — unit test task
+
+      ## Verification
+      - [ ] Verify implementation matches proposal scope
+      ```
+
+      Each task uses `- [ ]` checkboxes and should be independently completable.
+
+      The `## Testing` section MUST satisfy these verification keyword requirements:
+      - At least one task MUST contain a lint/validation keyword: `lint`, `validate`,
+        `validation`, `typecheck`, `type-check`, or `build`
+      - At least one task MUST contain a unit test keyword: `unit test` or `unit tests`
+      - Both tasks MUST name an explicit runnable command in backticks or use a known
+        runner (npm, pnpm, yarn, bun, node, bash, sh, pytest, jest, vitest, go, cargo,
+        make, uv, poetry)
+      - Paraphrasing these keywords (e.g. "run tests" instead of "run unit tests") will
+        cause `verify` to fail
+
+      If the relevant command cannot be determined confidently from repository context,
+      record that in `questions.md` instead of guessing.
    - write `questions.md`, recording every unresolved point under `## Open`, or
      leave `<!-- No open questions -->` if nothing is unclear
 

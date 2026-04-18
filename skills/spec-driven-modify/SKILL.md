@@ -88,7 +88,27 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
       the change has no observable spec impact, leave `changes/<name>/specs/`
       empty rather than creating a prose-only delta file. Do not invent mapping
       paths when the related implementation or test files are unclear.
-    - For `tasks.md`: **preserve all `- [x]` completed task state** — only add, remove, or reword `- [ ]` incomplete tasks unless the user explicitly asks to change completed ones
+    - For `tasks.md`: **preserve all `- [x]` completed task state** — only add,
+      remove, or reword `- [ ]` incomplete tasks unless the user explicitly asks
+      to change completed ones. When adding or editing `## Testing` tasks, follow
+      this canonical structure:
+
+      ```markdown
+      ## Testing
+
+      - [ ] Run `npm run lint` — lint or validation task
+      - [ ] Run `npm test` — unit test task
+      ```
+
+      The `## Testing` section MUST satisfy these verification keyword requirements:
+      - At least one task MUST contain a lint/validation keyword: `lint`, `validate`,
+        `validation`, `typecheck`, `type-check`, or `build`
+      - At least one task MUST contain a unit test keyword: `unit test` or `unit tests`
+      - Both tasks MUST name an explicit runnable command in backticks or use a known
+        runner (npm, pnpm, yarn, bun, node, bash, sh, pytest, jest, vitest, go, cargo,
+        make, uv, poetry)
+      - Paraphrasing these keywords (e.g. "run tests" instead of "run unit tests") will
+        cause `verify` to fail
     - For `questions.md`: add new questions under `## Open`, or move questions to `## Resolved` with an `A:` answer line when the human provides answers
 
 5. **Show a summary** — briefly describe what changed across all modified files and confirm with the user.

@@ -109,14 +109,39 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    - Do not invent mapping paths when the related implementation or test files
       are not clear; leave mapping completion to `/spec-driven-apply`
 
-7. **Fill tasks.md** — write a concrete implementation checklist:
-   - Use `- [ ]` checkboxes for every task
-   - Tasks should be independently completable
-   - Group under three sections: `## Implementation`, `## Testing`, `## Verification`
-   - `## Testing` MUST include at least one lint or validation task and one unit test task appropriate to the project's tech stack
-   - Each required testing task MUST name an explicit runnable command such as `npm run lint`, `npm run build`, or `npm test`
-   - If the relevant command cannot be determined confidently from repository context, add an open question to `questions.md` instead of guessing
-   - Do NOT add an "Update specs" task — the specs/ directory contains the spec artifacts
+7. **Fill tasks.md** — write a concrete implementation checklist using this canonical structure:
+
+   ```markdown
+   # Tasks: <change-name>
+
+   ## Implementation
+   - [ ] Describe the first atomic implementation task
+   - [ ] Describe the second atomic implementation task
+
+   ## Testing
+
+   - [ ] Run `npm run lint` — lint or validation task
+   - [ ] Run `npm test` — unit test task
+
+   ## Verification
+   - [ ] Verify implementation matches proposal scope
+   ```
+
+   Each task uses `- [ ]` checkboxes. Tasks should be independently completable.
+
+   The `## Testing` section MUST satisfy these verification keyword requirements:
+   - At least one task MUST contain a lint/validation keyword: `lint`, `validate`,
+     `validation`, `typecheck`, `type-check`, or `build`
+   - At least one task MUST contain a unit test keyword: `unit test` or `unit tests`
+   - Both tasks MUST name an explicit runnable command in backticks or use a known
+     runner (npm, pnpm, yarn, bun, node, bash, sh, pytest, jest, vitest, go, cargo,
+     make, uv, poetry)
+   - Paraphrasing these keywords (e.g. "run tests" instead of "run unit tests") will
+     cause `verify` to fail
+
+   If the relevant command cannot be determined confidently from repository context,
+   add an open question to `questions.md` instead of guessing. Do NOT add an
+   "Update specs" task — the specs/ directory contains the spec artifacts.
 
 8. **Fill questions.md** — document any open questions or ambiguities:
    - For every unclear point (motivation, scope boundaries, technical approach, etc.), add an entry under `## Open`:

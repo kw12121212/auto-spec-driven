@@ -80,6 +80,42 @@ Notes:
 
 Group specs by domain area. Use kebab-case directory names (e.g. `core/`, `api/`, `auth/`).
 
+## Tasks Format
+
+Use `tasks.md` under `.spec-driven/changes/<name>/` as the implementation
+checklist. Each change gets its own tasks file with three sections.
+
+Canonical structure:
+
+```markdown
+# Tasks: <change-name>
+
+## Implementation
+- [ ] Describe the first atomic implementation task
+- [ ] Describe the second atomic implementation task
+
+## Testing
+
+- [ ] Run `npm run lint` — lint or validation task
+- [ ] Run `npm test` — unit test task
+
+## Verification
+- [ ] Verify implementation matches proposal scope
+```
+
+The `## Testing` section must satisfy these keyword requirements to pass
+`verify`:
+
+- At least one task must contain a **lint/validation keyword**:
+  `lint`, `validate`, `validation`, `typecheck`, `type-check`, or `build`
+- At least one task must contain a **unit test keyword**:
+  `unit test` or `unit tests`
+- Both tasks must name an explicit runnable command in backticks or use a known
+  runner (npm, pnpm, yarn, bun, node, bash, sh, pytest, jest, vitest, go,
+  cargo, make, uv, poetry)
+- Paraphrasing these keywords (e.g. "run tests" instead of "run unit tests")
+  will cause `verify` to fail
+
 ## Conventions
 
 - Write in present tense ("the system does X")

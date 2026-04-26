@@ -22,9 +22,9 @@ The user must complete the change or cancel it instead.
 the corresponding main spec file before moving the change directory into `archive/`.
 Applying `REMOVED` deltas MAY delete requirement blocks or remove now-empty spec files.
 
-### Requirement: archive-confirms-empty-spec-impact
-If `changes/<name>/specs/` is empty, `spec-driven-archive` MUST ask the user to confirm
-that the change truly has no observable spec impact before continuing.
+### Requirement: archive-allows-empty-specs
+If `changes/<name>/specs/` is empty, `spec-driven-archive` MUST proceed without
+confirmation — changes without observable spec impact are valid.
 
 ### Requirement: archive-updates-spec-index
 After merging specs, `spec-driven-archive` MUST update `.spec-driven/specs/INDEX.md`

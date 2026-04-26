@@ -7,10 +7,15 @@
 **Option A: via [skills.sh](https://skills.sh) (recommended — no extra files in your project)**
 
 ```bash
-npx skills add kw12121212/auto-spec-driven
+npx skills add -g kw12121212/auto-spec-driven
 ```
 
-When prompted, select the AI tools you actually use. Prefer the shared/global scope to avoid duplicating skill files in each project.
+The `-g` flag installs globally so all your projects share the same skills. When prompted, select the AI tools you actually use.
+
+**Uninstall:**
+```bash
+npx skills remove -g kw12121212/auto-spec-driven
+```
 
 **Option B: from source (for development or live-edit)**
 

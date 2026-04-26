@@ -35,7 +35,7 @@ Explicitly distinguish script work from AI work when you run this skill.
 - Ask the user which change to archive when needed
 - Interpret the `apply` output and block archive when tasks remain incomplete
 - Inspect `.spec-driven/changes/<name>/specs/`, merge delta specs into `.spec-driven/specs/`, and remove emptied main spec files when required by `REMOVED`
-- Ask for explicit confirmation if the change has no delta specs
+- Accept empty `specs/` without confirmation — changes without spec impact are valid
 - Update `.spec-driven/specs/INDEX.md` to reflect created or deleted main spec files
 - Preserve or apply spec mapping frontmatter during spec merges
 - Summarize the merged spec impact, any roadmap status changes caused by archive, and the final archive location
@@ -59,7 +59,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
    If `remaining > 0`, stop — archiving is not allowed until all tasks are complete. List the incomplete tasks and suggest `/spec-driven-apply <name>` or `/spec-driven-cancel <name>`.
 
 3. **Merge delta specs** — list all files in `.spec-driven/changes/<name>/specs/`:
-    - If `specs/` is empty: ask the user to confirm this change has no observable spec impact before continuing.
+    - If `specs/` is empty: proceed without confirmation — changes without spec impact are valid.
     - For each delta file (e.g. `specs/install/install-behavior.md`), merge into the corresponding main spec file (e.g. `.spec-driven/specs/install/install-behavior.md`):
      - **ADDED**: append the `### Requirement:` blocks to the target file (create it if it doesn't exist)
      - **MODIFIED**: locate the existing `### Requirement: <name>` block by name and replace it in place
@@ -94,7 +94,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - Never archive a change with incomplete tasks
 - Always state which steps are script-executed and which are AI-executed
 - Always merge delta specs before archiving — this is a hard gate, not optional
-- If `changes/<name>/specs/` is empty, require explicit human confirmation that the change has no observable spec impact
+- If `changes/<name>/specs/` is empty, proceed without confirmation — changes without spec impact are valid
 - Deleting requirements or empty spec files in `.spec-driven/specs/` is allowed when applying `REMOVED` delta entries
 - Do not delete the change directory manually — archive the change by running the archive command
 - Keep implementation and test mappings in frontmatter, not in requirement

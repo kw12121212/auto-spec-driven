@@ -7,10 +7,15 @@
 **方式 A：通过 [skills.sh](https://skills.sh) 安装（推荐 — 不在项目中产生额外文件）**
 
 ```bash
-npx skills add kw12121212/auto-spec-driven
+npx skills add -g kw12121212/auto-spec-driven
 ```
 
-按提示选择你实际使用的 AI 工具即可。安装范围建议选择公共/全局安装，避免在每个项目里重复生成 skills 文件。
+`-g` 表示全局安装，所有项目共享同一份 skills。按提示选择你实际使用的 AI 工具即可。
+
+**卸载：**
+```bash
+npx skills remove -g kw12121212/auto-spec-driven
+```
 
 **方式 B：从源码安装（用于开发或实时编辑）**
 

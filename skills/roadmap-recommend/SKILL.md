@@ -59,9 +59,13 @@ node {{SKILL_DIR}}/scripts/spec-driven.js init
     sub-agent. The parent agent MUST keep the final recommendation, the user
     confirmation checkpoint, and all proposal artifact writes.
 
-2. **Understand what the user wants optimized** — determine whether the user
-   wants the next change chosen for impact, urgency, dependency order, risk
-   reduction, or some other planning goal.
+2. **Default to dependency order** — unless the user explicitly specifies a
+   different planning goal (e.g. impact, urgency, risk reduction), recommend
+   the next change by dependency order: scan milestones from earliest to latest,
+   and within each milestone pick the first planned change that is not yet
+   `complete`, has no corresponding active change in `.spec-driven/changes/`,
+   and whose dependencies (if any) are all `complete`. If the user does specify
+   a planning goal, optimize for that goal instead.
 
 3. **Recommend one candidate change** — propose:
     - a kebab-case change name

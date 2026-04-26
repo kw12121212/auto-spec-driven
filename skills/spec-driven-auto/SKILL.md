@@ -98,7 +98,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 7. **Archive** — close out the change:
     - Confirm there are no incomplete tasks before archiving
     - List all delta files in `specs/` and merge each into the corresponding main spec file
-    - If `changes/<name>/specs/` is empty, ask the user to confirm this change has no observable spec impact before continuing
+    - If `changes/<name>/specs/` is empty, proceed without confirmation — changes without spec impact are valid
     - Update `.spec-driven/specs/INDEX.md` if new spec files were created
     - Run `node {{SKILL_DIR}}/scripts/spec-driven.js verify-spec-mappings`
       after merging mapping frontmatter into main specs
@@ -111,7 +111,7 @@ If this fails, the project is not initialized. Run `/spec-driven-init` first.
 - The context reset in Step 1 is mandatory — never skip it
 - The complexity check in Step 2 is mandatory — never skip it
 - The workflow runs fully automatically — do not pause for confirmation except when open questions in questions.md need user resolution
-- Additional confirmations are required whenever the workflow is blocked by unresolved questions or an empty delta-spec archive decision
+- Additional confirmations are required whenever the workflow is blocked by unresolved questions
 - All other steps run automatically unless blocked by an unresolvable issue
 - Follow all config.yaml rules (specs, change, code, test) throughout
 - If anything goes wrong mid-flow, stop and explain — do not silently continue

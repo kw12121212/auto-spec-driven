@@ -98,10 +98,15 @@ The TypeScript CLI handles all filesystem operations; the AI handles content and
 
 **Install via [skills.sh](https://skills.sh) (recommended — no extra files in your project):**
 ```bash
-npx skills add kw12121212/auto-spec-driven
+npx skills add -g kw12121212/auto-spec-driven
 ```
 
-When prompted by `skills`, select the AI tools you actually use. For installation scope, prefer the shared/global option so you avoid duplicating skill files inside each project.
+The `-g` flag installs globally so all your projects share the same skills. When prompted by `skills`, select the AI tools you actually use.
+
+**Uninstall:**
+```bash
+npx skills remove -g kw12121212/auto-spec-driven
+```
 
 **From source (for development or live-edit):**
 ```bash
